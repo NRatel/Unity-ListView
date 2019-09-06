@@ -50,6 +50,8 @@ public class ListView2 : MonoBehaviour
 
         //计算由Cell的pivot决定的起始偏移值
         pivotOffsetX = cellPrefabRT.pivot.x * cellPrefabRT.rect.width;
+
+        scrollRect.onValueChanged.AddListener(onScrollValueChanged); 
     }
 
     private void Start()
@@ -60,7 +62,14 @@ public class ListView2 : MonoBehaviour
 
     private void CalcNeedShowIndexes()
     {
-        List<int> indexes = new List<int>();
+        //已将Content的锚点和pivot的X都设为了0。
+        //所以，Content的 anchoredPosition.x 就代表deltaX
+
+        float deltaX = contentRT.anchoredPosition.x;
+        Debug.Log("deltaX: " + deltaX);
+
+
+        //List<int> indexes = new List<int>();
     }
 
 
