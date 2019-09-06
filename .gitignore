@@ -1,0 +1,17 @@
+.DS_Store
+
+obj
+Library
+Temp
+Logs
+Builds
+.idea
+.vs
+
+Assets/Plugins/Editor
+Assets/Plugins/Editor.meta
+
+*.csproj
+!Assembly-CSharp-Editor.csproj
+!Assembly-CSharp-firstpass.csproj
+!Assembly-CSharp.csproj
