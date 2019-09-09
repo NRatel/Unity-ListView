@@ -532,11 +532,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1247502327}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2252ede10428551408cf3664c38dda95, type: 3}
+  m_Script: {fileID: 11500000, guid: 8a24f861d4dfef440aa41aa9873378dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellCount: 5
-  contentRT: {fileID: 1082149553}
+  cellCount: 10
   cellPrefabRT: {fileID: 7913374827684128912, guid: 0351d333f2388c44abeab53e02dfe18b,
     type: 3}
   paddingLeft: 10
@@ -555,7 +554,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:

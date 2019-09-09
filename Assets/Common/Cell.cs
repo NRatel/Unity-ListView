@@ -14,7 +14,7 @@ public class Cell : MonoBehaviour
 
     public void SetIndex(int index)
     {
-        Debug.Log("index: " + index);
+        //Debug.Log("index: " + index);
         text.text = index.ToString();
     }
 }
