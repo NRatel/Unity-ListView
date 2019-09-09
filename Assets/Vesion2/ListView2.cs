@@ -32,11 +32,11 @@ public class ListView2 : MonoBehaviour
     private Dictionary<int, GameObject> cellDict;     //index-Cell字典    
     private Stack<GameObject> unUseCellStack;       //空闲Cell堆栈
 
-    private List<int> oldIndexes;
-    private List<int> newIndexes;
+    private List<int> oldIndexes;       //旧的索引集合
+    private List<int> newIndexes;       //新的索引集合
 
-    private List<int> appearIndexes;
-    private List<int> disAppearIndexes;
+    private List<int> appearIndexes;    //将要出现的索引集合
+    private List<int> disAppearIndexes; //将要消失的索引集合
 
     private void Awake()
     {
@@ -124,7 +124,9 @@ public class ListView2 : MonoBehaviour
 
         //Debug.Log("outFromLeft, outFromRight: " + outFromLeft + ", " + outFromRight);
 
+        //应该显示的开始索引
         int startIndex = (outFromLeft); // 省略了，先+1再-1。 从滑出的下一个开始，索引从0开始;
+        //应该显示的结束索引
         int endIndex = (cellCount - 1 - outFromRight);
 
         //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);

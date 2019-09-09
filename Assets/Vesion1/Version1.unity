@@ -535,7 +535,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2252ede10428551408cf3664c38dda95, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellCount: 5
+  cellCount: 10
   cellPrefabRT: {fileID: 7913374827684128912, guid: 0351d333f2388c44abeab53e02dfe18b,
     type: 3}
   paddingLeft: 10
