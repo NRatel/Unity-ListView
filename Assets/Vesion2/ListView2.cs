@@ -188,9 +188,8 @@ public class ListView2 : MonoBehaviour
         {
             GameObject cell = cellDict[index];
             cellDict.Remove(index);
-            unUseCellStack.Push(cell);
-
             cell.SetActive(false);
+            unUseCellStack.Push(cell);
         }
     }
 
