@@ -11,5 +11,5 @@
 详细记录实现思路：https://blog.csdn.net/NRatel/article/details/100561203   
 
 效果预览：  
-![alt text](https://i.imgur.com/wWU7Q6d.png)
+![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/version2.gif)
 
