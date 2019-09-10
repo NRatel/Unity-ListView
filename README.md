@@ -8,4 +8,14 @@
   第四版（标准成品）：在第三版基础上，由数据驱动列表显示。  
   第五版（多种特殊分支）：在第四版基础上，整合各种特殊需求进去。  
  
-详细记录实现思路，之后会放在博客上。
+详细记录实现思路：https://blog.csdn.net/NRatel/article/details/100561203   
+
+效果预览：
+
+# Outline Shader for Unity
+Unity 2018.3 project source for completed [Outline Shader Tutorial](https://roystan.net/articles/outline-shader.html) from the site [roystan.net](https://roystan.net/).
+
+![alt text](https://i.imgur.com/wWU7Q6d.png)
+
+Uses the depth and normals buffers to generate outlines of variable thickness and color.
+
