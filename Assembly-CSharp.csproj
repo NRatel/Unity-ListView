@@ -63,6 +63,7 @@
     <Compile Include="Assets\Common\Cell.cs" />
     <Compile Include="Assets\Vesion1\ListView1.cs" />
     <Compile Include="Assets\Vesion2\ListView2.cs" />
+    <Compile Include="Assets\VesionS1\ListViewS1.cs" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>E:/GitHub/Unity-ListView/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>

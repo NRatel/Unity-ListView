@@ -1,9 +1,19 @@
-﻿using System.Collections;
+﻿/*
+ 特殊需求：卡牌到达右侧后重叠停靠。
+ 注意：确保最终卡牌都能够完全展开，总是在 前一张卡牌压住
+ 调整要点：
+    1、增加右侧 viewportOffset。使超出右侧视口的卡牌仍然留存的数量增加。
+    2、必须计算并设置 SblingIndex。使后方卡牌在前方之下。
+    3、卡牌位置的计算和设置，改为滑动时每帧都进行计算。
+    4、卡牌到达viewport右侧后，
+ */
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ListView2 : MonoBehaviour
+public class ListViewS1 : MonoBehaviour
 {
     [SerializeField]
     public int cellCount = 5;           //计划生成的Cell数量
@@ -12,24 +22,34 @@ public class ListView2 : MonoBehaviour
     public RectTransform cellPrefabRT;  //Cell预设 的 RectTransform
 
     [SerializeField]
-    public float paddingLeft = 10;      //左边界宽度
+    public float paddingLeft = 10;      //左边距
 
     [SerializeField]
-    public float paddingRight = 10;     //右边界宽度
+    public float paddingRight = 10;     //右边距
 
     [SerializeField]
     public float spacingX = 10;         //X向间距
-    
+
+    [SerializeField]
+    public float berthRight = 10;       //开始停靠的右边距（必须 <= paddingRight，否则最后一个不能完全展开）
+
+    [SerializeField]
+    public float berthAniWidth = 10;    //停靠动画变化的宽度
+
+    [SerializeField]
+    public float berthAniHeight = 100;  //停靠动画变化的高度
+
     private float viewportOffset;       //设置视口容差（即左右两侧的Cell出现消失参考点），避免复用露馅 //为正时 参考位置向viewport的外围增加。// 默认值为一个spacing。
 
     private ScrollRect scrollRect;      //ScrollRect
     private RectTransform contentRT;    //Content 的 RectTransform
-    private RectTransform viewPortRT;   //viewPort 的 RectTransform
+    private RectTransform viewportRT;   //viewPort 的 RectTransform
 
     private float contentWidth;         //Content的总宽度
     private float pivotOffsetX;         //由Cell的pivot决定的起始偏移值
 
-    private Dictionary<int, RectTransform> cellRTDict;     //index-Cell字典    
+    private Dictionary<int, RectTransform> cellRTDict;   //index-Cell字典   
+    private List<KeyValuePair<int, RectTransform>> cellRTListForSort;          //Cell列表用于辅助Sbling排序
     private Stack<RectTransform> unUseCellRTStack;       //空闲Cell堆栈
 
     private List<int> oldIndexes;       //旧的索引集合
@@ -41,6 +61,7 @@ public class ListView2 : MonoBehaviour
     private void Awake()
     {
         cellRTDict = new Dictionary<int, RectTransform>();
+        cellRTListForSort = new List<KeyValuePair<int, RectTransform>>();
         unUseCellRTStack = new Stack<RectTransform>();
 
         oldIndexes = new List<int>();
@@ -54,7 +75,7 @@ public class ListView2 : MonoBehaviour
         //依赖的组件
         scrollRect = GetComponent<ScrollRect>();
         contentRT = scrollRect.content;
-        viewPortRT = scrollRect.viewport;
+        viewportRT = scrollRect.viewport;
 
         //强制设置 Content的 anchor 和 pivot
         contentRT.anchorMin = new Vector2(0, contentRT.anchorMin.y);
@@ -84,8 +105,10 @@ public class ListView2 : MonoBehaviour
         CalcIndexes();
         DisAppearCells();
         AppearCells();
+        SetCellsSblingIndex();
+        CalcCellsPos();
     }
-    
+
     private void onScrollValueChanged(Vector2 value)
     {
         if (cellCount < 0)
@@ -96,14 +119,20 @@ public class ListView2 : MonoBehaviour
         CalcIndexes();
         DisAppearCells();
         AppearCells();
+        SetCellsSblingIndex();
+        CalcCellsPos();
     }
 
     private void CalcIndexes()
     {
+        //由于右边Cell需要折叠放置，所以要多设一些viewportOffset，让其晚一些隐藏
+        float viewportOffsetLeft = viewportOffset;
+        float viewportOffsetRight = 2 * (cellPrefabRT.rect.width + spacingX);
+
         //content左边界，相对于viewport左边界的位移，矢量！向左滑为正方向
-        float deltaLeft = -contentRT.anchoredPosition.x - viewportOffset;
+        float deltaLeft = -contentRT.anchoredPosition.x - viewportOffsetLeft;
         //content右边界，相对于viewport右边界的位移，矢量！向右滑为正方向
-        float deltaRight = contentWidth - viewPortRT.rect.width - (-contentRT.anchoredPosition.x) - viewportOffset;
+        float deltaRight = contentWidth - viewportRT.rect.width - (-contentRT.anchoredPosition.x) - viewportOffsetRight;
 
         //Debug.Log("deltaLeft, deltaRight: " + deltaLeft + ", " + deltaRight);
 
@@ -135,21 +164,6 @@ public class ListView2 : MonoBehaviour
         {
             newIndexes.Add(index);
         }
-
-        //新旧索引列表输出调试
-        //string Str1 = "";
-        //foreach (int index in newIndexes)
-        //{
-        //    Str1 += index + ",";
-        //}
-        //string Str2 = "";
-        //foreach (int index in oldIndexes)
-        //{
-        //    Str2 += index + ",";
-        //}
-        //Debug.Log("Str1: " + Str1);
-        //Debug.Log("Str2: " + Str2);
-        //Debug.Log("-------------------------");
 
         //找出出现的和消失的
         //出现的：在新列表中，但不在老列表中。
@@ -198,9 +212,42 @@ public class ListView2 : MonoBehaviour
         foreach (int index in appearIndexes)
         {
             RectTransform cellRT = GetOrCreateCell(index);
-            cellRT.anchoredPosition = new Vector2(CalcCellPosX(index), cellRT.anchoredPosition.y);
             cellRTDict[index] = cellRT;
+
             cellRT.GetComponent<Cell>().SetIndex(index);
+        }
+    }
+
+    private void SetCellsSblingIndex()
+    {
+        if (cellRTDict.Count <= 0)
+        {
+            //无Cell不排序
+            return;
+        }
+        if (appearIndexes.Count <= 0 && disAppearIndexes.Count <= 0)
+        {
+            //无变化不重新排序
+            return;
+        }
+
+        //设置SiblingIndex
+        cellRTListForSort.Clear();
+        foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
+        {
+            cellRTListForSort.Add(kvp);
+        }
+        cellRTListForSort.Sort((x, y) =>
+        {
+            //按index升序
+            return x.Key - y.Key;
+        });
+        int minIndex = cellRTListForSort[0].Key;
+        int maxIndex = cellRTListForSort[cellRTListForSort.Count - 1].Key;
+        foreach (KeyValuePair<int, RectTransform> kvp in cellRTListForSort)
+        {
+            //kvp.Value.SetSiblingIndex(kvp.Key - minIndex);    //索引大的在上
+            kvp.Value.SetSiblingIndex(maxIndex - kvp.Key);    //索引大的在下
         }
     }
 
@@ -224,9 +271,49 @@ public class ListView2 : MonoBehaviour
         return cellRT;
     }
 
-    private float CalcCellPosX(int index)
+    private void CalcCellsPos()
     {
-        //X = 左边界间隙 + 由Cell的pivot决定的起始偏移值 + 前面已有Cell的宽度总和 + 前面已有的间距总和
-        return paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
+        foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
+        {
+            int index = kvp.Key;
+            //Cell的X坐标 = 左边界间隙 + 由Cell的pivot决定的起始偏移值 + 前面已有Cell的宽度总和 + 前面已有的间距总和
+            float x = paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
+
+            //相对的 视口右边界位置
+            //其中，-contentRT.anchoredPosition.x 即为 Cell anchoredPosition所在坐标系中的 viewPort左边界的位置。
+            float viewportRightX = -contentRT.anchoredPosition.x + viewportRT.rect.width - (cellPrefabRT.rect.width - pivotOffsetX);
+
+            //停靠的位置
+            float berthX = viewportRightX - berthRight;
+            if (x > berthX) { x = berthX; }
+
+            //开始停靠动画的位置（相对于停靠位置，往左 2/3个Cell宽度的地方）
+            float startAniX = berthX - (2.0f / 3 * cellPrefabRT.rect.width);
+
+            //上一个Cell的X坐标
+            float preX = paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * (index - 1) + spacingX * (index - 1);
+
+            float y = 0;
+            if (preX <= startAniX)
+            {
+                //x、y均保持不变
+                //x = x;
+                //y = y;
+            }
+            else if (preX < berthX)
+            {
+                //x、y移动时正比变化
+                x = x + berthAniWidth / (berthX - startAniX) * (preX - startAniX);
+                y = y - berthAniHeight / (berthX - startAniX) * (preX - startAniX);
+            }
+            else
+            {
+                //x在最右、y在最下
+                x = berthX + berthAniWidth;
+                y = 0 - berthAniHeight;
+            }
+
+            kvp.Value.anchoredPosition = new Vector2(x, y);
+        }
     }
 }
