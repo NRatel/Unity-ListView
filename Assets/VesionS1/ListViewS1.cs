@@ -72,45 +72,43 @@ public class ListViewS1 : MonoBehaviour
         contentRT.anchorMax = new Vector2(0, contentRT.anchorMax.y);
         contentRT.pivot = new Vector2(0, contentRT.pivot.y);
 
+        //计算由Cell的pivot决定的起始偏移值
+        pivotOffsetX = cellPrefabRT.pivot.x * cellPrefabRT.rect.width;
+    }
+
+    private void Start()
+    {
+        //注册滑动事件
+        scrollRect.onValueChanged.AddListener(onScrollValueChanged);
+        CalcAndSetContentSize();
+
+        if (cellCount < 0) { return; }
+
+        CalcIndexes();
+        DisAppearCells();
+        AppearCells();
+        CalcAndSetCellsSblingIndex();
+        CalcAndSetCellsPos();
+    }
+
+    private void onScrollValueChanged(Vector2 value)
+    {
+        if (cellCount < 0) { return; }
+
+        CalcIndexes();
+        DisAppearCells();
+        AppearCells();
+        CalcAndSetCellsSblingIndex();
+        CalcAndSetCellsPos();
+    }
+
+    private void CalcAndSetContentSize()
+    {
         //计算和设置Content总宽度
         //当cellCount小于等于0时，Content总宽度 = 0
         //当cellCount大于0时，Content总宽度 = 左边界间隙 + 所有Cell的宽度总和 + 相邻间距总和 + 右边界间隙
         contentWidth = cellCount <= 0 ? 0 : paddingLeft + cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1) + paddingRight;
         contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
-
-        //计算由Cell的pivot决定的起始偏移值
-        pivotOffsetX = cellPrefabRT.pivot.x * cellPrefabRT.rect.width;
-
-        //注册滑动事件
-        scrollRect.onValueChanged.AddListener(onScrollValueChanged);
-    }
-
-    private void Start()
-    {
-        if (cellCount < 0)
-        {
-            return;
-        }
-
-        CalcIndexes();
-        DisAppearCells();
-        AppearCells();
-        SetCellsSblingIndex();
-        CalcCellsPos();
-    }
-
-    private void onScrollValueChanged(Vector2 value)
-    {
-        if (cellCount < 0)
-        {
-            return;
-        }
-
-        CalcIndexes();
-        DisAppearCells();
-        AppearCells();
-        SetCellsSblingIndex();
-        CalcCellsPos();
     }
 
     private void CalcIndexes()
@@ -208,7 +206,7 @@ public class ListViewS1 : MonoBehaviour
         }
     }
 
-    private void SetCellsSblingIndex()
+    private void CalcAndSetCellsSblingIndex()
     {
         if (cellRTDict.Count <= 0)
         {
@@ -261,7 +259,7 @@ public class ListViewS1 : MonoBehaviour
         return cellRT;
     }
 
-    private void CalcCellsPos()
+    private void CalcAndSetCellsPos()
     {
         foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
         {
