@@ -6,10 +6,12 @@
   第二版：在第一版基础上，实现Cell复用。  
   第三版：在第二版基础上，处理其他排布方向。  
   第四版（标准成品）：在第三版基础上，由数据驱动列表显示。  
-  第五版（多种特殊分支）：在第四版基础上，整合各种特殊需求进去。  
+  第五版（多种特殊分支）：在某一版本基础上，整合各种特殊需求进去。  
  
 详细记录实现思路：https://blog.csdn.net/NRatel/article/details/100561203   
 
 效果预览：  
-![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/version2.gif)
+![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/list2.gif)  
+
+![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/listS1.gif)
 
