@@ -284,24 +284,21 @@ public class ListViewS1 : MonoBehaviour
             float triggerAniX = berthX - (2.0f / 3 * cellPrefabRT.rect.width);
 
             float y = 0;
+            float progress = 0;
             if (preX <= triggerAniX)
             {
-                //x、y均保持不变
-                //x = x;
-                //y = y;
+                progress = 0;
             }
             else if (preX < berthX)
             {
-                //x、y移动时正比变化
-                x = x + berthAniWidth / (berthX - triggerAniX) * (preX - triggerAniX);
-                y = y - berthAniHeight / (berthX - triggerAniX) * (preX - triggerAniX);
+                progress = (preX - triggerAniX) / (berthX - triggerAniX);   //曲线:正比方式
             }
             else
             {
-                //x到达最右、y到达最下
-                x = berthX + berthAniWidth;
-                y = 0 - berthAniHeight;
+                progress = 1;
             }
+            x = x + berthAniWidth * progress;
+            y = y - berthAniHeight * progress;
 
             kvp.Value.anchoredPosition = new Vector2(x, y);
         }
