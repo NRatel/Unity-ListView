@@ -285,13 +285,14 @@ public class ListViewS1 : MonoBehaviour
 
             float y = 0;
             float progress = 0;
-            if (preX <= triggerAniX)
+            if (preX < triggerAniX)
             {
                 progress = 0;
             }
-            else if (preX < berthX)
+            else if (preX <= berthX)
             {
                 progress = (preX - triggerAniX) / (berthX - triggerAniX);   //曲线:正比方式
+                progress = Mathf.Clamp(progress, 0, 1);
             }
             else
             {
