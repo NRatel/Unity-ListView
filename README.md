@@ -13,5 +13,6 @@
 效果预览：  
 ![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/list2.gif)  
 
+右侧重叠放置：  
 ![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/listS1.gif)
 
