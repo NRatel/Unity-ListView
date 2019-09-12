@@ -27,7 +27,7 @@ public class ListViewS1 : MonoBehaviour
     public float berthAniWidth = 10;    //停靠动画变化的宽度
 
     [SerializeField]
-    public float berthAniHeight = 100;  //停靠动画变化的高度
+    public float berthAniHeight = 10;   //停靠动画变化的高度 
 
     private float viewportOffset;       //设置视口容差（即左右两侧的Cell出现消失参考点），避免复用露馅 //为正时 参考位置向viewport的外围增加。// 默认值为一个spacing。
 
@@ -230,12 +230,13 @@ public class ListViewS1 : MonoBehaviour
             //按index升序
             return x.Key - y.Key;
         });
-        int minIndex = cellRTListForSort[0].Key;
-        int maxIndex = cellRTListForSort[cellRTListForSort.Count - 1].Key;
+
         foreach (KeyValuePair<int, RectTransform> kvp in cellRTListForSort)
         {
-            //kvp.Value.SetSiblingIndex(kvp.Key - minIndex);    //索引大的在上
-            kvp.Value.SetSiblingIndex(maxIndex - kvp.Key);    //索引大的在下
+            //索引大的在上
+            //kvp.Value.SetAsLastSibling();
+            //索引大的在下
+            kvp.Value.SetAsFirstSibling();
         }
     }
 
