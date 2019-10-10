@@ -3,23 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ListViewS1 : MonoBehaviour
+public class ListViewS1 : ListView2
 {
-    [SerializeField]
-    public int cellCount = 5;           //计划生成的Cell数量
-
-    [SerializeField]
-    public RectTransform cellPrefabRT;  //Cell预设 的 RectTransform
-
-    [SerializeField]
-    public float paddingLeft = 10;      //左边距
-
-    [SerializeField]
-    public float paddingRight = 10;     //右边距
-
-    [SerializeField]
-    public float spacingX = 10;         //X向间距
-
     [SerializeField]
     public float berthRight = 10;       //开始停靠的右边距（必须 <= paddingRight，否则最后一个不能完全展开）
 
@@ -27,91 +12,22 @@ public class ListViewS1 : MonoBehaviour
     public float berthAniWidth = 10;    //停靠动画变化的宽度
 
     [SerializeField]
-    public float berthAniHeight = 10;   //停靠动画变化的高度 
+    public float berthAniHeight = 10;   //停靠动画变化的高度
 
-    private float viewportOffset;       //设置视口容差（即左右两侧的Cell出现消失参考点），避免复用露馅 //为正时 参考位置向viewport的外围增加。// 默认值为一个spacing。
-
-    private ScrollRect scrollRect;      //ScrollRect
-    private RectTransform contentRT;    //Content 的 RectTransform
-    private RectTransform viewportRT;   //viewPort 的 RectTransform
-
-    private float contentWidth;         //Content的总宽度
-    private float pivotOffsetX;         //由Cell的pivot决定的起始偏移值
-
-    private Dictionary<int, RectTransform> cellRTDict;   //index-Cell字典   
-    private List<KeyValuePair<int, RectTransform>> cellRTListForSort;          //Cell列表用于辅助Sbling排序
-    private Stack<RectTransform> unUseCellRTStack;       //空闲Cell堆栈
-
-    private List<int> oldIndexes;       //旧的索引集合
-    private List<int> newIndexes;       //新的索引集合
-
-    private List<int> appearIndexes;    //将要出现的索引集合
-    private List<int> disAppearIndexes; //将要消失的索引集合
-
-    private void Awake()
+    protected override void onScrollValueChanged(Vector2 value)
     {
-        cellRTDict = new Dictionary<int, RectTransform>();
-        cellRTListForSort = new List<KeyValuePair<int, RectTransform>>();
-        unUseCellRTStack = new Stack<RectTransform>();
+        base.onScrollValueChanged(value);
 
-        oldIndexes = new List<int>();
-        newIndexes = new List<int>();
-        appearIndexes = new List<int>();
-        disAppearIndexes = new List<int>();
+        if (cellCount < 0)
+        {
+            return;
+        }
 
-        //设置视口容差默认值
-        viewportOffset = spacingX;
-
-        //依赖的组件
-        scrollRect = GetComponent<ScrollRect>();
-        contentRT = scrollRect.content;
-        viewportRT = scrollRect.viewport;
-
-        //强制设置 Content的 anchor 和 pivot
-        contentRT.anchorMin = new Vector2(0, contentRT.anchorMin.y);
-        contentRT.anchorMax = new Vector2(0, contentRT.anchorMax.y);
-        contentRT.pivot = new Vector2(0, contentRT.pivot.y);
-
-        //计算由Cell的pivot决定的起始偏移值
-        pivotOffsetX = cellPrefabRT.pivot.x * cellPrefabRT.rect.width;
-    }
-
-    private void Start()
-    {
-        //注册滑动事件
-        scrollRect.onValueChanged.AddListener(onScrollValueChanged);
-        CalcAndSetContentSize();
-
-        if (cellCount < 0) { return; }
-
-        CalcIndexes();
-        DisAppearCells();
-        AppearCells();
-        CalcAndSetCellsSblingIndex();
+        //滑动时每帧更新位置
         CalcAndSetCellsPos();
     }
 
-    private void onScrollValueChanged(Vector2 value)
-    {
-        if (cellCount < 0) { return; }
-
-        CalcIndexes();
-        DisAppearCells();
-        AppearCells();
-        CalcAndSetCellsSblingIndex();
-        CalcAndSetCellsPos();
-    }
-
-    private void CalcAndSetContentSize()
-    {
-        //计算和设置Content总宽度
-        //当cellCount小于等于0时，Content总宽度 = 0
-        //当cellCount大于0时，Content总宽度 = 左边界间隙 + 所有Cell的宽度总和 + 相邻间距总和 + 右边界间隙
-        contentWidth = cellCount <= 0 ? 0 : paddingLeft + cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1) + paddingRight;
-        contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
-    }
-
-    private void CalcIndexes()
+    protected override void CalcIndexes()
     {
         //由于右边Cell需要折叠放置，所以要多设一些viewportOffset，让其晚一些隐藏
         float viewportOffsetLeft = viewportOffset;
@@ -183,84 +99,9 @@ public class ListViewS1 : MonoBehaviour
         newIndexes = temp;
         newIndexes.Clear();
     }
-
-    private void DisAppearCells()
-    {
-        foreach (int index in disAppearIndexes)
-        {
-            RectTransform cellRT = cellRTDict[index];
-            cellRTDict.Remove(index);
-            cellRT.gameObject.SetActive(false);
-            unUseCellRTStack.Push(cellRT);
-        }
-    }
-
-    private void AppearCells()
-    {
-        foreach (int index in appearIndexes)
-        {
-            RectTransform cellRT = GetOrCreateCell(index);
-            cellRTDict[index] = cellRT;
-
-            cellRT.GetComponent<Cell>().SetIndex(index);
-        }
-    }
-
-    private void CalcAndSetCellsSblingIndex()
-    {
-        if (cellRTDict.Count <= 0)
-        {
-            //无Cell不排序
-            return;
-        }
-        if (appearIndexes.Count <= 0 && disAppearIndexes.Count <= 0)
-        {
-            //无变化不重新排序
-            return;
-        }
-
-        //设置SiblingIndex
-        cellRTListForSort.Clear();
-        foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
-        {
-            cellRTListForSort.Add(kvp);
-        }
-        cellRTListForSort.Sort((x, y) =>
-        {
-            //按index升序
-            return x.Key - y.Key;
-        });
-
-        foreach (KeyValuePair<int, RectTransform> kvp in cellRTListForSort)
-        {
-            //索引大的在上
-            //kvp.Value.SetAsLastSibling();
-            //索引大的在下
-            kvp.Value.SetAsFirstSibling();
-        }
-    }
-
-    private RectTransform GetOrCreateCell(int index)
-    {
-        RectTransform cellRT;
-        if (unUseCellRTStack.Count > 0)
-        {
-            cellRT = unUseCellRTStack.Pop();
-            cellRT.gameObject.SetActive(true);
-        }
-        else
-        {
-            cellRT = GameObject.Instantiate<GameObject>(cellPrefabRT.gameObject).GetComponent<RectTransform>();
-            cellRT.SetParent(contentRT, false);
-            //强制设置Cell的anchor
-            cellRT.anchorMin = new Vector2(0, cellRT.anchorMin.y);
-            cellRT.anchorMax = new Vector2(0, cellRT.anchorMax.y);
-        }
-
-        return cellRT;
-    }
-
-    private void CalcAndSetCellsPos()
+    
+    //调用时机：滑动时每帧
+    protected override void CalcAndSetCellsPos()
     {
         foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
         {
