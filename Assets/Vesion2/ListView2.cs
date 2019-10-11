@@ -20,7 +20,9 @@ public class ListView2 : MonoBehaviour
     [SerializeField]
     public float spacingX = 10;             //X向间距
 
-    protected float viewportOffset;         //设置视口容差（即左右两侧的Cell出现消失参考点），避免复用露馅 //为正时 参考位置向viewport的外围增加。// 默认值为一个spacing。
+    //视口容差（即左右两侧的Cell出现消失参考点），可避免复用时露馅  //为正时 参考位置向viewport的外围增加。
+    protected float viewportOffsetLeft;     //左侧视口容差
+    protected float viewportOffsetRight;    //右侧视口容差
 
     protected ScrollRect scrollRect;        //ScrollRect
     protected RectTransform contentRT;      //Content 的 RectTransform
@@ -51,9 +53,6 @@ public class ListView2 : MonoBehaviour
         appearIndexes = new List<int>();
         disAppearIndexes = new List<int>();
 
-        //设置视口容差默认值
-        viewportOffset = spacingX;
-
         //依赖的组件
         scrollRect = GetComponent<ScrollRect>();
         contentRT = scrollRect.content;
@@ -68,7 +67,7 @@ public class ListView2 : MonoBehaviour
         pivotOffsetX = cellPrefabRT.pivot.x * cellPrefabRT.rect.width;
 
         //注册滑动事件
-        scrollRect.onValueChanged.AddListener(onScrollValueChanged);
+        scrollRect.onValueChanged.AddListener(OnScrollValueChanged);
     }
 
     protected virtual void Start()
@@ -77,7 +76,8 @@ public class ListView2 : MonoBehaviour
         {
             return;
         }
-
+        
+        SetViewportOffset();
         CalcAndSetContentSize();
 
         CalcIndexes();
@@ -85,7 +85,7 @@ public class ListView2 : MonoBehaviour
         AppearCells();
     }
 
-    protected virtual void onScrollValueChanged(Vector2 value)
+    protected virtual void OnScrollValueChanged(Vector2 value)
     {
         if (cellCount < 0)
         {
@@ -97,6 +97,14 @@ public class ListView2 : MonoBehaviour
         AppearCells();
     }
 
+    //设置视口容差
+    protected virtual void SetViewportOffset()
+    {
+        viewportOffsetLeft = spacingX;
+        viewportOffsetRight = spacingX;
+    }
+
+    //计算并设置Content大小
     protected virtual void CalcAndSetContentSize()
     {
         //计算和设置Content总宽度
@@ -105,12 +113,13 @@ public class ListView2 : MonoBehaviour
         contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
     }
 
+    //计算 应出现的索引 和 应消失的索引
     protected virtual void CalcIndexes()
     {
         //content左边界 相对于viewport左边界 的位移，矢量！向左滑为正方向
-        float deltaLeft = -contentRT.anchoredPosition.x - viewportOffset;
+        float deltaLeft = -contentRT.anchoredPosition.x - viewportOffsetLeft;
         //content右边界 相对于viewport右边界 的位移，矢量！向右滑为正方向
-        float deltaRight = contentWidth - viewportRT.rect.width - (-contentRT.anchoredPosition.x) - viewportOffset;
+        float deltaRight = contentWidth - viewportRT.rect.width - (-contentRT.anchoredPosition.x) - viewportOffsetRight;
 
         //Debug.Log("deltaLeft, deltaRight: " + deltaLeft + ", " + deltaRight);
 
@@ -208,18 +217,23 @@ public class ListView2 : MonoBehaviour
         {
             RectTransform cellRT = GetOrCreateCell(index);
             cellRTDict[index] = cellRT;
+
+            //设置Cell位置
+            cellRT.anchoredPosition = new Vector2(CalcCellPosX(index), cellRT.anchoredPosition.y);
+
+            //设置Cell数据，对Cell进行初始化
+            cellRT.GetComponent<Cell>().SetIndex(index);
         }
 
         //有Cell出现时
         if (appearIndexes.Count > 0)
         {
+            //不能放在上面的循环中，因为只能整体处理
             CalcAndSetCellsSblingIndex();
-            CalcAndSetCellsPos();
-            SetCellsData();
         }
     }
 
-    //计算并设置Cell的SblingIndex
+    //计算并设置Cells的SblingIndex
     //调用时机：有新的Cell出现时
     //Cell可能重叠时必须
     //若无需求，可去掉以节省性能
@@ -245,34 +259,15 @@ public class ListView2 : MonoBehaviour
         }
     }
 
-    //计算并设置Cell的位置
-    //调用时机：有新的Cell出现时
-    protected virtual void CalcAndSetCellsPos()
+    //计算Cell的X坐标
+    protected virtual float CalcCellPosX(int index)
     {
-        foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
-        {
-            int index = kvp.Key;
-            RectTransform cellRT = kvp.Value;
-
-            //X = 左边界间隙 + 由Cell的pivot决定的起始偏移值 + 前面已有Cell的宽度总和 + 前面已有的间距总和
-            float x = paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
-
-            cellRT.anchoredPosition = new Vector2(x, cellRT.anchoredPosition.y);
-        }
+        //X = 左边界间隙 + 由Cell的pivot决定的起始偏移值 + 前面已有Cell的宽度总和 + 前面已有的间距总和
+        float x = paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
+        return x;
     }
 
-    //设置Cell数据
-    protected virtual void SetCellsData()
-    {
-        foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
-        {
-            int index = kvp.Key;
-            RectTransform cellRT = kvp.Value;
-            //在这里对Cell初始化
-            cellRT.GetComponent<Cell>().SetIndex(index);
-        }
-    }
-
+    //获取或创建Cell
     private RectTransform GetOrCreateCell(int index)
     {
         RectTransform cellRT;
