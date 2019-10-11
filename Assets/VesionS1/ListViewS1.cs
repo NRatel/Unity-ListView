@@ -39,14 +39,7 @@ public class ListViewS1 : ListView2
         //滑动时重新计算位置
         ReCalcAndSetCellsPos();
     }
-
-    //设置视口容差
-    protected override void SetViewportOffset()
-    {
-        viewportOffsetLeft = spacingX;
-        viewportOffsetRight = 2 * (cellPrefabRT.rect.width + spacingX);
-    }
-
+    
     //重新计算Cell位置。调用时机：滑动时每帧
     private void ReCalcAndSetCellsPos()
     {
