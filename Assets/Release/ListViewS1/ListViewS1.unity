@@ -442,7 +442,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1018716121}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: -1200242548, guid: f70555f144d8491a825f0804e09c671c, type: 3}
   m_Name: 
@@ -480,7 +480,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 0.000015258789, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!1 &1247502327
@@ -532,15 +532,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 1247502327}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a24f861d4dfef440aa41aa9873378dd, type: 3}
+  m_Script: {fileID: 11500000, guid: ef4e75f80c106d74fb40bb65aa90d26d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   cellCount: 10
   cellPrefabRT: {fileID: 7913374827684128912, guid: 0351d333f2388c44abeab53e02dfe18b,
     type: 3}
   paddingLeft: 10
-  paddingRight: 10
+  paddingRight: 20
   spacingX: 10
+  sortSbling: 2
+  berthRight: 10
+  berthAniWidth: 10
+  berthAniHeight: 10
 --- !u!114 &1247502330
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -597,7 +601,7 @@ MonoBehaviour:
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
+  m_ScrollSensitivity: 0.1
   m_Viewport: {fileID: 1018716122}
   m_HorizontalScrollbar: {fileID: 0}
   m_VerticalScrollbar: {fileID: 0}
