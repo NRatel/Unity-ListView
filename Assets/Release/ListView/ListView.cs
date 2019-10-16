@@ -206,7 +206,7 @@ namespace NRatel
             //有Cell出现时, 重新设置SblingIndex，注意只能整体遍历处理
             if (appearIndexes.Count > 0)
             {
-                CalcAndSetCellsSblingIndex();
+                SortCellsSblingIndex();
             }
         }
 
