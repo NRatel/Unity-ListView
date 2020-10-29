@@ -63,16 +63,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Res\Cell.cs" />
-    <Compile Include="Assets\TestText.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV1\ListViewV1.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV2\ListViewV2.cs" />
     <Compile Include="Assets\实验 (按功能拆分大类 )（未完成）\ListView\ListView.Data.cs" />
     <Compile Include="Assets\实验 (按功能拆分大类 )（未完成）\ListView\ListView.Snap.cs" />
     <Compile Include="Assets\实验 (按功能拆分大类 )（未完成）\ListView\ListView.SortSbling.cs" />
     <Compile Include="Assets\实验 (按功能拆分大类 )（未完成）\ListView\ListView.cs" />
-    <Compile Include="Assets\常见需求（未完成）\PageView\PageView.cs" />
-    <Compile Include="Assets\常见需求（未完成）\TableView\TableView.cs" />
-    <Compile Include="Assets\常见需求（未完成）\多种类不规则Cell的列表（如聊天窗口）\ListViewForChat.cs" />
+    <Compile Include="Assets\常见需求（未进行）\PageView\PageView.cs" />
+    <Compile Include="Assets\常见需求（未进行）\TableView\TableView.cs" />
+    <Compile Include="Assets\常见需求（未进行）\多种不规则Cell的列表（如聊天窗口）\ListViewForChat.cs" />
     <Compile Include="Assets\特殊需求\右侧堆叠的ListView\ListViewS1.cs" />
     <Reference Include="UnityEngine">
       <HintPath>D:/Program Files/Unity2019.4.2f1LTS/Unity/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
