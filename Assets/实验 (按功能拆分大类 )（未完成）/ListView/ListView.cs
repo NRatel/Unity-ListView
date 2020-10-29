@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -16,7 +17,7 @@ namespace NRatel
         public float paddingRight = 0;          //右边界宽度
         public float spacingX = 0;              //X向间距
 
-        protected float viewportOffsetLeft = 0;    //左侧视口容差
+        protected float viewportOffsetLeft = 0;    //左侧视口容差     //用于 viewport的计算大小大于实际大小，消除出现问题
         protected float viewportOffsetRight = 0;   //右侧视口容差
 
         protected ScrollRect scrollRect;        //ScrollRect
@@ -28,7 +29,7 @@ namespace NRatel
 
         protected Dictionary<int, RectTransform> cellRTDict;    //index-Cell字典    
         protected Stack<RectTransform> unUseCellRTStack;        //空闲Cell堆栈
-
+           
         private List<int> oldIndexes;         //旧的索引集合
         private List<int> newIndexes;         //新的索引集合
 
@@ -94,6 +95,8 @@ namespace NRatel
         //计算 应出现的索引 和 应消失的索引
         private void CalcIndexes()
         {
+            /***这块后边要改成以Content所在坐标系为基准进行计算***/
+
             //content左边界 相对于 viewport左边界（含viewportOffset） 的位移，矢量！向左为正方向
             float outFromLeft = -contentRT.anchoredPosition.x - viewportOffsetLeft;
             //content右边界 相对于 viewport右边界（含viewportOffset） 的位移，矢量！向右为正方向

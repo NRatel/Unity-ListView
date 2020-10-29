@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-
 //要点
 // 1、paddingLeft、paddingRight 不需要手动设置了。
 // 因为，要保证第一个和最后一个Cell可以处于Viewport的中心。
@@ -16,7 +15,6 @@ using UnityEngine.EventSystems;
 // 方式一、仍由用户指定
 // 方式二、强制指定为 Viewport宽度 - Cell宽度，即 每个Cell独占一页
 // 
-
 //    考虑情况
 //    情况一、Cell宽度 <= Viewport宽度，即正常情况。此时可以强制，
 //          paddingLeft = paddingRight = (Viewport宽度 - Cell宽度)/2；
@@ -26,15 +24,18 @@ using UnityEngine.EventSystems;
 //          处理方式二、paddingLeft = paddingRight = (Viewport宽度 - Cell宽度)/2； spacingX = 0。能够保证
 //          处理方式三、强制检查，禁止这种情况发生。
 
-// 2、自动Snap: 放手后Snap。由当前位置和放手速度共同决定。
+// 3、自动Snap: 放手后Snap。由当前位置和放手速度共同决定。
 //    若放手时中心页未变，则根据放手速度确定是否翻到前一页或下一页。
 
-// 2、spacingX
+// 4、spacingX
 
-// 3、Loop: 可配置是否循环翻页
+// 5、loop: 可配置是否循环翻页
+
+// 6、carousel: 可配置轮播
 
 namespace NRatel
 {
+    //2020.4.2 考虑不用List的方式，而是直接实现滑动接口并用dotween处理移动
     public class PageView : ListView
     {
         ////调整边距

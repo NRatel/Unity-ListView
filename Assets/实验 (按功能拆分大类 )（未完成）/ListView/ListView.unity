@@ -540,7 +540,7 @@ MonoBehaviour:
     type: 3}
   paddingLeft: 10
   paddingRight: 10
-  spacingX: -10
+  spacingX: 30
   sortSbling: 0
 --- !u!114 &1247502330
 MonoBehaviour:
