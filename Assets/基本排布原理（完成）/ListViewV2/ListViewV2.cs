@@ -91,6 +91,7 @@ namespace NRatel.Fundamental
             CalcIndexes();
             DisAppearCells();
             AppearCells();
+            CalcAndSetCellsSblingIndex();
         }
 
         protected virtual void OnScrollValueChanged(Vector2 delta)
@@ -103,6 +104,7 @@ namespace NRatel.Fundamental
             CalcIndexes();
             DisAppearCells();
             AppearCells();
+            CalcAndSetCellsSblingIndex();
         }
 
         //调整边距
@@ -131,14 +133,15 @@ namespace NRatel.Fundamental
         protected virtual void CalcIndexes()
         {
             //content左边界 相对于 viewport左边界（含viewportOffset） 的位移，矢量！向左为正方向
-            float outFromLeft = -contentRT.anchoredPosition.x - viewportOffsetLeft;
+            //思路：画图，先以向右为正方向，从起始位置向正方向滑出些许后计算，最后取反，可轻松得出。
+            float outFromLeft = -(contentRT.anchoredPosition.x + viewportOffsetLeft);
             //content右边界 相对于 viewport右边界（含viewportOffset） 的位移，矢量！向右为正方向
-            float outFromRight = contentWidth - viewportRT.rect.width - (-contentRT.anchoredPosition.x) - viewportOffsetRight;
+            //思路：画图，以向右为正方向,从起始位置向正方向滑出些许后计算，可轻松得出。
+            float outFromRight = contentWidth + contentRT.anchoredPosition.x - (viewportRT.rect.width + viewportOffsetRight);
 
             //Debug.Log("deltaLeft, deltaRight: " + deltaLeft + ", " + deltaRight);
 
-            //计算完全滑出左边界和完全滑出右边的数量。
-            //对于滑出的，要向下取整，即尽量认为其没滑出。
+            //计算完全滑出左边界和完全滑出右边的数量。 要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
             int outFromLeftCount = 0;    //完全滑出左边界的数量
             int outFromRightCount = 0;   //完全滑出右边界的数量
             if (outFromLeft > 0)
@@ -154,9 +157,8 @@ namespace NRatel.Fundamental
 
             //Debug.Log("outFromLeft, outFromRight: " + outFromLeft + ", " + outFromRight);
 
-            //应该显示的开始索引
+            //应该显示的开始索引和结束索引
             int startIndex = (outFromLeftCount); // 省略了 先+1再-1。 从滑出的下一个开始，索引从0开始;
-                                                 //应该显示的结束索引
             int endIndex = (cellCount - 1 - outFromRightCount);
 
             //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
@@ -238,13 +240,6 @@ namespace NRatel.Fundamental
                 //设置Cell数据，对Cell进行初始化
                 cellRT.GetComponent<Cell>().SetIndex(index);
             }
-
-            //有Cell出现时
-            if (appearIndexes.Count > 0)
-            {
-                //不能放在上面的循环中，因为只能整体处理
-                CalcAndSetCellsSblingIndex();
-            }
         }
 
         //计算并设置Cells的SblingIndex
@@ -253,6 +248,8 @@ namespace NRatel.Fundamental
         //若无需求，可去掉以节省性能
         protected virtual void CalcAndSetCellsSblingIndex()
         {
+            if (appearIndexes.Count <= 0) { return; }
+
             cellRTListForSort.Clear();
             foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
             {
