@@ -18,7 +18,7 @@ namespace NRatel
         private List<KeyValuePair<int, RectTransform>> cellRTListForSort;     //Cell列表用于辅助Sbling排序
 
         //计算并设置Cells的SblingIndex
-        private void SortCellsSblingIndex()
+        private void CalcAndSetCellsSblingIndex()
         {
             if (sortSbling == SblingType.None) { return; }
 

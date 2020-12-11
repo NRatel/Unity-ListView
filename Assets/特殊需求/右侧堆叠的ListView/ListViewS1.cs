@@ -1,11 +1,12 @@
-﻿using System.Collections;
+﻿using NRatel.Fundamental;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace NRatel
 {
-    public class ListViewS1 : ListView
+    public class ListViewS1 : ListViewV2
     {
         [SerializeField]
         public float berthRight = 0;       //开始停靠的右边距（必须 <= paddingRight，否则最后一个不能完全展开）
@@ -33,7 +34,7 @@ namespace NRatel
         }
 
         //设置视口容差
-        private void FixViewportOffset()
+        protected override void FixViewportOffset()
         {
             viewportOffsetLeft = spacingX;
             viewportOffsetRight = 2 * (cellPrefabRT.rect.width + spacingX);
