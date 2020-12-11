@@ -6,102 +6,77 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEditor;
 
+//ListView只受Cell宽高、数量影响。
+//ListView不保存数据，也不负责创建和显示Cell。
+//使用处，利用回调处理Cell的显示和隐藏。
+//要支持编辑器下布局预览。
 namespace NRatel
 {
     //[ExecuteInEditMode]
     public partial class ListView : MonoBehaviour
     {
-        [SerializeField]
-        public int cellCount = 0;               //计划生成的Cell数量
+        [SerializeField] private float cellWidth = 0;                //左边界宽度
+        [SerializeField] private float cellHeight = 0;               //左边界宽度
+        [SerializeField] private float paddingLeft = 0;              //左边界宽度
+        [SerializeField] private float paddingRight = 0;             //右边界宽度
+        [SerializeField] private float spacingX = 0;                 //水平间距
 
-        [SerializeField]
-        public RectTransform cellPrefabRT;      //Cell预设 的 RectTransform
+        public Action<int> onCellAppear;
+        public Action<int> onCellDisAppear;
 
-        [SerializeField]
-        public float paddingLeft = 10;          //左边界宽度
+        private int cellCount = 0;                  //Cell数量
+        private float viewportOffsetLeft = 10;      //左侧视口容差
+        private float viewportOffsetRight = 10;     //右侧视口容差
+        private ScrollRect scrollRect;              //ScrollRect
+        private RectTransform contentRT;            //Content 的 RectTransform
+        private RectTransform viewportRT;           //viewport 的 RectTransform
+        private float contentWidth;                 //Content的总宽度
 
-        [SerializeField]
-        public float paddingRight = 10;         //右边界宽度
-
-        [SerializeField]
-        public float spacingX = 10;             //X向间距
-
-        //视口容差（即左右两侧的Cell出现消失参考点），可避免复用时露馅  //为正时 参考位置向viewport的外围增加。
-        protected float viewportOffsetLeft = 0;     //左侧视口容差
-        protected float viewportOffsetRight = 0;    //右侧视口容差
-
-        protected ScrollRect scrollRect;        //ScrollRect
-        protected RectTransform contentRT;      //Content 的 RectTransform
-        protected RectTransform viewportRT;     //viewport 的 RectTransform
-
-        protected float contentWidth;           //Content的总宽度
-        protected float pivotOffsetX;           //由Cell的pivot决定的起始偏移值
-
-        protected Dictionary<int, RectTransform> cellRTDict;    //index-Cell字典    
-        protected Stack<RectTransform> unUseCellRTStack;        //空闲Cell堆栈
-
-        protected List<int> oldIndexes;         //旧的索引集合
-        protected List<int> newIndexes;         //新的索引集合
-
-        protected List<int> appearIndexes;      //将要出现的索引集合   //使用List而非单个，可以支持Content位置跳变
-        protected List<int> disAppearIndexes;   //将要消失的索引集合   //使用List而非单个，可以支持Content位置跳变
+        private List<int> oldIndexes;               //旧的索引集合
+        private List<int> newIndexes;               //新的索引集合
+        private List<int> appearIndexes;            //将要出现的索引集合   //使用List而非单个，可以支持Content位置跳变
+        private List<int> disAppearIndexes;         //将要消失的索引集合   //使用List而非单个，可以支持Content位置跳变
 
         private void Awake()
         {
-            cellRTDict = new Dictionary<int, RectTransform>();
-            unUseCellRTStack = new Stack<RectTransform>();
-            cellRTListForSort = new List<KeyValuePair<int, RectTransform>>();
-
             oldIndexes = new List<int>();
             newIndexes = new List<int>();
             appearIndexes = new List<int>();
             disAppearIndexes = new List<int>();
-            
+
             scrollRect = GetComponent<ScrollRect>();
             contentRT = scrollRect.content;
             viewportRT = scrollRect.viewport;
-            
+
             contentRT.anchorMin = new Vector2(0, contentRT.anchorMin.y);
             contentRT.anchorMax = new Vector2(0, contentRT.anchorMax.y);
             contentRT.pivot = new Vector2(0, contentRT.pivot.y);
-            
-            pivotOffsetX = cellPrefabRT.pivot.x * cellPrefabRT.rect.width;
 
-            scrollRect.onValueChanged.AddListener(OnScrollValueChanged);
+            scrollRect.onValueChanged.AddListener(ScrollAndCalc);
         }
-
-        private void Start()
+            
+        public void Init(int cellCount)
         {
-            if (cellCount < 0)
-            {
-                return;
-            }
+            this.cellCount = cellCount;
 
             CalcAndSetContentSize();
 
             CalcIndexes();
             DisAppearCells();
             AppearCells();
-            CalcAndSetCellsSblingIndex();
         }
 
-        private void OnScrollValueChanged(Vector2 delta)
+        private void ScrollAndCalc(Vector2 delta)
         {
-            if (cellCount < 0)
-            {
-                return;
-            }
-
             CalcIndexes();
             DisAppearCells();
             AppearCells();
-            CalcAndSetCellsSblingIndex();
         }
 
         //计算并设置Content大小
         private void CalcAndSetContentSize()
         {
-            contentWidth = paddingLeft + cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1) + paddingRight;
+            contentWidth = paddingLeft + cellWidth * cellCount + spacingX * (cellCount - 1) + paddingRight;
             contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
         }
 
@@ -115,12 +90,12 @@ namespace NRatel
 
             if (outFromLeft > 0)
             {
-                outFromLeftCount = Mathf.FloorToInt((outFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
+                outFromLeftCount = Mathf.FloorToInt((outFromLeft - paddingLeft + spacingX) / (cellWidth + spacingX));
                 outFromLeftCount = Mathf.Clamp(outFromLeftCount, 0, cellCount);
             }
             if (outFromRight > 0)
             {
-                outFromRightCount = Mathf.FloorToInt((outFromRight - paddingRight + spacingX) / (cellPrefabRT.rect.width + spacingX));
+                outFromRightCount = Mathf.FloorToInt((outFromRight - paddingRight + spacingX) / (cellHeight + spacingX));
                 outFromRightCount = Mathf.Clamp(outFromRightCount, 0, cellCount);
             }
 
@@ -148,7 +123,7 @@ namespace NRatel
                     disAppearIndexes.Add(index);
                 }
             }
-            
+
             List<int> temp;
             temp = oldIndexes;
             oldIndexes = newIndexes;
@@ -161,10 +136,7 @@ namespace NRatel
         {
             foreach (int index in disAppearIndexes)
             {
-                RectTransform cellRT = cellRTDict[index];
-                cellRTDict.Remove(index);
-                cellRT.gameObject.SetActive(false);
-                unUseCellRTStack.Push(cellRT);
+                onCellDisAppear?.Invoke(index);
             }
         }
 
@@ -173,38 +145,15 @@ namespace NRatel
         {
             foreach (int index in appearIndexes)
             {
-                RectTransform cellRT = GetOrCreateCell(index);
-                cellRTDict[index] = cellRT;
-                cellRT.anchoredPosition = new Vector2(CalcCellPosX(index), cellRT.anchoredPosition.y);
-                cellRT.GetComponent<Cell>().SetIndex(index);
+                onCellAppear?.Invoke(index);
             }
         }
 
-        //计算Cell的X坐标
-        private float CalcCellPosX(int index)
+        private float GetCellPosX(int index, Vector2 cellAnchorMin, Vector2 cellAnchorMax, Vector2 cellPivot)
         {
-            float x = paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
-            return x;
-        }
-
-        //获取或创建Cell
-        private RectTransform GetOrCreateCell(int index)
-        {
-            RectTransform cellRT;
-            if (unUseCellRTStack.Count > 0)
-            {
-                cellRT = unUseCellRTStack.Pop();
-                cellRT.gameObject.SetActive(true);
-            }
-            else
-            {
-                cellRT = GameObject.Instantiate<GameObject>(cellPrefabRT.gameObject).GetComponent<RectTransform>();
-                cellRT.SetParent(contentRT, false);
-                cellRT.anchorMin = new Vector2(0, cellRT.anchorMin.y);
-                cellRT.anchorMax = new Vector2(0, cellRT.anchorMax.y);
-            }
-
-            return cellRT;
+            float anchorOffsetX = (cellAnchorMin.x + cellAnchorMax.x) /2 * contentWidth;
+            float pivotOffsetX = cellPivot.x * cellWidth;
+            return paddingLeft + cellWidth * index + spacingX * index + pivotOffsetX - anchorOffsetX;
         }
     }
 }

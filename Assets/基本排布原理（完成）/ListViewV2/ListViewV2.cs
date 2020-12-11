@@ -275,6 +275,8 @@ namespace NRatel.Fundamental
         {
             //X = 左边界间隙 + 由Cell的pivot决定的起始偏移值 + 前面已有Cell的宽度总和 + 前面已有的间距总和
             float x = paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
+
+            Debug.Log("index, cellPosX" + index + "," + x);
             return x;
         }
 
