@@ -65,9 +65,12 @@
     <Compile Include="Assets\Res\Cell.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV1\ListViewV1.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV2\ListViewV2.cs" />
+    <Compile Include="Assets\实验 (完善+按功能拆分 )（未完成）\ListView\ListView.Core.cs" />
+    <Compile Include="Assets\实验 (完善+按功能拆分 )（未完成）\ListView\ListView.Pool.cs" />
     <Compile Include="Assets\实验 (完善+按功能拆分 )（未完成）\ListView\ListView.Preview.cs" />
     <Compile Include="Assets\实验 (完善+按功能拆分 )（未完成）\ListView\ListView.Snap.cs" />
     <Compile Include="Assets\实验 (完善+按功能拆分 )（未完成）\ListView\ListView.cs" />
+    <Compile Include="Assets\实验 (完善+按功能拆分 )（未完成）\TestListView.cs" />
     <Compile Include="Assets\常见需求（未进行）\PageView\PageView.cs" />
     <Compile Include="Assets\常见需求（未进行）\TableView\TableView.cs" />
     <Compile Include="Assets\常见需求（未进行）\多种不规则Cell的列表（如聊天窗口）\ListViewForChat.cs" />

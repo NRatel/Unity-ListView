@@ -25,17 +25,17 @@ namespace NRatel
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            Debug.Log("OnBeginDrag");
+            //Debug.Log("OnBeginDrag");
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            Debug.Log("OnDrag");
+            //Debug.Log("OnDrag");
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            Debug.Log("OnEndDrag");
+            //Debug.Log("OnEndDrag");
         }
 
 

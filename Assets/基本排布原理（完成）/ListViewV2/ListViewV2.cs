@@ -12,10 +12,10 @@ namespace NRatel.Fundamental
     public class ListViewV2 : MonoBehaviour
     {
         [SerializeField]
-        public int cellCount = 0;               //计划生成的Cell数量
+        public RectTransform cellPrefabRT;      //Cell预设 的 RectTransform
 
         [SerializeField]
-        public RectTransform cellPrefabRT;      //Cell预设 的 RectTransform
+        public int cellCount = 0;               //计划生成的Cell数量
 
         [SerializeField]
         public float paddingLeft = 10;          //左边界宽度
