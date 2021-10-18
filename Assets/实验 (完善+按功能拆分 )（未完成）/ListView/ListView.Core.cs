@@ -76,13 +76,13 @@ namespace NRatel
         //计算应出现的索引和应消失的索引
         private void CalcIndexes()
         {
-            float outFromLeft = -(contentRT.anchoredPosition.x + viewportOffsetLeft);
-            float outFromRight = contentWidth + contentRT.anchoredPosition.x - (viewportRT.rect.width + viewportOffsetRight);
+            float outFromLeft = 0 + contentRT.anchoredPosition.x + viewportOffsetLeft;
+            float outFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
             int outFromLeftCount = 0;
             int outFromRightCount = 0;
-            if (outFromLeft > 0)
+            if (outFromLeft < 0)
             {
-                outFromLeftCount = Mathf.FloorToInt((outFromLeft - paddingLeft + spacingX) / (cellWidth + spacingX));
+                outFromLeftCount = Mathf.FloorToInt((-outFromLeft - paddingLeft + spacingX) / (cellWidth + spacingX));
                 outFromLeftCount = Mathf.Clamp(outFromLeftCount, 0, cellCount);
             }
             if (outFromRight > 0)

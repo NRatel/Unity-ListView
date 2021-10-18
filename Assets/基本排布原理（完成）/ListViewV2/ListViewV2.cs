@@ -132,21 +132,18 @@ namespace NRatel.Fundamental
         //计算 应出现的索引 和 应消失的索引
         protected virtual void CalcIndexes()
         {
-            //content左边界 相对于 viewport左边界（含viewportOffset） 的位移，矢量！向左为正方向
-            //思路：画图，先以向右为正方向，从起始位置向正方向滑出些许后计算，最后取反，可轻松得出。
-            float outFromLeft = -(contentRT.anchoredPosition.x + viewportOffsetLeft);
-            //content右边界 相对于 viewport右边界（含viewportOffset） 的位移，矢量！向右为正方向
-            //思路：画图，以向右为正方向,从起始位置向正方向滑出些许后计算，可轻松得出。
-            float outFromRight = contentWidth + contentRT.anchoredPosition.x - (viewportRT.rect.width + viewportOffsetRight);
-
-            //Debug.Log("deltaLeft, deltaRight: " + deltaLeft + ", " + deltaRight);
+            //始终以viewpoert左边界为参考原点，向右为正方向观察。则有：
+            //content左边界 相对于 viewport左边界（含viewportOffset） 的位移为：
+            float outFromLeft = 0 + contentRT.anchoredPosition.x + viewportOffsetLeft;
+            //content右边界 相对于 viewport右边界（含viewportOffset） 的位移为：
+            float outFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
 
             //计算完全滑出左边界和完全滑出右边的数量。 要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
             int outFromLeftCount = 0;    //完全滑出左边界的数量
             int outFromRightCount = 0;   //完全滑出右边界的数量
-            if (outFromLeft > 0)
+            if (outFromLeft < 0)
             {
-                outFromLeftCount = Mathf.FloorToInt((outFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
+                outFromLeftCount = Mathf.FloorToInt((-outFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
                 outFromLeftCount = Mathf.Clamp(outFromLeftCount, 0, cellCount);
             }
             if (outFromRight > 0)
