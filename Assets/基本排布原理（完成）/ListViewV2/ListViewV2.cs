@@ -134,29 +134,29 @@ namespace NRatel.Fundamental
         {
             //始终以viewpoert左边界为参考原点，向右为正方向观察。则有：
             //content左边界 相对于 viewport左边界（含viewportOffset） 的位移为：
-            float outFromLeft = 0 + contentRT.anchoredPosition.x + viewportOffsetLeft;
+            float outWidthFromLeft = 0 + contentRT.anchoredPosition.x + viewportOffsetLeft;
             //content右边界 相对于 viewport右边界（含viewportOffset） 的位移为：
-            float outFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
+            float outWidthFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
 
             //计算完全滑出左边界和完全滑出右边的数量。 要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-            int outFromLeftCount = 0;    //完全滑出左边界的数量
-            int outFromRightCount = 0;   //完全滑出右边界的数量
-            if (outFromLeft < 0)
+            int outCountFromLeft = 0;    //完全滑出左边界的数量
+            int outCountFromRight = 0;   //完全滑出右边界的数量
+            if (outWidthFromLeft < 0)
             {
-                outFromLeftCount = Mathf.FloorToInt((-outFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
-                outFromLeftCount = Mathf.Clamp(outFromLeftCount, 0, cellCount);
+                outCountFromLeft = Mathf.FloorToInt((-outWidthFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
+                outCountFromLeft = Mathf.Clamp(outCountFromLeft, 0, cellCount);
             }
-            if (outFromRight > 0)
+            if (outWidthFromRight > 0)
             {
-                outFromRightCount = Mathf.FloorToInt((outFromRight - paddingRight + spacingX) / (cellPrefabRT.rect.width + spacingX));
-                outFromRightCount = Mathf.Clamp(outFromRightCount, 0, cellCount);
+                outCountFromRight = Mathf.FloorToInt((outWidthFromRight - paddingRight + spacingX) / (cellPrefabRT.rect.width + spacingX));
+                outCountFromRight = Mathf.Clamp(outCountFromRight, 0, cellCount);
             }
 
             //Debug.Log("outFromLeft, outFromRight: " + outFromLeft + ", " + outFromRight);
 
             //应该显示的开始索引和结束索引
-            int startIndex = (outFromLeftCount); // 省略了 先+1再-1。 从滑出的下一个开始，索引从0开始;
-            int endIndex = (cellCount - 1 - outFromRightCount);
+            int startIndex = (outCountFromLeft); // 省略了 先+1再-1。 从滑出的下一个开始，索引从0开始;
+            int endIndex = (cellCount - 1 - outCountFromRight);
 
             //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
 
@@ -209,7 +209,7 @@ namespace NRatel.Fundamental
             oldIndexes = newIndexes;
             newIndexes = temp;
             newIndexes.Clear();
-        }
+        }  
 
         //该消失的消失
         protected virtual void DisAppearCells()

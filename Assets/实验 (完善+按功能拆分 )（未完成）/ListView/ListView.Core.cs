@@ -76,22 +76,22 @@ namespace NRatel
         //计算应出现的索引和应消失的索引
         private void CalcIndexes()
         {
-            float outFromLeft = 0 + contentRT.anchoredPosition.x + viewportOffsetLeft;
-            float outFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
-            int outFromLeftCount = 0;
-            int outFromRightCount = 0;
-            if (outFromLeft < 0)
+            float outWidthFromLeft = 0 + contentRT.anchoredPosition.x + viewportOffsetLeft;
+            float outWidthFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
+            int outCountFromLeft = 0;
+            int outCountFromRight = 0;
+            if (outWidthFromLeft < 0)
             {
-                outFromLeftCount = Mathf.FloorToInt((-outFromLeft - paddingLeft + spacingX) / (cellWidth + spacingX));
-                outFromLeftCount = Mathf.Clamp(outFromLeftCount, 0, cellCount);
+                outCountFromLeft = Mathf.FloorToInt((-outWidthFromLeft - paddingLeft + spacingX) / (cellWidth + spacingX));
+                outCountFromLeft = Mathf.Clamp(outCountFromLeft, 0, cellCount);
             }
-            if (outFromRight > 0)
+            if (outWidthFromRight > 0)
             {
-                outFromRightCount = Mathf.FloorToInt((outFromRight - paddingRight + spacingX) / (cellWidth + spacingX));
-                outFromRightCount = Mathf.Clamp(outFromRightCount, 0, cellCount);
+                outCountFromRight = Mathf.FloorToInt((outWidthFromRight - paddingRight + spacingX) / (cellWidth + spacingX));
+                outCountFromRight = Mathf.Clamp(outCountFromRight, 0, cellCount);
             }
-            int startIndex = (outFromLeftCount);
-            int endIndex = (cellCount - 1 - outFromRightCount);
+            int startIndex = (outCountFromLeft);
+            int endIndex = (cellCount - 1 - outCountFromRight);
 
             for (int index = startIndex; index <= endIndex; index++)
             {
