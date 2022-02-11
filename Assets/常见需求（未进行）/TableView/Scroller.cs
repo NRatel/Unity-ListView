@@ -10,6 +10,12 @@ namespace UnityEngine.UI
     [RequireComponent(typeof(RectTransform))]
     public class Scroller : UIBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IScrollHandler, ICanvasElement, ILayoutElement
     {
+        public enum MovementDirection
+        {
+            Horizontal,
+            Vertical
+        }
+
         public enum MovementType
         {
             Unrestricted,
@@ -31,21 +37,13 @@ namespace UnityEngine.UI
         public RectTransform content { get { return m_Content; } set { m_Content = value; } }
 
         [SerializeField]
-        private bool m_Horizontal = true;
-        
-        public bool horizontal { get { return m_Horizontal; } set { m_Horizontal = value; } }
+        protected MovementDirection m_MovementDirection = MovementDirection.Vertical;
 
-        [SerializeField]
-        private bool m_Vertical = true;
-
-        public bool vertical { get { return m_Vertical; } set { m_Vertical = value; } }
+        public MovementDirection movementDirection { get { return m_MovementDirection; } set { m_MovementDirection = value; } }
 
         [SerializeField]
         private MovementType m_MovementType = MovementType.Elastic;
-
-        /// <summary>
-        /// The behavior to use when the content moves beyond the scroll rect.
-        /// </summary>
+        
         public MovementType movementType { get { return m_MovementType; } set { m_MovementType = value; } }
 
         [SerializeField]
@@ -206,13 +204,13 @@ namespace UnityEngine.UI
             Vector2 delta = data.scrollDelta;
             // Down is positive for scroll events, while in UI system up is positive.
             delta.y *= -1;
-            if (vertical && !horizontal)
+            if (m_MovementDirection == MovementDirection.Vertical)
             {
                 if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y))
                     delta.y = delta.x;
                 delta.x = 0;
             }
-            if (horizontal && !vertical)
+            else
             {
                 if (Mathf.Abs(delta.y) > Mathf.Abs(delta.x))
                     delta.x = delta.y;
@@ -311,9 +309,9 @@ namespace UnityEngine.UI
         /// </summary>
         protected virtual void SetContentAnchoredPosition(Vector2 position)
         {
-            if (!m_Horizontal)
+            if (m_MovementDirection == MovementDirection.Vertical)
                 position.x = m_Content.anchoredPosition.x;
-            if (!m_Vertical)
+            else
                 position.y = m_Content.anchoredPosition.y;
 
             if (position != m_Content.anchoredPosition)
@@ -598,9 +596,9 @@ namespace UnityEngine.UI
                 if (delta.sqrMagnitude > float.Epsilon)
                 {
                     contentPos = m_Content.anchoredPosition + delta;
-                    if (!m_Horizontal)
+                    if (m_MovementDirection == MovementDirection.Vertical)
                         contentPos.x = m_Content.anchoredPosition.x;
-                    if (!m_Vertical)
+                    else
                         contentPos.y = m_Content.anchoredPosition.y;
                     AdjustBounds(ref m_ViewBounds, ref contentPivot, ref contentSize, ref contentPos);
                 }
@@ -658,10 +656,10 @@ namespace UnityEngine.UI
 
         private Vector2 CalculateOffset(Vector2 delta)
         {
-            return InternalCalculateOffset(ref m_ViewBounds, ref m_ContentBounds, m_Horizontal, m_Vertical, m_MovementType, ref delta);
+            return InternalCalculateOffset(ref m_ViewBounds, ref m_ContentBounds, m_MovementDirection, m_MovementType, ref delta);
         }
 
-        internal static Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds, bool horizontal, bool vertical, MovementType movementType, ref Vector2 delta)
+        internal static Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds, MovementDirection moveDirection, MovementType movementType, ref Vector2 delta)
         {
             Vector2 offset = Vector2.zero;
             if (movementType == MovementType.Unrestricted)
@@ -671,8 +669,7 @@ namespace UnityEngine.UI
             Vector2 max = contentBounds.max;
 
             // min/max offset extracted to check if approximately 0 and avoid recalculating layout every frame (case 1010178)
-
-            if (horizontal)
+            if (moveDirection == MovementDirection.Horizontal)
             {
                 min.x += delta.x;
                 max.x += delta.x;
@@ -684,9 +681,7 @@ namespace UnityEngine.UI
                     offset.x = minOffset;
                 else if (maxOffset > 0.001f)
                     offset.x = maxOffset;
-            }
-
-            if (vertical)
+            }else
             {
                 min.y += delta.y;
                 max.y += delta.y;
