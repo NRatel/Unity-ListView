@@ -8,8 +8,11 @@ namespace UnityEngine.UI
     [ExecuteAlways]
     [DisallowMultipleComponent]
     [RequireComponent(typeof(RectTransform))]
-    public class Scroller : UIBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IScrollHandler, ICanvasElement, ILayoutElement
+    public class UIScrollRect : UIBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IScrollHandler, ICanvasElement, ILayoutElement
     {
+        protected UIScrollRect()
+        { }
+
         public enum MovementDirection
         {
             Horizontal,
@@ -115,11 +118,6 @@ namespace UnityEngine.UI
             }
         }
 
-        private DrivenRectTransformTracker m_Tracker;
-
-        protected Scroller()
-        { }
-
         public virtual void Rebuild(CanvasUpdate executing)
         {
             if (executing == CanvasUpdate.Prelayout)
@@ -165,7 +163,6 @@ namespace UnityEngine.UI
             m_Dragging = false;
             m_Scrolling = false;
             m_HasRebuiltLayout = false;
-            m_Tracker.Clear();
             m_Velocity = Vector2.zero;
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
             base.OnDisable();
