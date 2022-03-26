@@ -56,76 +56,131 @@ namespace NRatel
         private Vector2 m_RequiredSpace;
         private Vector2 m_StartOffset;
 
-        public Vector2 GetCellSize()
+        private Vector2 GetCellSize()
         {
             return new Vector2(100, 100);
         }
 
-        public Vector2 GetCellPivot()
+        private Vector2 GetCellPivot()
         {
             return new Vector2(0.5f, 0.5f);
         }
 
-        public int GetCellCount()
+        private int GetCellCount()
         {
             return 10;
         }
 
-        private void Refresh()
+        public void Refresh()
         {
-            Calculate();   //元素大小、中心点和数量确定后，计算几次即可。
+            ResetContent();
+
+            CalcCellCountOnAxis();
+            CalculateActualCellCount();
+            CalculateRequiredSpaceAndStartOffset();
+
+            SetContentSizeOnMovementAxis();
+            LayoutChildren();
         }
 
-        private void Calculate()
+        //轴向修改后需要重置
+        private void ResetContent()
+        {
+            // 根据轴向和起始角落设置锚点、中心点
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
+                m_Content.anchorMin = new Vector2(cornerX, 0);
+                m_Content.anchorMax = new Vector2(cornerX, 1);
+                m_Content.pivot = new Vector2(cornerX, 0.5f);
+            }
+            else
+            {
+                int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
+                m_Content.anchorMin = new Vector2(0, 1 - cornerY);
+                m_Content.anchorMax = new Vector2(1, 1 - cornerY);
+                m_Content.pivot = new Vector2(0.5f, 1 - cornerY);
+            }
+
+            //位置归0
+            m_Content.anchoredPosition = Vector2.zero;
+
+            // 重置为Viewport的大小
+            m_Content.sizeDelta = m_Viewport.sizeDelta;
+        }
+        
+        //一、计算直观行列数（直观坐标轴上）
+        public void CalcCellCountOnAxis()
         {
             int cellCount = GetCellCount();
             Vector2 cellSize = GetCellSize();
 
-            //一、按直观（水平向），计算行列数
-            float width = m_Content.rect.size.x;
-            float height = m_Content.rect.size.y;
-
             int cellCountX = 1;  //默认最小1
             int cellCountY = 1;  //默认最小1
 
-            if (m_Constraint == Constraint.FixedColumnCount)
+            if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                //指定列时：
-                //列数 = 指定列数
-                cellCountX = m_ConstraintCount;
+                Debug.Assert(m_Constraint == Constraint.FixedColumnCount || m_Constraint == Constraint.Flexible); //由编辑器限制选项
+
+                if (m_Constraint == Constraint.FixedColumnCount)
+                {
+                    cellCountX = m_ConstraintCount;
+                }
+                else if (m_Constraint == Constraint.Flexible)
+                {
+                    // 自适应时：
+                    if (cellSize.x + spacing.x <= 0)
+                        //处理参数不合法的情况
+                        cellCountX = int.MaxValue;   
+                    else
+                    {
+                        //列数 = 能放下的最大列数
+                        float width = m_Content.rect.size.x;
+                        cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x))); 
+                    }  
+                }
+
                 if (cellCount > cellCountX)   //多于一列时
-                    //行数 = 整除（总数/列数） 有余数+1，没余数则不+
-                    cellCountY = cellCount / cellCountX + (cellCount % cellCountX > 0 ? 1 : 0);
-            }
-            else if (m_Constraint == Constraint.FixedRowCount)
-            {
-                //指定行时：
-                //行数 = 指定行数
-                cellCountY = m_ConstraintCount;
-                if (cellCount > cellCountY)   //多于一行时
-                    //列数 = 整除（总数/行数） 有余数+1，没余数则不+
-                    cellCountX = cellCount / cellCountY + (cellCount % cellCountY > 0 ? 1 : 0);
+                    cellCountY = cellCount / cellCountX + (cellCount % cellCountX > 0 ? 1 : 0); //行数 = 整除（总数/列数） 有余数+1，没余数则不+
             }
             else
             {
-                // 自适应时：
-                if (cellSize.x + spacing.x <= 0)
-                    cellCountX = int.MaxValue;   //处理参数不合法的情况
-                else
-                    //列数 = 能放下的最大列数
-                    cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x)));
+                Debug.Assert(m_Constraint == Constraint.FixedRowCount || m_Constraint == Constraint.Flexible); //由编辑器限制选项
 
-                if (cellSize.y + spacing.y <= 0)
-                    cellCountY = int.MaxValue;   //处理参数不合法的情况
-                else
-                    //行数 = 能放下的最大行数
-                    cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y)));
+                if (m_Constraint == Constraint.FixedRowCount)
+                {
+                    cellCountY = m_ConstraintCount;
+                }
+                else if (m_Constraint == Constraint.Flexible)
+                {
+                    if (cellSize.y + spacing.y <= 0)
+                        //处理参数不合法的情况
+                        cellCountY = int.MaxValue;
+                    else
+                    {
+                        //行数 = 能放下的最大行数
+                        float height = m_Content.rect.size.y;
+                        cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y))); 
+                    } 
+                }
+                if (cellCount > cellCountY)   //多于一行时
+                    cellCountX = cellCount / cellCountY + (cellCount % cellCountY > 0 ? 1 : 0); //列数 = 整除（总数/行数） 有余数+1，没余数则不+
+
             }
 
             this.m_CellCountOnAxisX = cellCountY;
             this.m_CellCountOnAxisY = cellCountY;
 
-//二、沿自定的轴转置，确定真实行列数
+        }
+
+        //二、计算真实行列数（沿自定的轴转置）
+        private void CalculateActualCellCount()
+        {
+            int cellCount = GetCellCount();
+            Vector2 cellSize = GetCellSize();
+            int cellCountX = this.m_CellCountOnAxisX;
+            int cellCountY = this.m_CellCountOnAxisY;
+
             int cellsPerMainAxis;  //延伸轴上的格子数
             int actualCellCountX;  //水平方向实际格子数（实际列数）
             int actualCellCountY;  //竖直方向实际格子数（实际行数）
@@ -146,8 +201,15 @@ namespace NRatel
             this.m_CellsPerMainAxis = cellsPerMainAxis;
             this.m_ActualCellCountX = actualCellCountX;
             this.m_ActualCellCountY = actualCellCountY;
+        }
 
-//三、计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
+        //三、计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
+        private void CalculateRequiredSpaceAndStartOffset()
+        {
+            Vector2 cellSize = GetCellSize();
+            int actualCellCountX = this.m_ActualCellCountX;
+            int actualCellCountY = this.m_ActualCellCountY;
+
             Vector2 requiredSpace = new Vector2(
                 actualCellCountX * cellSize.x + (actualCellCountX - 1) * spacing.x,
                 actualCellCountY * cellSize.y + (actualCellCountY - 1) * spacing.y
@@ -160,8 +222,25 @@ namespace NRatel
             this.m_RequiredSpace = requiredSpace;
             this.m_StartOffset = startOffset;
         }
+        
+        private void SetContentSizeOnMovementAxis()
+        {
+            RectTransform.Axis axis;
+            float size;
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                axis = RectTransform.Axis.Horizontal;
+                size = m_RequiredSpace.x + padding.horizontal;
+            } else
+            {
+                axis = RectTransform.Axis.Vertical;
+                size = m_RequiredSpace.y + padding.vertical;
+            }
+            
+            m_Content.SetSizeWithCurrentAnchors(axis, size);
+        }
 
-        private void SetContentSize()
+        private void LayoutChildren()
         {
 
         }
