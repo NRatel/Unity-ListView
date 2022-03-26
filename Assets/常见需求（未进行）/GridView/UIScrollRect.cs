@@ -1,8 +1,10 @@
 using System;
+using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-namespace UnityEngine.UI
+namespace NRatel
 {
     [SelectionBase]
     [ExecuteAlways]
@@ -10,10 +12,9 @@ namespace UnityEngine.UI
     [RequireComponent(typeof(RectTransform))]
     public class UIScrollRect : UIBehaviour, IInitializePotentialDragHandler, IBeginDragHandler, IEndDragHandler, IDragHandler, IScrollHandler, ICanvasElement, ILayoutElement
     {
-        protected UIScrollRect()
-        { }
+        protected UIScrollRect() { }
 
-        public enum MovementDirection
+        public enum MovementAxis
         {
             Horizontal,
             Vertical
@@ -31,47 +32,38 @@ namespace UnityEngine.UI
 
         [SerializeField]
         private RectTransform m_Viewport;
-
         public RectTransform viewport { get { return m_Viewport; } set { m_Viewport = value; SetDirtyCaching(); } }
         
         [SerializeField]
         private RectTransform m_Content;
-        
         public RectTransform content { get { return m_Content; } set { m_Content = value; } }
 
         [SerializeField]
-        protected MovementDirection m_MovementDirection = MovementDirection.Vertical;
-
-        public MovementDirection movementDirection { get { return m_MovementDirection; } set { m_MovementDirection = value; } }
+        protected MovementAxis m_MovementAxis = MovementAxis.Vertical;
+        public MovementAxis movementDirection { get { return m_MovementAxis; } set { m_MovementAxis = value; } }
 
         [SerializeField]
         private MovementType m_MovementType = MovementType.Elastic;
-        
         public MovementType movementType { get { return m_MovementType; } set { m_MovementType = value; } }
 
         [SerializeField]
         private float m_Elasticity = 0.1f;
-        
         public float elasticity { get { return m_Elasticity; } set { m_Elasticity = value; } }
 
         [SerializeField]
         private bool m_Inertia = true;
-        
         public bool inertia { get { return m_Inertia; } set { m_Inertia = value; } }
 
         [SerializeField]
         private float m_DecelerationRate = 0.135f; // Only used when inertia is enabled
-        
         public float decelerationRate { get { return m_DecelerationRate; } set { m_DecelerationRate = value; } }
 
         [SerializeField]
         private float m_ScrollSensitivity = 1.0f;
-        
         public float scrollSensitivity { get { return m_ScrollSensitivity; } set { m_ScrollSensitivity = value; } }
 
         [SerializeField]
         private ScrollRectEvent m_OnValueChanged = new ScrollRectEvent();
-        
         public ScrollRectEvent onValueChanged { get { return m_OnValueChanged; } set { m_OnValueChanged = value; } }
 
         // The offset from handle position to mouse down position
@@ -79,7 +71,6 @@ namespace UnityEngine.UI
         protected Vector2 m_ContentStartPosition = Vector2.zero;
 
         private RectTransform m_ViewRect;
-
         protected RectTransform viewRect
         {
             get
@@ -108,7 +99,7 @@ namespace UnityEngine.UI
         private bool m_HasRebuiltLayout = false;
 
         [System.NonSerialized] private RectTransform m_Rect;
-        private RectTransform rectTransform
+        protected RectTransform rectTransform
         {
             get
             {
@@ -201,7 +192,7 @@ namespace UnityEngine.UI
             Vector2 delta = data.scrollDelta;
             // Down is positive for scroll events, while in UI system up is positive.
             delta.y *= -1;
-            if (m_MovementDirection == MovementDirection.Vertical)
+            if (m_MovementAxis == MovementAxis.Vertical)
             {
                 if (Mathf.Abs(delta.x) > Mathf.Abs(delta.y))
                     delta.y = delta.x;
@@ -306,7 +297,7 @@ namespace UnityEngine.UI
         /// </summary>
         protected virtual void SetContentAnchoredPosition(Vector2 position)
         {
-            if (m_MovementDirection == MovementDirection.Vertical)
+            if (m_MovementAxis == MovementAxis.Vertical)
                 position.x = m_Content.anchoredPosition.x;
             else
                 position.y = m_Content.anchoredPosition.y;
@@ -593,7 +584,7 @@ namespace UnityEngine.UI
                 if (delta.sqrMagnitude > float.Epsilon)
                 {
                     contentPos = m_Content.anchoredPosition + delta;
-                    if (m_MovementDirection == MovementDirection.Vertical)
+                    if (m_MovementAxis == MovementAxis.Vertical)
                         contentPos.x = m_Content.anchoredPosition.x;
                     else
                         contentPos.y = m_Content.anchoredPosition.y;
@@ -653,10 +644,10 @@ namespace UnityEngine.UI
 
         private Vector2 CalculateOffset(Vector2 delta)
         {
-            return InternalCalculateOffset(ref m_ViewBounds, ref m_ContentBounds, m_MovementDirection, m_MovementType, ref delta);
+            return InternalCalculateOffset(ref m_ViewBounds, ref m_ContentBounds, m_MovementAxis, m_MovementType, ref delta);
         }
 
-        internal static Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds, MovementDirection moveDirection, MovementType movementType, ref Vector2 delta)
+        internal static Vector2 InternalCalculateOffset(ref Bounds viewBounds, ref Bounds contentBounds, MovementAxis moveDirection, MovementType movementType, ref Vector2 delta)
         {
             Vector2 offset = Vector2.zero;
             if (movementType == MovementType.Unrestricted)
@@ -666,7 +657,7 @@ namespace UnityEngine.UI
             Vector2 max = contentBounds.max;
 
             // min/max offset extracted to check if approximately 0 and avoid recalculating layout every frame (case 1010178)
-            if (moveDirection == MovementDirection.Horizontal)
+            if (moveDirection == MovementAxis.Horizontal)
             {
                 min.x += delta.x;
                 max.x += delta.x;
