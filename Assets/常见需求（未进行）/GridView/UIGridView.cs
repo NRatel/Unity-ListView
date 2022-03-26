@@ -43,15 +43,26 @@ namespace NRatel
         [SerializeField] protected TextAnchor m_ChildAlignment = TextAnchor.UpperLeft;
         public TextAnchor childAlignment { get { return m_ChildAlignment; } set { SetProperty(ref m_ChildAlignment, value); } }
 
-        [SerializeField] protected AlignmentOffset m_Offset = new AlignmentOffset();
-        public AlignmentOffset offset { get { return m_Offset; } set { SetProperty(ref m_Offset, value); } }
+        [SerializeField] protected RectOffset m_Padding = new RectOffset();
+        public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
         #endregion
 
-        private Vector2Int m_CellCountOnAxis;
+        private int m_CellCountOnAxisX;
+        private int m_CellCountOnAxisY;
+        private int m_CellsPerMainAxis;
+        private int m_ActualCellCountX;
+        private int m_ActualCellCountY;
+        private Vector2 m_RequiredSpace;
+        private Vector2 m_StartOffset;
 
         public Vector2 GetCellSize()
         {
             return new Vector2(100, 100);
+        }
+
+        public Vector2 GetCellPivot()
+        {
+            return new Vector2(0.5f, 0.5f);
         }
 
         public int GetCellCount()
@@ -59,57 +70,160 @@ namespace NRatel
             return 10;
         }
 
-        public void Refresh()
-        {
-            CalcCellCountOnAxis();
-
-        }
-
-        //一、按直观（水平向），计算行列数
-        public void CalcCellCountOnAxis()
+        private void Prepare()
         {
             int cellCount = GetCellCount();
+            Vector2 cellSize = GetCellSize();
 
+//一、按直观（水平向），计算行列数
             float width = rectTransform.rect.size.x;
             float height = rectTransform.rect.size.y;
-            
-            Vector2Int cellCountOnAxis = Vector2Int.one;
+
+            int cellCountX = 1;  //默认最小1
+            int cellCountY = 1;  //默认最小1
+
+            if (m_Constraint == Constraint.FixedColumnCount)
+            {
+                //指定列时：
+                //列数 = 指定列数
+                cellCountX = m_ConstraintCount;
+                if (cellCount > cellCountX)   //多于一列时
+                    //行数 = 整除（总数/列数） 有余数+1，没余数则不+
+                    cellCountY = cellCount / cellCountX + (cellCount % cellCountX > 0 ? 1 : 0);
+            }
+            else if (m_Constraint == Constraint.FixedRowCount)
+            {
+                //指定行时：
+                //行数 = 指定行数
+                cellCountY = m_ConstraintCount;
+                if (cellCount > cellCountY)   //多于一行时
+                    //列数 = 整除（总数/行数） 有余数+1，没余数则不+
+                    cellCountX = cellCount / cellCountY + (cellCount % cellCountY > 0 ? 1 : 0);
+            }
+            else
+            {
+                // 自适应时：
+                if (cellSize.x + spacing.x <= 0)
+                    cellCountX = int.MaxValue;   //处理参数不合法的情况
+                else
+                    //列数 = 能放下的最大列数
+                    cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x)));
+
+                if (cellSize.y + spacing.y <= 0)
+                    cellCountY = int.MaxValue;   //处理参数不合法的情况
+                else
+                    //行数 = 能放下的最大行数
+                    cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y)));
+            }
+
+            this.m_CellCountOnAxisX = cellCountY;
+            this.m_CellCountOnAxisY = cellCountY;
+
+//二、沿自定的轴转置，确定真实行列数
+            int cellsPerMainAxis;  //延伸轴上的格子数
+            int actualCellCountX;  //水平方向实际格子数（实际列数）
+            int actualCellCountY;  //竖直方向实际格子数（实际行数）
 
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                Debug.Assert(m_Constraint == Constraint.FixedColumnCount || m_Constraint == Constraint.Flexible); //由编辑器限制选项
-
-                if (m_Constraint == Constraint.FixedColumnCount)
-                {
-                    cellCountOnAxis.x = m_ConstraintCount;
-                    if (cellCount > cellCountOnAxis.x)   //多于一列时
-                        cellCountOnAxis.y = cellCount / cellCountOnAxis.x + (cellCount % cellCountOnAxis.x > 0 ? 1 : 0);
-                }
-                else if (m_Constraint == Constraint.Flexible)
-                {
-                    Vector2 cellSize = GetCellSize();
-                    cellCountOnAxis.x = Mathf.Max(1, Mathf.FloorToInt((width - offset.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x)));
-                    cellCountOnAxis.y = Mathf.CeilToInt(GetCellCount() / (float)cellCountOnAxis.x - 0.001f);
-                }
-            }  
+                cellsPerMainAxis = cellCountX;
+                actualCellCountX = Mathf.Clamp(cellCountX, 1, cellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
+                actualCellCountY = Mathf.Clamp(cellCountY, 1, Mathf.CeilToInt(cellCount / (float)cellsPerMainAxis));
+            }
             else
             {
-                Debug.Assert(m_Constraint == Constraint.FixedRowCount || m_Constraint == Constraint.Flexible); //由编辑器限制选项
-
-                if (m_Constraint == Constraint.FixedRowCount)
-                {
-                    cellCountOnAxis.y = m_ConstraintCount;
-                    cellCountOnAxis.x = Mathf.CeilToInt(GetCellCount() / (float)cellCountOnAxis.y - 0.001f);
-                }
-                else if (m_Constraint == Constraint.Flexible)
-                {
-                    Vector2 cellSize = GetCellSize();
-                    cellCountOnAxis.y = Mathf.Max(1, Mathf.FloorToInt((height - offset.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y)));
-                    cellCountOnAxis.x = Mathf.CeilToInt(GetCellCount() / (float)cellCountOnAxis.y - 0.001f);
-                }
+                cellsPerMainAxis = cellCountY;
+                actualCellCountY = Mathf.Clamp(cellCountY, 1, cellCount);
+                actualCellCountX = Mathf.Clamp(cellCountX, 1, Mathf.CeilToInt(cellCount / (float)cellsPerMainAxis));
             }
 
-            m_CellCountOnAxis = cellCountOnAxis;
+            this.m_CellsPerMainAxis = cellsPerMainAxis;
+            this.m_ActualCellCountX = actualCellCountX;
+            this.m_ActualCellCountY = actualCellCountY;
+
+//三、计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
+            Vector2 requiredSpace = new Vector2(
+                actualCellCountX * cellSize.x + (actualCellCountX - 1) * spacing.x,
+                actualCellCountY * cellSize.y + (actualCellCountY - 1) * spacing.y
+            );
+            Vector2 startOffset = new Vector2(
+                GetStartOffset(0, requiredSpace.x),
+                GetStartOffset(1, requiredSpace.y)
+            );
+
+            this.m_RequiredSpace = requiredSpace;
+            this.m_StartOffset = startOffset;
+        }
+
+        private void Refresh()
+        {
+
+        }
+
+        private float GetStartOffset(int axis, float requiredSpaceWithoutPadding)
+        {
+            float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //该轴上子元素需要的总尺寸 + 边距
+            float availableSpace = rectTransform.rect.size[axis];   //该轴上 LayoutGroup 的实际有效尺寸
+            float surplusSpace = availableSpace - requiredSpace;  //剩余尺寸（可以是负的）
+            float alignmentOnAxis = GetAlignmentOnAxis(axis);   //获取小数形式的子元素对齐方式
+
+            //水平方向从左开始，竖直方向从上开始。
+            // 要计入剩余尺寸。以水平方向为例，
+            // 若对齐方式为居左，则 alignmentOnAxis 为 0， 结果为 padding.left + 0，可以达到居左效果；
+            // 若对齐方式为居中，则 alignmentOnAxis 为 0.5， 结果为 padding.left + 0.5*剩余距离，可以达到居中效果；
+            // 若对齐方式为居右，则 alignmentOnAxis 为 1， 结果为 padding.left + 1*剩余距离，可以达到居右效果。
+            return (axis == 0 ? padding.left : padding.top) + surplusSpace * alignmentOnAxis;
+        }
+
+        // Returns the alignment on the specified axis as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom.
+        // 以小数形式返回指定轴上的对齐方式，其中0为左/上，0.5为中，1为右/下。（水平方向：0左，0.5中，1右）（竖直方向：0上，0.5中，1下）
+        // 参数 "axis"：The axis to get alignment along. 0 is horizontal and 1 is vertical.    //轴索引，0是水平的，1是垂直的。
+        // 返回值：The alignment as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom. //小数形式的对齐方式
+        private float GetAlignmentOnAxis(int axis)
+        {
+            if (axis == 0)
+                return ((int)childAlignment % 3) * 0.5f;  // TextAnchor 水平方向 0~8 转为 0左，0.5中，1右。
+            else
+                return ((int)childAlignment / 3) * 0.5f;  // TextAnchor 竖直方向 0~8 转为 0上，0.5中，1下。
+        }
+
+        private Vector2 GetCellPos(int index)
+        {
+//一、计算索引
+            int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
+            int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
+
+            int posIndexX;   //X位置索引
+            int posIndexY;   //Y位置索引
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                posIndexX = index % m_CellsPerMainAxis;
+                posIndexY = index / m_CellsPerMainAxis;
+            }
+            else
+            {
+                posIndexX = index / m_CellsPerMainAxis;
+                posIndexY = index % m_CellsPerMainAxis;
+            }
+
+            //根据起始角进行转置
+            if (cornerX == 1)  //如果是从右往左
+                posIndexX = m_ActualCellCountX - 1 - posIndexX;
+            if (cornerY == 1) //如果是从下往上
+                posIndexY = m_ActualCellCountY - 1 - posIndexY;
+
+//二、计算坐标
+            Vector2 cellSize = GetCellSize();
+            Vector2 cellPivot = GetCellPivot();
+            Vector2 scaleFactor = Vector2.one;  //不考虑元素缩放
+
+            // x轴：初始位置+宽度*中心点偏移*缩放系数 (x轴是向正方向)(从左上到右下)
+            float anchoredPosX = (m_StartOffset.x + (cellSize.x + spacing.x) * posIndexX) + cellSize.x * cellPivot.x * scaleFactor.x;
+            
+            // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
+            float anchoredPosY = -(m_StartOffset.y + (cellSize.y + spacing.y) * posIndexY) - cellSize.y * (1f - cellPivot.y) * scaleFactor.y;
+            
+            return new Vector2(anchoredPosX, anchoredPosY);
         }
 
         protected void SetProperty<T>(ref T currentValue, T newValue)
@@ -118,49 +232,6 @@ namespace NRatel
                 return;
             currentValue = newValue;
             Refresh();
-        }
-    }
-
-    public class AlignmentOffset
-    {
-        private float m_Left;       //水平居左时
-        private float m_OffsetX;    //水平居中时
-        private float m_Right;      //水平居右时
-        private float m_Top;        //竖直居上时
-        private float m_OffsetY;    //竖直居中时
-        private float m_Bottomt;    //竖直居下时
-
-        public float left { get { return m_Left; } set { m_Left = value; } }
-        public float offsetX { get { return m_OffsetX; } set { m_OffsetX = value; } }
-        public float right { get { return m_Right; } set { m_Right = value; } }
-        public float top { get { return m_Top; } set { m_Top = value; } }
-        public float offsetY { get { return m_OffsetY; } set { m_OffsetY = value; } }
-        public float bottom { get { return m_Bottomt; } set { m_Bottomt = value; } }
-
-        //水平方向最终值（同时只会有一个生效）
-        public float horizontal
-        {
-            get
-            {
-                float v = 0;
-                if (m_Left != 0) { v = m_Left; }
-                if (m_OffsetX != 0) { v = m_OffsetX; }
-                if (m_Right != 0) { v = m_Right; }
-                return v;
-            }
-        }
-
-        //竖直方向最终值（同时只会有一个生效）
-        public float vertical
-        {
-            get
-            {
-                float v = 0;
-                if (m_Top != 0) { v = m_Top; }
-                if (m_OffsetY != 0) { v = m_OffsetY; }
-                if (m_Bottomt != 0) { v = m_Bottomt; }
-                return v;
-            }
         }
     }
 }
