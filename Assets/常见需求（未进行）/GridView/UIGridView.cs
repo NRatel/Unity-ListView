@@ -27,6 +27,8 @@ namespace NRatel
         }
 
         #region 排布参数
+        public MovementAxis startAxis { get { return (MovementAxis)(1 - (int)m_MovementAxis); } }  //对m_MovementAxis取反
+
         [SerializeField] protected Corner m_StartCorner = Corner.UpperLeft;
         public Corner startCorner { get { return m_StartCorner; } set { SetProperty(ref m_StartCorner, value); } }
 
@@ -47,7 +49,7 @@ namespace NRatel
         [SerializeField] protected RectOffset m_Padding = new RectOffset();
         public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
         #endregion
-        
+
         private int m_CellCountOnAxisX;
         private int m_CellCountOnAxisY;
         private int m_CellsPerMainAxis;
@@ -79,7 +81,7 @@ namespace NRatel
             CalculateActualCellCount();
             CalculateRequiredSpaceAndStartOffset();
 
-            //SetContentSizeOnMovementAxis();
+            SetContentSizeOnMovementAxis();
             LayoutChildren();
         }
 
@@ -87,7 +89,7 @@ namespace NRatel
         private void ResetContent()
         {
             // 根据轴向和起始角落设置锚点、中心点
-            if (m_MovementAxis == MovementAxis.Horizontal)
+            if (startAxis == MovementAxis.Horizontal)
             {
                 int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
                 m_Content.anchorMin = new Vector2(cornerX, 0);
@@ -109,7 +111,7 @@ namespace NRatel
             m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, m_Viewport.rect.size.x);
             m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, m_Viewport.rect.size.y);
         }
-        
+
         //一、计算直观行列数（直观坐标轴上）
         public void CalcCellCountOnAxis()
         {
@@ -119,7 +121,7 @@ namespace NRatel
             int cellCountX = 1;  //默认最小1
             int cellCountY = 1;  //默认最小1
 
-            if (m_MovementAxis == MovementAxis.Horizontal)
+            if (startAxis == MovementAxis.Horizontal)
             {
                 Debug.Assert(m_Constraint == Constraint.FixedColumnCount || m_Constraint == Constraint.Flexible); //由编辑器限制选项
 
@@ -132,13 +134,13 @@ namespace NRatel
                     // 自适应时：
                     if (cellSize.x + spacing.x <= 0)
                         //处理参数不合法的情况
-                        cellCountX = int.MaxValue;   
+                        cellCountX = int.MaxValue;
                     else
                     {
                         //列数 = 能放下的最大列数
                         float width = m_Content.rect.size.x;
-                        cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x))); 
-                    }  
+                        cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x)));
+                    }
                 }
 
                 if (cellCount > cellCountX)   //多于一列时
@@ -161,15 +163,15 @@ namespace NRatel
                     {
                         //行数 = 能放下的最大行数
                         float height = m_Content.rect.size.y;
-                        cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y))); 
-                    } 
+                        cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y)));
+                    }
                 }
                 if (cellCount > cellCountY)   //多于一行时
                     cellCountX = cellCount / cellCountY + (cellCount % cellCountY > 0 ? 1 : 0); //列数 = 整除（总数/行数） 有余数+1，没余数则不+
 
             }
 
-            this.m_CellCountOnAxisX = cellCountY;
+            this.m_CellCountOnAxisX = cellCountX;
             this.m_CellCountOnAxisY = cellCountY;
 
         }
@@ -186,7 +188,7 @@ namespace NRatel
             int actualCellCountX;  //水平方向实际格子数（实际列数）
             int actualCellCountY;  //竖直方向实际格子数（实际行数）
 
-            if (m_MovementAxis == MovementAxis.Horizontal)
+            if (startAxis == MovementAxis.Horizontal)
             {
                 cellsPerMainAxis = cellCountX;
                 actualCellCountX = Mathf.Clamp(cellCountX, 1, cellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
@@ -223,27 +225,48 @@ namespace NRatel
             this.m_RequiredSpace = requiredSpace;
             this.m_StartOffset = startOffset;
         }
-        
+
         private void SetContentSizeOnMovementAxis()
         {
+            Debug.Log("m_CellCountOnAxisX: " + m_CellCountOnAxisX);
+            Debug.Log("m_CellCountOnAxisY: " + m_CellCountOnAxisY);
+            Debug.Log("m_CellsPerMainAxis: " + m_CellsPerMainAxis);
+            Debug.Log("m_ActualCellCountX: " + m_ActualCellCountX);
+            Debug.Log("m_ActualCellCountY: " + m_ActualCellCountY);
+            Debug.Log("m_RequiredSpace: " + m_RequiredSpace);
+            Debug.Log("m_StartOffset: " + m_StartOffset);
+
+
             RectTransform.Axis axis;
             float size;
-            if (m_MovementAxis == MovementAxis.Horizontal)
+            if (startAxis == MovementAxis.Horizontal)
             {
                 axis = RectTransform.Axis.Horizontal;
                 size = m_RequiredSpace.x + padding.horizontal;
-            } else
+            }
+            else
             {
                 axis = RectTransform.Axis.Vertical;
                 size = m_RequiredSpace.y + padding.vertical;
             }
-            
+
             m_Content.SetSizeWithCurrentAnchors(axis, size);
         }
 
         private void LayoutChildren()
         {
+            for (int i = m_Content.childCount - 1; i >= 0; i--)
+            {
+                Destroy(m_Content.GetChild(i).gameObject);
+            }
 
+            int cellCount = GetCellCount();
+
+            for (int i = 0; i < cellCount; i++)
+            {
+                RectTransform cellRT = CreateCell(i);
+                cellRT.anchoredPosition = GetCellPos(i);
+            }
         }
 
         private float GetStartOffset(int axis, float requiredSpaceWithoutPadding)
@@ -275,13 +298,13 @@ namespace NRatel
 
         private Vector2 GetCellPos(int index)
         {
-//一、计算索引
+            //一、计算索引
             int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
             int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
 
             int posIndexX;   //X位置索引
             int posIndexY;   //Y位置索引
-            if (m_MovementAxis == MovementAxis.Horizontal)
+            if (startAxis == MovementAxis.Horizontal)
             {
                 posIndexX = index % m_CellsPerMainAxis;
                 posIndexY = index / m_CellsPerMainAxis;
@@ -298,17 +321,17 @@ namespace NRatel
             if (cornerY == 1) //如果是从下往上
                 posIndexY = m_ActualCellCountY - 1 - posIndexY;
 
-//二、计算坐标
+            //二、计算坐标
             Vector2 cellSize = GetCellSize();
             Vector2 cellPivot = GetCellPivot();
             Vector2 scaleFactor = Vector2.one;  //不考虑元素缩放
 
             // x轴：初始位置+宽度*中心点偏移*缩放系数 (x轴是向正方向)(从左上到右下)
             float anchoredPosX = (m_StartOffset.x + (cellSize.x + spacing.x) * posIndexX) + cellSize.x * cellPivot.x * scaleFactor.x;
-            
+
             // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
             float anchoredPosY = -(m_StartOffset.y + (cellSize.y + spacing.y) * posIndexY) - cellSize.y * (1f - cellPivot.y) * scaleFactor.y;
-            
+
             return new Vector2(anchoredPosX, anchoredPosY);
         }
 
@@ -318,6 +341,23 @@ namespace NRatel
                 return;
             currentValue = newValue;
             Refresh();
+        }
+
+
+
+        //测试代码
+        public RectTransform cellPrefabRT;      //Cell预设 的 RectTransform
+        private RectTransform CreateCell(int index)
+        {
+            RectTransform cellRT = GameObject.Instantiate<GameObject>(cellPrefabRT.gameObject).GetComponent<RectTransform>();
+            cellRT.SetParent(m_Content, false);
+            //强制设置Cell的anchor
+            cellRT.anchorMin = Vector2.up;
+            cellRT.anchorMax = Vector2.up;
+
+            cellRT.sizeDelta = GetCellSize();
+
+            return cellRT;
         }
     }
 }
