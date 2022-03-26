@@ -31,11 +31,11 @@ namespace NRatel
         public class ScrollRectEvent : UnityEvent<Vector2> { }
 
         [SerializeField]
-        private RectTransform m_Viewport;
+        protected RectTransform m_Viewport;
         public RectTransform viewport { get { return m_Viewport; } set { m_Viewport = value; SetDirtyCaching(); } }
         
         [SerializeField]
-        private RectTransform m_Content;
+        protected RectTransform m_Content;
         public RectTransform content { get { return m_Content; } set { m_Content = value; } }
 
         [SerializeField]
@@ -43,7 +43,7 @@ namespace NRatel
         public MovementAxis movementDirection { get { return m_MovementAxis; } set { m_MovementAxis = value; } }
 
         [SerializeField]
-        private MovementType m_MovementType = MovementType.Elastic;
+        protected MovementType m_MovementType = MovementType.Elastic;
         public MovementType movementType { get { return m_MovementType; } set { m_MovementType = value; } }
 
         [SerializeField]
@@ -63,7 +63,7 @@ namespace NRatel
         public float scrollSensitivity { get { return m_ScrollSensitivity; } set { m_ScrollSensitivity = value; } }
 
         [SerializeField]
-        private ScrollRectEvent m_OnValueChanged = new ScrollRectEvent();
+        protected ScrollRectEvent m_OnValueChanged = new ScrollRectEvent();
         public ScrollRectEvent onValueChanged { get { return m_OnValueChanged; } set { m_OnValueChanged = value; } }
 
         // The offset from handle position to mouse down position

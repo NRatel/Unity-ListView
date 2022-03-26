@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,7 +47,7 @@ namespace NRatel
         [SerializeField] protected RectOffset m_Padding = new RectOffset();
         public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
         #endregion
-
+        
         private int m_CellCountOnAxisX;
         private int m_CellCountOnAxisY;
         private int m_CellsPerMainAxis;
@@ -70,14 +71,19 @@ namespace NRatel
             return 10;
         }
 
-        private void Prepare()
+        private void Refresh()
+        {
+            Calculate();   //元素大小、中心点和数量确定后，计算几次即可。
+        }
+
+        private void Calculate()
         {
             int cellCount = GetCellCount();
             Vector2 cellSize = GetCellSize();
 
-//一、按直观（水平向），计算行列数
-            float width = rectTransform.rect.size.x;
-            float height = rectTransform.rect.size.y;
+            //一、按直观（水平向），计算行列数
+            float width = m_Content.rect.size.x;
+            float height = m_Content.rect.size.y;
 
             int cellCountX = 1;  //默认最小1
             int cellCountY = 1;  //默认最小1
@@ -155,7 +161,7 @@ namespace NRatel
             this.m_StartOffset = startOffset;
         }
 
-        private void Refresh()
+        private void SetContentSize()
         {
 
         }
@@ -163,7 +169,7 @@ namespace NRatel
         private float GetStartOffset(int axis, float requiredSpaceWithoutPadding)
         {
             float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //该轴上子元素需要的总尺寸 + 边距
-            float availableSpace = rectTransform.rect.size[axis];   //该轴上 LayoutGroup 的实际有效尺寸
+            float availableSpace = m_Content.rect.size[axis];   //该轴上 LayoutGroup 的实际有效尺寸
             float surplusSpace = availableSpace - requiredSpace;  //剩余尺寸（可以是负的）
             float alignmentOnAxis = GetAlignmentOnAxis(axis);   //获取小数形式的子元素对齐方式
 
