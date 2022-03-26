@@ -79,7 +79,7 @@ namespace NRatel
             CalculateActualCellCount();
             CalculateRequiredSpaceAndStartOffset();
 
-            SetContentSizeOnMovementAxis();
+            //SetContentSizeOnMovementAxis();
             LayoutChildren();
         }
 
@@ -102,11 +102,12 @@ namespace NRatel
                 m_Content.pivot = new Vector2(0.5f, 1 - cornerY);
             }
 
-            //位置归0
+            // 位置归0
             m_Content.anchoredPosition = Vector2.zero;
 
             // 重置为Viewport的大小
-            m_Content.sizeDelta = m_Viewport.sizeDelta;
+            m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, m_Viewport.rect.size.x);
+            m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, m_Viewport.rect.size.y);
         }
         
         //一、计算直观行列数（直观坐标轴上）
