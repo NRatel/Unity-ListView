@@ -33,7 +33,7 @@ namespace NRatel
             RightOrLower = 2,
         }
 
-        #region 排布参数
+        #region 排布相关参数
         public MovementAxis startAxis { get { return (MovementAxis)(1 - (int)m_MovementAxis); } }  //对m_MovementAxis取反
 
         [SerializeField] protected Corner m_StartCorner = Corner.UpperLeft;
@@ -49,7 +49,7 @@ namespace NRatel
         public Vector2 spacing { get { return m_Spacing; } set { SetProperty(ref m_Spacing, value); } }
         #endregion
 
-        #region 对齐参数
+        #region 对齐相关参数
         [SerializeField] protected Alignment m_ChildAlignment = Alignment.LeftOrUpper;
         public Alignment childAlignment { get { return m_ChildAlignment; } set { SetProperty(ref m_ChildAlignment, value); } }
 
@@ -258,7 +258,7 @@ namespace NRatel
             this.m_StartOffset = startOffset;
         }
 
-        //六、依次布局子物体
+        //六、依次布局所有子物体
         private void LayoutChildren()
         {
             for (int i = m_Content.childCount - 1; i >= 0; i--)
@@ -345,9 +345,7 @@ namespace NRatel
             currentValue = newValue;
             Refresh();
         }
-
-
-
+        
         //测试代码
         public RectTransform cellPrefabRT;      //Cell预设 的 RectTransform
         private RectTransform CreateCell(int index)
