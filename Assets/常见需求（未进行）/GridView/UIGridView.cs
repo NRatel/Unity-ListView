@@ -57,6 +57,8 @@ namespace NRatel
         public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
         #endregion
 
+        protected DrivenRectTransformTracker m_Tracker;
+
         private int m_CellCountOnAxisX;
         private int m_CellCountOnAxisY;
         private int m_CellsPerMainAxis;
@@ -64,6 +66,12 @@ namespace NRatel
         private int m_ActualCellCountY;
         private Vector2 m_RequiredSpace;
         private Vector2 m_StartOffset;
+
+        protected override void OnDisable()
+        {
+            m_Tracker.Clear();
+            base.OnDisable();
+        }
 
         private Vector2 GetCellSize()
         {
@@ -83,6 +91,7 @@ namespace NRatel
         public void Refresh()
         {
             ResetContent();
+            ResetTracker();
 
             CalcCellCountOnAxis();
             CalculateActualCellCount();
@@ -118,6 +127,11 @@ namespace NRatel
             // 重置为Viewport的大小
             m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, m_Viewport.rect.size.x);
             m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, m_Viewport.rect.size.y);
+        }
+
+        private void ResetTracker()
+        {
+            m_Tracker.Clear();
         }
 
         //一、计算直观行列数（直观坐标轴上）
@@ -352,6 +366,10 @@ namespace NRatel
         {
             RectTransform cellRT = GameObject.Instantiate<GameObject>(cellPrefabRT.gameObject).GetComponent<RectTransform>();
             cellRT.SetParent(m_Content, false);
+
+            //驱动子物体的锚点和位置
+            m_Tracker.Add(this, cellRT, DrivenTransformProperties.Anchors | DrivenTransformProperties.AnchoredPosition | DrivenTransformProperties.SizeDelta);
+            
             //强制设置Cell的anchor
             cellRT.anchorMin = Vector2.up;
             cellRT.anchorMax = Vector2.up;
