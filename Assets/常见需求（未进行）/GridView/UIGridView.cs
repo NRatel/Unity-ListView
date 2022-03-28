@@ -322,16 +322,16 @@ namespace NRatel
 
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                //content起始边界 相对于 viewport起始边界的距离：
-                float outWidthFromStart = Mathf.Abs(m_Content.anchoredPosition.x);
-                //content结束边界 相对于 viewport结束边界的距离：
-                float outWidthFromEnd = Mathf.Abs(m_Content.anchoredPosition.x + (m_Content.rect.width - m_Viewport.rect.width) * (cornerX == 0 ? 1 : -1));
+                //content起始边界 相对于 viewport起始边界的位移（滑动轴延伸方向为正方向）：
+                float outWidthFromStart = m_Content.anchoredPosition.x * (cornerX == 0 ? 1 : -1);
+                //content结束边界 相对于 viewport结束边界的位移（滑动轴延伸方向为正方向）：
+                float outWidthFromEnd = (m_Content.anchoredPosition.x + (m_Content.rect.width - m_Viewport.rect.width) * (cornerX == 0 ? 1 : -1)) * (cornerX == 0 ? 1 : -1);
 
-                if (outWidthFromStart > 0)
+                if (outWidthFromStart < 0)
                 {
                     float startPadding = cornerX == 0 ? padding.left : padding.right;
                     //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromStart = Mathf.FloorToInt((outWidthFromStart - startPadding + spacing.x) / (cellSize.x + spacing.x));
+                    int outColFromStart = Mathf.FloorToInt((-outWidthFromStart - startPadding + spacing.x) / (cellSize.x + spacing.x));
                     outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountY, 0, cellCount);
                 }
                 if (outWidthFromEnd > 0)
@@ -345,14 +345,16 @@ namespace NRatel
             }
             else
             {
-                float outHeightFromStart = Mathf.Abs(m_Content.anchoredPosition.y);
-                float outHeightFromEnd = Mathf.Abs(-m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height) * (cornerY == 0 ? 1 : -1));
-
-                if (outHeightFromStart > 0)
+                //content起始边界 相对于 viewport起始边界的位移（滑动轴延伸方向为正方向）：
+                float outHeightFromStart = m_Content.anchoredPosition.y * (cornerY == 0 ? -1 : 1);
+                //content结束边界 相对于 viewport结束边界的位移（滑动轴延伸方向为正方向）：
+                float outHeightFromEnd = (m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height) * (cornerY == 0 ? -1 : 1)) * (cornerY == 0 ? -1 : 1);
+                
+                if (outHeightFromStart < 0)
                 {
                     float startPadding = cornerY == 0 ? padding.top : padding.bottom;
                     //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromStart = Mathf.FloorToInt((outHeightFromStart - startPadding + spacing.y) / (cellSize.y + spacing.y));
+                    int outColFromStart = Mathf.FloorToInt((-outHeightFromStart - startPadding + spacing.y) / (cellSize.y + spacing.y));
                     outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountX, 0, cellCount);
                 }
                 if (outHeightFromEnd > 0)
