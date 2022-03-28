@@ -67,10 +67,43 @@ namespace NRatel
         private Vector2 m_RequiredSpace;
         private Vector2 m_StartOffset;
 
+        protected Dictionary<int, RectTransform> cellRTDict;    //index-Cell字典    
+        protected Stack<RectTransform> unUseCellRTStack;        //空闲Cell堆栈
+        protected List<KeyValuePair<int, RectTransform>> cellRTListForSort;     //Cell列表用于辅助Sbling排序
+
+        protected List<int> oldIndexes;         //旧的索引集合
+        protected List<int> newIndexes;         //新的索引集合
+        protected List<int> appearIndexes;      //将要出现的索引集合   //使用List而非单个，可以支持Content位置跳变
+        protected List<int> disAppearIndexes;   //将要消失的索引集合   //使用List而非单个，可以支持Content位置跳变
+
+        protected override void Awake()
+        {
+            cellRTDict = new Dictionary<int, RectTransform>();
+            unUseCellRTStack = new Stack<RectTransform>();
+            cellRTListForSort = new List<KeyValuePair<int, RectTransform>>();
+
+            oldIndexes = new List<int>();
+            newIndexes = new List<int>();
+            appearIndexes = new List<int>();
+            disAppearIndexes = new List<int>();
+
+            this.onValueChanged.AddListener(OnScrollValueChanged);
+        }
+
         protected override void OnDisable()
         {
             m_Tracker.Clear();
             base.OnDisable();
+        }
+
+        protected virtual void OnScrollValueChanged(Vector2 delta)
+        {
+            if (GetCellCount() <= 0) { return; }
+
+            CalcIndexes();
+            DisAppearCells();
+            AppearCells();
+            CalcAndSetCellsSblingIndex();
         }
 
         private Vector2 GetCellSize()
@@ -99,7 +132,10 @@ namespace NRatel
             SetContentSizeOnMovementAxis();
             CalculateStartOffset();
 
-            LayoutChildren();
+            CalcIndexes();
+            DisAppearCells();
+            AppearCells();
+            CalcAndSetCellsSblingIndex();
         }
 
         //轴向修改后需要重置
@@ -261,7 +297,7 @@ namespace NRatel
 
             m_Content.SetSizeWithCurrentAnchors(axis, size);
         }
-        
+
         //五、计算起始Offset
         private void CalculateStartOffset()
         {
@@ -270,6 +306,158 @@ namespace NRatel
                 GetStartOffset(1, m_RequiredSpace.y)
             );
             this.m_StartOffset = startOffset;
+        }
+        
+
+        //计算 应出现的索引 和 应消失的索引
+        private void CalcIndexes()
+        {
+            int cellCount = GetCellCount();
+
+            int startIndex = 0;
+            int endIndex = cellCount - 1;
+
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                //始终以viewpoert起始边界为参考原点，向滑动轴方向为正方向观察。则有：
+                //content起始边界 相对于 viewport起始边界的位移为：
+                float outWidthFromStart = 0 + m_Content.anchoredPosition.x;
+                //content结束边界 相对于 viewport结束边界的位移为：
+                float outWidthFromRight = 0 + m_Content.anchoredPosition.x + m_Content.rect.width - m_Viewport.rect.width;
+
+                //计算完全滑出起始边界和完全滑出结束边的数量。 要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                int outCountFromStart = 0;    //完全滑出起始边界的数量
+                int outCountFromEnd = 0;    //完全滑出结束边界的数量
+                if (outWidthFromStart < 0)
+                {
+                    outCountFromStart = Mathf.FloorToInt((-outWidthFromStart - padding.left + spacing.x) / (cellPrefabRT.rect.width + spacing.x));
+                    outCountFromStart = Mathf.Clamp(outCountFromStart, 0, cellCount);
+                }
+                if (outWidthFromRight > 0)
+                {
+                    outCountFromEnd = Mathf.FloorToInt((outWidthFromRight - padding.right + spacing.x) / (cellPrefabRT.rect.width + spacing.x));
+                    outCountFromEnd = Mathf.Clamp(outCountFromEnd, 0, cellCount);
+                }
+
+                //Debug.Log("outFromLeft, outFromRight: " + outFromLeft + ", " + outFromRight);
+
+                //应该显示的开始索引和结束索引
+                startIndex = (outCountFromStart); // 省略了 先+1再-1。 从滑出的下一个开始，索引从0开始;
+                endIndex = (cellCount - 1 - outCountFromEnd);
+            }
+            else
+            {
+
+            }
+
+            //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
+
+            for (int index = startIndex; index <= endIndex; index++)
+            {
+                newIndexes.Add(index);
+            }
+
+            ////新旧索引列表输出调试
+            //string Str1 = "";
+            //foreach (int index in newIndexes)
+            //{
+            //    Str1 += index + ",";
+            //}
+            //string Str2 = "";
+            //foreach (int index in oldIndexes)
+            //{
+            //    Str2 += index + ",";
+            //}
+            //Debug.Log("Str1: " + Str1);
+            //Debug.Log("Str2: " + Str2);
+            //Debug.Log("-------------------------");
+
+            //找出出现的和消失的
+            //出现的：在新列表中，但不在老列表中。
+            appearIndexes.Clear();
+            foreach (int index in newIndexes)
+            {
+                if (oldIndexes.IndexOf(index) < 0)
+                {
+                    //Debug.Log("出现：" + index);
+                    appearIndexes.Add(index);
+                }
+            }
+
+            //消失的：在老列表中，但不在新列表中。
+            disAppearIndexes.Clear();
+            foreach (int index in oldIndexes)
+            {
+                if (newIndexes.IndexOf(index) < 0)
+                {
+                    //Debug.Log("消失：" + index);
+                    disAppearIndexes.Add(index);
+                }
+            }
+
+            //oldIndexes保存当前帧索引数据。
+            List<int> temp;
+            temp = oldIndexes;
+            oldIndexes = newIndexes;
+            newIndexes = temp;
+            newIndexes.Clear();
+        }
+
+        //该消失的消失
+        private void DisAppearCells()
+        {
+            foreach (int index in disAppearIndexes)
+            {
+                RectTransform cellRT = cellRTDict[index];
+                cellRTDict.Remove(index);
+                cellRT.gameObject.SetActive(false);
+                unUseCellRTStack.Push(cellRT);
+            }
+        }
+
+        //该出现的出现
+        private void AppearCells()
+        {
+            foreach (int index in appearIndexes)
+            {
+                RectTransform cellRT = GetOrCreateCell(index);
+                cellRTDict[index] = cellRT;
+
+                //设置Cell位置
+                cellRT.anchoredPosition = GetCellPos(index);
+
+                //设置Cell数据，对Cell进行初始化
+                cellRT.GetComponent<Cell>().SetIndex(index);
+            }
+        }
+
+
+        //计算并设置Cells的SblingIndex
+        //调用时机：有新的Cell出现时
+        //Cell可能重叠时必须
+        //若无需求，可去掉以节省性能
+        protected virtual void CalcAndSetCellsSblingIndex()
+        {
+            if (appearIndexes.Count <= 0) { return; }
+
+            cellRTListForSort.Clear();
+            foreach (KeyValuePair<int, RectTransform> kvp in cellRTDict)
+            {
+                cellRTListForSort.Add(kvp);
+            }
+            cellRTListForSort.Sort((x, y) =>
+            {
+                //按index升序
+                return x.Key - y.Key;
+            });
+
+            foreach (KeyValuePair<int, RectTransform> kvp in cellRTListForSort)
+            {
+                //索引大的在上
+                //kvp.Value.SetAsLastSibling();
+                //索引大的在下
+                kvp.Value.SetAsFirstSibling();
+            }
         }
 
         //六、依次布局所有子物体
@@ -284,7 +472,7 @@ namespace NRatel
 
             for (int i = 0; i < cellCount; i++)
             {
-                RectTransform cellRT = CreateCell(i);
+                RectTransform cellRT = GetOrCreateCell(i);
                 cellRT.anchoredPosition = GetCellPos(i);
             }
         }
@@ -359,22 +547,31 @@ namespace NRatel
             currentValue = newValue;
             Refresh();
         }
-        
+
         //测试代码
         public RectTransform cellPrefabRT;      //Cell预设 的 RectTransform
-        private RectTransform CreateCell(int index)
+        private RectTransform GetOrCreateCell(int index)
         {
-            RectTransform cellRT = GameObject.Instantiate<GameObject>(cellPrefabRT.gameObject).GetComponent<RectTransform>();
-            cellRT.SetParent(m_Content, false);
+            RectTransform cellRT;
+            if (unUseCellRTStack.Count > 0)
+            {
+                cellRT = unUseCellRTStack.Pop();
+                cellRT.gameObject.SetActive(true);
+            }
+            else
+            {
+                cellRT = GameObject.Instantiate<GameObject>(cellPrefabRT.gameObject).GetComponent<RectTransform>();
+                cellRT.SetParent(m_Content, false);
 
-            //驱动子物体的锚点和位置
-            m_Tracker.Add(this, cellRT, DrivenTransformProperties.Anchors | DrivenTransformProperties.AnchoredPosition | DrivenTransformProperties.SizeDelta);
-            
-            //强制设置Cell的anchor
-            cellRT.anchorMin = Vector2.up;
-            cellRT.anchorMax = Vector2.up;
+                //驱动子物体的锚点和位置
+                m_Tracker.Add(this, cellRT, DrivenTransformProperties.Anchors | DrivenTransformProperties.AnchoredPosition | DrivenTransformProperties.SizeDelta);
 
-            cellRT.sizeDelta = GetCellSize();
+                //强制设置Cell的anchor
+                cellRT.anchorMin = Vector2.up;
+                cellRT.anchorMax = Vector2.up;
+
+                cellRT.sizeDelta = GetCellSize();
+            }
 
             return cellRT;
         }
