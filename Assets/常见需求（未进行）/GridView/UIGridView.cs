@@ -77,7 +77,7 @@ namespace NRatel
 
         private int GetCellCount()
         {
-            return 10;
+            return 100;
         }
 
         public void Refresh()
@@ -258,6 +258,7 @@ namespace NRatel
             this.m_StartOffset = startOffset;
         }
 
+        //六、依次布局子物体
         private void LayoutChildren()
         {
             for (int i = m_Content.childCount - 1; i >= 0; i--)
