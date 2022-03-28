@@ -161,8 +161,8 @@ namespace NRatel
             m_Content.anchoredPosition = Vector2.zero;
 
             // 重置为Viewport的大小
-            m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, m_Viewport.rect.size.x);
-            m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, m_Viewport.rect.size.y);
+            m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, m_Viewport.rect.width);
+            m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, m_Viewport.rect.height);
         }
 
         private void ResetTracker()
@@ -196,7 +196,7 @@ namespace NRatel
                     else
                     {
                         //列数 = 能放下的最大列数
-                        float width = m_Content.rect.size.x;
+                        float width = m_Content.rect.width;
                         cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x)));
                     }
                 }
@@ -220,7 +220,7 @@ namespace NRatel
                     else
                     {
                         //行数 = 能放下的最大行数
-                        float height = m_Content.rect.size.y;
+                        float height = m_Content.rect.height;
                         cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y)));
                     }
                 }
@@ -313,42 +313,61 @@ namespace NRatel
         private void CalcIndexes()
         {
             int cellCount = GetCellCount();
+            Vector2 cellSize = GetCellSize();
+            int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
+            int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
 
-            int startIndex = 0;
-            int endIndex = cellCount - 1;
+            int outCountFromStart = 0;  //完全滑出起始边界的数量
+            int outCountFromEnd = 0;    //完全滑出结束边界的数量
 
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                //始终以viewpoert起始边界为参考原点，向滑动轴方向为正方向观察。则有：
-                //content起始边界 相对于 viewport起始边界的位移为：
-                float outWidthFromStart = 0 + m_Content.anchoredPosition.x;
-                //content结束边界 相对于 viewport结束边界的位移为：
-                float outWidthFromRight = 0 + m_Content.anchoredPosition.x + m_Content.rect.width - m_Viewport.rect.width;
+                //content起始边界 相对于 viewport起始边界的距离：
+                float outWidthFromStart = Mathf.Abs(m_Content.anchoredPosition.x);
+                //content结束边界 相对于 viewport结束边界的距离：
+                float outWidthFromEnd = Mathf.Abs(m_Content.anchoredPosition.x + (m_Content.rect.width - m_Viewport.rect.width) * (cornerX == 0 ? 1 : -1));
 
-                //计算完全滑出起始边界和完全滑出结束边的数量。 要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                int outCountFromStart = 0;    //完全滑出起始边界的数量
-                int outCountFromEnd = 0;    //完全滑出结束边界的数量
-                if (outWidthFromStart < 0)
+                if (outWidthFromStart > 0)
                 {
-                    outCountFromStart = Mathf.FloorToInt((-outWidthFromStart - padding.left + spacing.x) / (cellPrefabRT.rect.width + spacing.x));
-                    outCountFromStart = Mathf.Clamp(outCountFromStart, 0, cellCount);
+                    float startPadding = cornerX == 0 ? padding.left : padding.right;
+                    //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                    int outColFromStart = Mathf.FloorToInt((outWidthFromStart - startPadding + spacing.x) / (cellSize.x + spacing.x));
+                    outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountY, 0, cellCount);
                 }
-                if (outWidthFromRight > 0)
+                if (outWidthFromEnd > 0)
                 {
-                    outCountFromEnd = Mathf.FloorToInt((outWidthFromRight - padding.right + spacing.x) / (cellPrefabRT.rect.width + spacing.x));
-                    outCountFromEnd = Mathf.Clamp(outCountFromEnd, 0, cellCount);
+                    float endPadding = cornerX == 0 ? padding.right : padding.left;
+                    //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                    int outColFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (cellSize.x + spacing.x));
+                    //(m_ActualCellCountY - cellCount % m_ActualCellCountY)：最后一列未满时差几个。
+                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountY - (m_ActualCellCountY - cellCount % m_ActualCellCountY), 0, cellCount);
                 }
-
-                //Debug.Log("outFromLeft, outFromRight: " + outFromLeft + ", " + outFromRight);
-
-                //应该显示的开始索引和结束索引
-                startIndex = (outCountFromStart); // 省略了 先+1再-1。 从滑出的下一个开始，索引从0开始;
-                endIndex = (cellCount - 1 - outCountFromEnd);
             }
             else
             {
+                float outHeightFromStart = Mathf.Abs(m_Content.anchoredPosition.y);
+                float outHeightFromEnd = Mathf.Abs(-m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height) * (cornerY == 0 ? 1 : -1));
 
+                if (outHeightFromStart > 0)
+                {
+                    float startPadding = cornerY == 0 ? padding.top : padding.bottom;
+                    //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                    int outColFromStart = Mathf.FloorToInt((outHeightFromStart - startPadding + spacing.y) / (cellSize.y + spacing.y));
+                    outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountX, 0, cellCount);
+                }
+                if (outHeightFromEnd > 0)
+                {
+                    float endPadding = cornerY == 0 ? padding.bottom : padding.top;
+                    //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                    int outColFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (cellSize.y + spacing.y));
+                    //(m_ActualCellCountX - cellCount % m_ActualCellCountX)：最后一行未满时差几个。
+                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountX - (m_ActualCellCountX - cellCount % m_ActualCellCountX), 0, cellCount);
+                }
             }
+
+            //应该显示的开始索引和结束索引
+            int startIndex = (outCountFromStart); // 省略了先+1再-1。 从滑出的下一个开始，索引从0开始;
+            int endIndex = (cellCount - 1 - outCountFromEnd);
 
             //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
 
