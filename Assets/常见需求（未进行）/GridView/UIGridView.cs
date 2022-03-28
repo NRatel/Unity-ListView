@@ -26,6 +26,13 @@ namespace NRatel
             FixedRowCount = 2       // 限定行数（竖直轴时）
         }
 
+        public enum Alignment
+        {
+            LeftOrUpper = 0,
+            CenterOrMiddle = 1,
+            RightOrLower = 2,
+        }
+
         #region 排布参数
         public MovementAxis startAxis { get { return (MovementAxis)(1 - (int)m_MovementAxis); } }  //对m_MovementAxis取反
 
@@ -43,8 +50,8 @@ namespace NRatel
         #endregion
 
         #region 对齐参数
-        [SerializeField] protected TextAnchor m_ChildAlignment = TextAnchor.UpperLeft;
-        public TextAnchor childAlignment { get { return m_ChildAlignment; } set { SetProperty(ref m_ChildAlignment, value); } }
+        [SerializeField] protected Alignment m_ChildAlignment = Alignment.LeftOrUpper;
+        public Alignment childAlignment { get { return m_ChildAlignment; } set { SetProperty(ref m_ChildAlignment, value); } }
 
         [SerializeField] protected RectOffset m_Padding = new RectOffset();
         public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
@@ -79,9 +86,10 @@ namespace NRatel
 
             CalcCellCountOnAxis();
             CalculateActualCellCount();
-            CalculateRequiredSpaceAndStartOffset();
-
+            CalculateRequiredSpace();
             SetContentSizeOnMovementAxis();
+            CalculateStartOffset();
+
             LayoutChildren();
         }
 
@@ -89,7 +97,7 @@ namespace NRatel
         private void ResetContent()
         {
             // 根据轴向和起始角落设置锚点、中心点
-            if (startAxis == MovementAxis.Horizontal)
+            if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
                 m_Content.anchorMin = new Vector2(cornerX, 0);
@@ -207,7 +215,7 @@ namespace NRatel
         }
 
         //三、计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
-        private void CalculateRequiredSpaceAndStartOffset()
+        private void CalculateRequiredSpace()
         {
             Vector2 cellSize = GetCellSize();
             int actualCellCountX = this.m_ActualCellCountX;
@@ -217,29 +225,16 @@ namespace NRatel
                 actualCellCountX * cellSize.x + (actualCellCountX - 1) * spacing.x,
                 actualCellCountY * cellSize.y + (actualCellCountY - 1) * spacing.y
             );
-            Vector2 startOffset = new Vector2(
-                GetStartOffset(0, requiredSpace.x),
-                GetStartOffset(1, requiredSpace.y)
-            );
 
             this.m_RequiredSpace = requiredSpace;
-            this.m_StartOffset = startOffset;
         }
 
+        //四、设置滑动轴方向的Content大小
         private void SetContentSizeOnMovementAxis()
         {
-            Debug.Log("m_CellCountOnAxisX: " + m_CellCountOnAxisX);
-            Debug.Log("m_CellCountOnAxisY: " + m_CellCountOnAxisY);
-            Debug.Log("m_CellsPerMainAxis: " + m_CellsPerMainAxis);
-            Debug.Log("m_ActualCellCountX: " + m_ActualCellCountX);
-            Debug.Log("m_ActualCellCountY: " + m_ActualCellCountY);
-            Debug.Log("m_RequiredSpace: " + m_RequiredSpace);
-            Debug.Log("m_StartOffset: " + m_StartOffset);
-
-
             RectTransform.Axis axis;
             float size;
-            if (startAxis == MovementAxis.Horizontal)
+            if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 axis = RectTransform.Axis.Horizontal;
                 size = m_RequiredSpace.x + padding.horizontal;
@@ -251,6 +246,16 @@ namespace NRatel
             }
 
             m_Content.SetSizeWithCurrentAnchors(axis, size);
+        }
+        
+        //五、计算起始Offset
+        private void CalculateStartOffset()
+        {
+            Vector2 startOffset = new Vector2(
+                GetStartOffset(0, m_RequiredSpace.x),
+                GetStartOffset(1, m_RequiredSpace.y)
+            );
+            this.m_StartOffset = startOffset;
         }
 
         private void LayoutChildren()
@@ -290,10 +295,7 @@ namespace NRatel
         // 返回值：The alignment as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom. //小数形式的对齐方式
         private float GetAlignmentOnAxis(int axis)
         {
-            if (axis == 0)
-                return ((int)childAlignment % 3) * 0.5f;  // TextAnchor 水平方向 0~8 转为 0左，0.5中，1右。
-            else
-                return ((int)childAlignment / 3) * 0.5f;  // TextAnchor 竖直方向 0~8 转为 0上，0.5中，1下。
+            return (axis == (int)m_MovementAxis) ? 0.5f : (int)childAlignment * 0.5f;
         }
 
         private Vector2 GetCellPos(int index)
