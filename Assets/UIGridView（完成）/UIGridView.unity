@@ -271,19 +271,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 653326933}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: NRatel.UIGridView, Assembly-CSharp
-        m_MethodName: Refresh
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &653326933
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -369,6 +357,7 @@ GameObject:
   - component: {fileID: 1179262182}
   - component: {fileID: 1179262181}
   - component: {fileID: 1179262180}
+  - component: {fileID: 1179262184}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -458,6 +447,22 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1179262184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1179262179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3ed1c922a9d03ed419ed51cea332c59f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  template: {fileID: 7913374827684128912, guid: bb9cfa4b442948a49b55ffe7d87e462f,
+    type: 3}
+  m_UIGridView: {fileID: 1687565317}
+  m_BtnRefresh: {fileID: 653326932}
 --- !u!1 &1236441317
 GameObject:
   m_ObjectHideFlags: 0
@@ -701,7 +706,6 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  cellPrefabRT: {fileID: 0}
 --- !u!222 &1687565319
 CanvasRenderer:
   m_ObjectHideFlags: 0
