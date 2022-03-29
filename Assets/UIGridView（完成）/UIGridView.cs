@@ -32,8 +32,7 @@ namespace NRatel
             CenterOrMiddle = 1,
             RightOrLower = 2,
         }
-
-        #region 排布相关参数
+        
         public MovementAxis startAxis { get { return (MovementAxis)(1 - (int)m_MovementAxis); } }  //对m_MovementAxis取反
 
         [SerializeField] protected Corner m_StartCorner = Corner.UpperLeft;
@@ -47,19 +46,14 @@ namespace NRatel
 
         [SerializeField] protected Vector2 m_Spacing = Vector2.zero;
         public Vector2 spacing { get { return m_Spacing; } set { SetProperty(ref m_Spacing, value); } }
-        #endregion
-
-        #region 对齐相关参数
+        
         [SerializeField] protected Alignment m_ChildAlignment = Alignment.LeftOrUpper;
         public Alignment childAlignment { get { return m_ChildAlignment; } set { SetProperty(ref m_ChildAlignment, value); } }
 
         [SerializeField] protected RectOffset m_Padding = new RectOffset();
         public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
-        #endregion
 
         protected DrivenRectTransformTracker m_Tracker;
-
-        private Vector2 m_ViewportOffset = new Vector2(5, 5);
 
         private int m_CellCountOnAxisX;
         private int m_CellCountOnAxisY;
@@ -77,6 +71,31 @@ namespace NRatel
         protected List<int> newIndexes;         //新的索引集合
         protected List<int> appearIndexes;      //将要出现的索引集合   //使用List而非单个，可以支持Content位置跳变
         protected List<int> disAppearIndexes;   //将要消失的索引集合   //使用List而非单个，可以支持Content位置跳变
+        
+        private RectTransform m_CellRT;
+        private int m_CellCount;
+        private Action<int, RectTransform> m_OnCellAppear;
+
+        public void StartShow(RectTransform cellRT, int count, Action<int, RectTransform> onCellAppear)
+        {
+            this.m_CellRT = cellRT;
+            this.m_CellCount = count;
+            this.m_OnCellAppear = onCellAppear;
+
+            ResetContent();
+            ResetTracker();
+
+            CalcCellCountOnAxis();
+            CalculateActualCellCount();
+            CalculateRequiredSpace();
+            SetContentSizeOnMovementAxis();
+            CalculateStartOffset();
+
+            CalcIndexes();
+            DisAppearCells();
+            AppearCells();
+            CalcAndSetCellsSblingIndex();
+        }
 
         protected override void Awake()
         {
@@ -100,40 +119,8 @@ namespace NRatel
 
         protected virtual void OnScrollValueChanged(Vector2 delta)
         {
-            if (GetCellCount() <= 0) { return; }
+            if (m_CellCount <= 0) { return; }
 
-            CalcIndexes();
-            DisAppearCells();
-            AppearCells();
-            CalcAndSetCellsSblingIndex();
-        }
-
-        private Vector2 GetCellSize()
-        {
-            return new Vector2(100, 100);
-        }
-
-        private Vector2 GetCellPivot()
-        {
-            return new Vector2(0.5f, 0.5f);
-        }
-
-        private int GetCellCount()
-        {
-            return 100;
-        }
-
-        public void Refresh()
-        {
-            ResetContent();
-            ResetTracker();
-
-            CalcCellCountOnAxis();
-            CalculateActualCellCount();
-            CalculateRequiredSpace();
-            SetContentSizeOnMovementAxis();
-
-            CalculateStartOffset();
             CalcIndexes();
             DisAppearCells();
             AppearCells();
@@ -175,9 +162,6 @@ namespace NRatel
         //一、计算直观行列数（直观坐标轴上）
         public void CalcCellCountOnAxis()
         {
-            int cellCount = GetCellCount();
-            Vector2 cellSize = GetCellSize();
-
             int cellCountX = 1;  //默认最小1
             int cellCountY = 1;  //默认最小1
 
@@ -192,19 +176,19 @@ namespace NRatel
                 else if (m_Constraint == Constraint.Flexible)
                 {
                     // 自适应时：
-                    if (cellSize.x + spacing.x <= 0)
+                    if (m_CellRT.rect.size.x + spacing.x <= 0)
                         //处理参数不合法的情况
                         cellCountX = int.MaxValue;
                     else
                     {
                         //列数 = 能放下的最大列数
                         float width = m_Content.rect.width;
-                        cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x)));
+                        cellCountX = Mathf.Max(1, Mathf.FloorToInt((width - padding.horizontal + spacing.x + 0.001f) / (m_CellRT.rect.size.x + spacing.x)));
                     }
                 }
 
-                if (cellCount > cellCountX)   //多于一列时
-                    cellCountY = cellCount / cellCountX + (cellCount % cellCountX > 0 ? 1 : 0); //行数 = 整除（总数/列数） 有余数+1，没余数则不+
+                if (m_CellCount > cellCountX)   //多于一列时
+                    cellCountY = m_CellCount / cellCountX + (m_CellCount % cellCountX > 0 ? 1 : 0); //行数 = 整除（总数/列数） 有余数+1，没余数则不+
             }
             else
             {
@@ -216,18 +200,18 @@ namespace NRatel
                 }
                 else if (m_Constraint == Constraint.Flexible)
                 {
-                    if (cellSize.y + spacing.y <= 0)
+                    if (m_CellRT.rect.size.y + spacing.y <= 0)
                         //处理参数不合法的情况
                         cellCountY = int.MaxValue;
                     else
                     {
                         //行数 = 能放下的最大行数
                         float height = m_Content.rect.height;
-                        cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (cellSize.y + spacing.y)));
+                        cellCountY = Mathf.Max(1, Mathf.FloorToInt((height - padding.vertical + spacing.y + 0.001f) / (m_CellRT.rect.size.y + spacing.y)));
                     }
                 }
-                if (cellCount > cellCountY)   //多于一行时
-                    cellCountX = cellCount / cellCountY + (cellCount % cellCountY > 0 ? 1 : 0); //列数 = 整除（总数/行数） 有余数+1，没余数则不+
+                if (m_CellCount > cellCountY)   //多于一行时
+                    cellCountX = m_CellCount / cellCountY + (m_CellCount % cellCountY > 0 ? 1 : 0); //列数 = 整除（总数/行数） 有余数+1，没余数则不+
 
             }
 
@@ -239,8 +223,6 @@ namespace NRatel
         //二、计算真实行列数（沿自定的轴转置）
         private void CalculateActualCellCount()
         {
-            int cellCount = GetCellCount();
-            Vector2 cellSize = GetCellSize();
             int cellCountX = this.m_CellCountOnAxisX;
             int cellCountY = this.m_CellCountOnAxisY;
 
@@ -251,14 +233,14 @@ namespace NRatel
             if (startAxis == MovementAxis.Horizontal)
             {
                 cellsPerMainAxis = cellCountX;
-                actualCellCountX = Mathf.Clamp(cellCountX, 1, cellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
-                actualCellCountY = Mathf.Clamp(cellCountY, 1, Mathf.CeilToInt(cellCount / (float)cellsPerMainAxis));
+                actualCellCountX = Mathf.Clamp(cellCountX, 1, m_CellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
+                actualCellCountY = Mathf.Clamp(cellCountY, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
             }
             else
             {
                 cellsPerMainAxis = cellCountY;
-                actualCellCountY = Mathf.Clamp(cellCountY, 1, cellCount);
-                actualCellCountX = Mathf.Clamp(cellCountX, 1, Mathf.CeilToInt(cellCount / (float)cellsPerMainAxis));
+                actualCellCountY = Mathf.Clamp(cellCountY, 1, m_CellCount);
+                actualCellCountX = Mathf.Clamp(cellCountX, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
             }
 
             this.m_CellsPerMainAxis = cellsPerMainAxis;
@@ -269,13 +251,12 @@ namespace NRatel
         //三、计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
         private void CalculateRequiredSpace()
         {
-            Vector2 cellSize = GetCellSize();
             int actualCellCountX = this.m_ActualCellCountX;
             int actualCellCountY = this.m_ActualCellCountY;
 
             Vector2 requiredSpace = new Vector2(
-                actualCellCountX * cellSize.x + (actualCellCountX - 1) * spacing.x,
-                actualCellCountY * cellSize.y + (actualCellCountY - 1) * spacing.y
+                actualCellCountX * m_CellRT.rect.size.x + (actualCellCountX - 1) * spacing.x,
+                actualCellCountY * m_CellRT.rect.size.y + (actualCellCountY - 1) * spacing.y
             );
 
             this.m_RequiredSpace = requiredSpace;
@@ -313,8 +294,6 @@ namespace NRatel
         //计算 应出现的索引 和 应消失的索引
         private void CalcIndexes()
         {
-            int cellCount = GetCellCount();
-            Vector2 cellSize = GetCellSize();
             int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
             int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
 
@@ -332,16 +311,16 @@ namespace NRatel
                 {
                     float startPadding = cornerX == 0 ? padding.left : padding.right;
                     //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromStart = Mathf.FloorToInt((-outWidthFromStart - startPadding + spacing.x) / (cellSize.x + spacing.x));
-                    outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountY, 0, cellCount);
+                    int outColFromStart = Mathf.FloorToInt((-outWidthFromStart - startPadding + spacing.x) / (m_CellRT.rect.size.x + spacing.x));
+                    outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountY, 0, m_CellCount);
                 }
                 if (outWidthFromEnd > 0)
                 {
                     float endPadding = cornerX == 0 ? padding.right : padding.left;
                     //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (cellSize.x + spacing.x));
+                    int outColFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (m_CellRT.rect.size.x + spacing.x));
                     //(m_ActualCellCountY - cellCount % m_ActualCellCountY)：最后一列未满时差几个。
-                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountY - (m_ActualCellCountY - cellCount % m_ActualCellCountY), 0, cellCount);
+                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountY - (m_ActualCellCountY - m_CellCount % m_ActualCellCountY), 0, m_CellCount);
                 }
             }
             else
@@ -355,22 +334,22 @@ namespace NRatel
                 {
                     float startPadding = cornerY == 0 ? padding.top : padding.bottom;
                     //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromStart = Mathf.FloorToInt((-outHeightFromStart - startPadding + spacing.y) / (cellSize.y + spacing.y));
-                    outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountX, 0, cellCount);
+                    int outColFromStart = Mathf.FloorToInt((-outHeightFromStart - startPadding + spacing.y) / (m_CellRT.rect.size.y + spacing.y));
+                    outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountX, 0, m_CellCount);
                 }
                 if (outHeightFromEnd > 0)
                 {
                     float endPadding = cornerY == 0 ? padding.bottom : padding.top;
                     //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (cellSize.y + spacing.y));
+                    int outColFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (m_CellRT.rect.size.y + spacing.y));
                     //(m_ActualCellCountX - cellCount % m_ActualCellCountX)：最后一行未满时差几个。
-                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountX - (m_ActualCellCountX - cellCount % m_ActualCellCountX), 0, cellCount);
+                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountX - (m_ActualCellCountX - m_CellCount % m_ActualCellCountX), 0, m_CellCount);
                 }
             }
 
             //应该显示的开始索引和结束索引
             int startIndex = (outCountFromStart); // 省略了先+1再-1。 从滑出的下一个开始，索引从0开始;
-            int endIndex = (cellCount - 1 - outCountFromEnd);
+            int endIndex = (m_CellCount - 1 - outCountFromEnd);
 
             //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
 
@@ -444,16 +423,11 @@ namespace NRatel
             {
                 RectTransform cellRT = GetOrCreateCell(index);
                 cellRTDict[index] = cellRT;
-
-                //设置Cell位置
-                cellRT.anchoredPosition = GetCellPos(index);
-
-                //设置Cell数据，对Cell进行初始化
-                cellRT.GetComponent<Cell>().SetIndex(index);
+                cellRT.anchoredPosition = GetCellPos(index);    //设置Cell位置
+                m_OnCellAppear?.Invoke(index, cellRT); //出现回调
             }
         }
-
-
+        
         //计算并设置Cells的SblingIndex
         //调用时机：有新的Cell出现时
         //Cell可能重叠时必须
@@ -532,15 +506,13 @@ namespace NRatel
                 posIndexY = m_ActualCellCountY - 1 - posIndexY;
 
             //二、计算坐标
-            Vector2 cellSize = GetCellSize();
-            Vector2 cellPivot = GetCellPivot();
             Vector2 scaleFactor = Vector2.one;  //不考虑元素缩放
 
             // x轴：初始位置+宽度*中心点偏移*缩放系数 (x轴是向正方向)(从左上到右下)
-            float anchoredPosX = (m_StartOffset.x + (cellSize.x + spacing.x) * posIndexX) + cellSize.x * cellPivot.x * scaleFactor.x;
+            float anchoredPosX = (m_StartOffset.x + (m_CellRT.rect.size.x + spacing.x) * posIndexX) + m_CellRT.rect.size.x * m_CellRT.pivot.x * scaleFactor.x;
 
             // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
-            float anchoredPosY = -(m_StartOffset.y + (cellSize.y + spacing.y) * posIndexY) - cellSize.y * (1f - cellPivot.y) * scaleFactor.y;
+            float anchoredPosY = -(m_StartOffset.y + (m_CellRT.rect.size.y + spacing.y) * posIndexY) - m_CellRT.rect.size.y * (1f - m_CellRT.pivot.y) * scaleFactor.y;
 
             return new Vector2(anchoredPosX, anchoredPosY);
         }
@@ -550,11 +522,9 @@ namespace NRatel
             if ((currentValue == null && newValue == null) || (currentValue != null && currentValue.Equals(newValue)))  //过滤无效和未变
                 return;
             currentValue = newValue;
-            Refresh();
+            //Refresh();
         }
 
-        //测试代码
-        public RectTransform cellPrefabRT;      //Cell预设 的 RectTransform
         private RectTransform GetOrCreateCell(int index)
         {
             RectTransform cellRT;
@@ -565,7 +535,7 @@ namespace NRatel
             }
             else
             {
-                cellRT = GameObject.Instantiate<GameObject>(cellPrefabRT.gameObject).GetComponent<RectTransform>();
+                cellRT = GameObject.Instantiate<GameObject>(m_CellRT.gameObject).GetComponent<RectTransform>();
                 cellRT.SetParent(m_Content, false);
 
                 //驱动子物体的锚点和位置
@@ -575,24 +545,24 @@ namespace NRatel
                 cellRT.anchorMin = Vector2.up;
                 cellRT.anchorMax = Vector2.up;
 
-                cellRT.sizeDelta = GetCellSize();
+                cellRT.sizeDelta = m_CellRT.rect.size;
             }
 
             return cellRT;
         }
-        
+
         //protected override void OnRectTransformDimensionsChange()
         //{
         //    base.OnRectTransformDimensionsChange();
         //    Refresh();
         //}
 
-//#if UNITY_EDITOR
-//        protected override void OnValidate()
-//        {
-//            base.OnValidate();
-//            Refresh();
-//        }
-//#endif
+        //#if UNITY_EDITOR
+        //        protected override void OnValidate()
+        //        {
+        //            base.OnValidate();
+        //            Refresh();
+        //        }
+        //#endif
     }
 }
