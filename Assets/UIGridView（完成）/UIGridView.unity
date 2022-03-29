@@ -355,8 +355,8 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 300}
-  m_Pivot: {x: 0, y: 1}
+  m_SizeDelta: {x: 0, y: 3760}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!1 &1179262179
 GameObject:
   m_ObjectHideFlags: 0
@@ -698,10 +698,10 @@ MonoBehaviour:
   m_Spacing: {x: 10, y: 10}
   m_ChildAlignment: 1
   m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
+    m_Left: 20
+    m_Right: 10
+    m_Top: 20
+    m_Bottom: 10
   cellPrefabRT: {fileID: 7913374827684128912, guid: bb9cfa4b442948a49b55ffe7d87e462f,
     type: 3}
 --- !u!114 &1687565318
