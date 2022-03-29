@@ -683,7 +683,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Viewport: {fileID: 1914716811}
   m_Content: {fileID: 1057025578}
-  m_MovementAxis: 0
+  m_MovementAxis: 1
   m_MovementType: 1
   m_Elasticity: 0.1
   m_Inertia: 1
@@ -692,8 +692,8 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_StartCorner: 1
-  m_Constraint: 2
+  m_StartCorner: 0
+  m_Constraint: 1
   m_ConstraintCount: 3
   m_Spacing: {x: 10, y: 10}
   m_ChildAlignment: 1

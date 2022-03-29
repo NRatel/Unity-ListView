@@ -59,6 +59,8 @@ namespace NRatel
 
         protected DrivenRectTransformTracker m_Tracker;
 
+        private Vector2 m_ViewportOffset = new Vector2(5, 5);
+
         private int m_CellCountOnAxisX;
         private int m_CellCountOnAxisY;
         private int m_CellsPerMainAxis;
@@ -130,8 +132,8 @@ namespace NRatel
             CalculateActualCellCount();
             CalculateRequiredSpace();
             SetContentSizeOnMovementAxis();
-            CalculateStartOffset();
 
+            CalculateStartOffset();
             CalcIndexes();
             DisAppearCells();
             AppearCells();
@@ -308,7 +310,6 @@ namespace NRatel
             this.m_StartOffset = startOffset;
         }
         
-
         //计算 应出现的索引 和 应消失的索引
         private void CalcIndexes()
         {
@@ -480,24 +481,7 @@ namespace NRatel
                 kvp.Value.SetAsFirstSibling();
             }
         }
-
-        //六、依次布局所有子物体
-        private void LayoutChildren()
-        {
-            for (int i = m_Content.childCount - 1; i >= 0; i--)
-            {
-                Destroy(m_Content.GetChild(i).gameObject);
-            }
-
-            int cellCount = GetCellCount();
-
-            for (int i = 0; i < cellCount; i++)
-            {
-                RectTransform cellRT = GetOrCreateCell(i);
-                cellRT.anchoredPosition = GetCellPos(i);
-            }
-        }
-
+        
         private float GetStartOffset(int axis, float requiredSpaceWithoutPadding)
         {
             float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //该轴上子元素需要的总尺寸 + 边距
@@ -596,5 +580,19 @@ namespace NRatel
 
             return cellRT;
         }
+        
+        //protected override void OnRectTransformDimensionsChange()
+        //{
+        //    base.OnRectTransformDimensionsChange();
+        //    Refresh();
+        //}
+
+#if UNITY_EDITOR
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            Refresh();
+        }
+#endif
     }
 }
