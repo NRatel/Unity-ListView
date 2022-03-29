@@ -587,12 +587,12 @@ namespace NRatel
         //    Refresh();
         //}
 
-#if UNITY_EDITOR
-        protected override void OnValidate()
-        {
-            base.OnValidate();
-            Refresh();
-        }
-#endif
+//#if UNITY_EDITOR
+//        protected override void OnValidate()
+//        {
+//            base.OnValidate();
+//            Refresh();
+//        }
+//#endif
     }
 }
