@@ -54,9 +54,7 @@ namespace NRatel
         public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
 
         protected DrivenRectTransformTracker m_Tracker;
-
-        private int m_CellCountOnNaturalAxisX;
-        private int m_CellCountOnNaturalAxisY;
+        
         private int m_CellsPerMainAxis;
         private int m_ActualCellCountX;
         private int m_ActualCellCountY;
@@ -86,7 +84,6 @@ namespace NRatel
             ResetTracker();
 
             CalcCellCountOnNaturalAxis();
-            CalculateActualCellCount();
             CalculateRequiredSpace();
             SetContentSizeOnMovementAxis();
             CalculateStartOffset();
@@ -159,7 +156,7 @@ namespace NRatel
             m_Tracker.Clear();
         }
 
-        //一、计算直观行列数（自然坐标轴上）
+        //计算直观行列数（自然坐标轴上）
         public void CalcCellCountOnNaturalAxis()
         {
             int cellCountX = 1;  //默认最小1
@@ -215,40 +212,30 @@ namespace NRatel
 
             }
 
-            this.m_CellCountOnNaturalAxisX = cellCountX;
-            this.m_CellCountOnNaturalAxisY = cellCountY;
-
-            Debug.Log("m_CellCountOnNaturalAxisX, m_CellCountOnNaturalAxisY:" + m_CellCountOnNaturalAxisX + "," + m_CellCountOnNaturalAxisY);
-        }
-
-        //二、行列数约束至合法范围
-        private void CalculateActualCellCount()
-        {
+            //行列数约束至合法范围
             int cellsPerMainAxis;  //沿startAxis轴的格子数
             int actualCellCountX;  //实际列数
             int actualCellCountY;  //实际行数
 
             if (startAxis == MovementAxis.Horizontal)
             {
-                cellsPerMainAxis = m_CellCountOnNaturalAxisX;
-                actualCellCountX = Mathf.Clamp(m_CellCountOnNaturalAxisX, 1, m_CellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
-                actualCellCountY = Mathf.Clamp(m_CellCountOnNaturalAxisY, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
+                cellsPerMainAxis = cellCountX;
+                actualCellCountX = Mathf.Clamp(cellCountX, 1, m_CellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
+                actualCellCountY = Mathf.Clamp(cellCountY, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
             }
             else
             {
-                cellsPerMainAxis = m_CellCountOnNaturalAxisY;
-                actualCellCountY = Mathf.Clamp(m_CellCountOnNaturalAxisY, 1, m_CellCount);
-                actualCellCountX = Mathf.Clamp(m_CellCountOnNaturalAxisX, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
+                cellsPerMainAxis = cellCountY;
+                actualCellCountY = Mathf.Clamp(cellCountY, 1, m_CellCount);
+                actualCellCountX = Mathf.Clamp(cellCountX, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
             }
 
             this.m_CellsPerMainAxis = cellsPerMainAxis;
             this.m_ActualCellCountX = actualCellCountX;
             this.m_ActualCellCountY = actualCellCountY;
-
-            Debug.Log("m_ActualCellCountX, m_ActualCellCountY:" + m_ActualCellCountX + "," + m_ActualCellCountY);
         }
-
-        //三、计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
+        
+        //计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
         private void CalculateRequiredSpace()
         {
             Vector2 requiredSpace = new Vector2(
@@ -259,7 +246,7 @@ namespace NRatel
             this.m_RequiredSpace = requiredSpace;
         }
 
-        //四、设置滑动轴方向的Content大小
+        //设置滑动轴方向的Content大小
         private void SetContentSizeOnMovementAxis()
         {
             RectTransform.Axis axis;
@@ -278,7 +265,7 @@ namespace NRatel
             m_Content.SetSizeWithCurrentAnchors(axis, size);
         }
 
-        //五、计算起始Offset
+        //计算起始Offset
         private void CalculateStartOffset()
         {
             Vector2 startOffset = new Vector2(
@@ -288,7 +275,7 @@ namespace NRatel
             this.m_StartOffset = startOffset;
         }
         
-        //计算 应出现的索引 和 应消失的索引
+        //计算应出现的索引 和 应消失的索引
         private void CalcIndexes()
         {
             int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
