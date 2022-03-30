@@ -251,12 +251,9 @@ namespace NRatel
         //三、计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
         private void CalculateRequiredSpace()
         {
-            int actualCellCountX = this.m_ActualCellCountX;
-            int actualCellCountY = this.m_ActualCellCountY;
-
             Vector2 requiredSpace = new Vector2(
-                actualCellCountX * m_CellRT.rect.size.x + (actualCellCountX - 1) * spacing.x,
-                actualCellCountY * m_CellRT.rect.size.y + (actualCellCountY - 1) * spacing.y
+                actualCellCountX * m_CellRT.rect.size.x + (m_ActualCellCountX - 1) * spacing.x,
+                actualCellCountY * m_CellRT.rect.size.y + (m_ActualCellCountY - 1) * spacing.y
             );
 
             this.m_RequiredSpace = requiredSpace;
