@@ -1,12 +1,10 @@
-using UnityEngine;
 using UnityEngine.UI;
-using UnityEditorInternal;
 using UnityEditor.AnimatedValues;
 using UnityEditor;
 
 namespace NRatel
 {
-    [CustomEditor(typeof(UIGridView), true)]
+    [CustomEditor(typeof(UIScrollRect), true)]
     [CanEditMultipleObjects]
     public class UIScrollRectInspector : Editor
     {

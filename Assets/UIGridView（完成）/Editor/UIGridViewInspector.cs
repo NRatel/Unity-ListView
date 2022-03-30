@@ -1,7 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
-using UnityEditorInternal;
-using UnityEditor.AnimatedValues;
 using UnityEditor;
 
 namespace NRatel
