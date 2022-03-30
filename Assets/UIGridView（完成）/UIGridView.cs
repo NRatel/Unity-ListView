@@ -221,10 +221,10 @@ namespace NRatel
             Debug.Log("m_CellCountOnNaturalAxisX, m_CellCountOnNaturalAxisY:" + m_CellCountOnNaturalAxisX + "," + m_CellCountOnNaturalAxisY);
         }
 
-        //二、计算真实行列数（自定义排布轴上）（以延伸方向的轴为X轴）
+        //二、计算真实行列数（自定义排布轴上）（以startAxis轴为X轴）
         private void CalculateActualCellCount()
         {
-            int cellsPerMainAxis;  //延伸轴上的格子数
+            int cellsPerMainAxis;  //沿startAxis轴的格子数
             int actualCellCountX;  //实际列数
             int actualCellCountY;  //实际行数
 
