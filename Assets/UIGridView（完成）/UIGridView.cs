@@ -55,8 +55,8 @@ namespace NRatel
 
         protected DrivenRectTransformTracker m_Tracker;
 
-        private int m_CellCountOnAxisX;
-        private int m_CellCountOnAxisY;
+        private int m_CellCountOnNaturalAxisX;
+        private int m_CellCountOnNaturalAxisY;
         private int m_CellsPerMainAxis;
         private int m_ActualCellCountX;
         private int m_ActualCellCountY;
@@ -85,7 +85,7 @@ namespace NRatel
             ResetContent();
             ResetTracker();
 
-            CalcCellCountOnAxis();
+            CalcCellCountOnNaturalAxis();
             CalculateActualCellCount();
             CalculateRequiredSpace();
             SetContentSizeOnMovementAxis();
@@ -159,8 +159,8 @@ namespace NRatel
             m_Tracker.Clear();
         }
 
-        //一、计算直观行列数（直观坐标轴上）
-        public void CalcCellCountOnAxis()
+        //一、计算直观行列数（自然坐标轴）
+        public void CalcCellCountOnNaturalAxis()
         {
             int cellCountX = 1;  //默认最小1
             int cellCountY = 1;  //默认最小1
@@ -215,32 +215,28 @@ namespace NRatel
 
             }
 
-            this.m_CellCountOnAxisX = cellCountX;
-            this.m_CellCountOnAxisY = cellCountY;
-
+            this.m_CellCountOnNaturalAxisX = cellCountX;
+            this.m_CellCountOnNaturalAxisY = cellCountY;
         }
 
-        //二、计算真实行列数（沿自定的轴转置）
+        //二、计算真实行列数（分别转置到自定义的排布轴）
         private void CalculateActualCellCount()
         {
-            int cellCountX = this.m_CellCountOnAxisX;
-            int cellCountY = this.m_CellCountOnAxisY;
-
             int cellsPerMainAxis;  //延伸轴上的格子数
             int actualCellCountX;  //水平方向实际格子数（实际列数）
             int actualCellCountY;  //竖直方向实际格子数（实际行数）
 
             if (startAxis == MovementAxis.Horizontal)
             {
-                cellsPerMainAxis = cellCountX;
-                actualCellCountX = Mathf.Clamp(cellCountX, 1, m_CellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
-                actualCellCountY = Mathf.Clamp(cellCountY, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
+                cellsPerMainAxis = m_CellCountOnNaturalAxisX;
+                actualCellCountX = Mathf.Clamp(m_CellCountOnNaturalAxisX, 1, m_CellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
+                actualCellCountY = Mathf.Clamp(m_CellCountOnNaturalAxisY, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
             }
             else
             {
-                cellsPerMainAxis = cellCountY;
-                actualCellCountY = Mathf.Clamp(cellCountY, 1, m_CellCount);
-                actualCellCountX = Mathf.Clamp(cellCountX, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
+                cellsPerMainAxis = m_CellCountOnNaturalAxisY;
+                actualCellCountY = Mathf.Clamp(m_CellCountOnNaturalAxisY, 1, m_CellCount);
+                actualCellCountX = Mathf.Clamp(m_CellCountOnNaturalAxisX, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
             }
 
             this.m_CellsPerMainAxis = cellsPerMainAxis;
