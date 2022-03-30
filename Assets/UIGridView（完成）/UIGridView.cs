@@ -252,8 +252,8 @@ namespace NRatel
         private void CalculateRequiredSpace()
         {
             Vector2 requiredSpace = new Vector2(
-                actualCellCountX * m_CellRT.rect.size.x + (m_ActualCellCountX - 1) * spacing.x,
-                actualCellCountY * m_CellRT.rect.size.y + (m_ActualCellCountY - 1) * spacing.y
+                m_ActualCellCountX * m_CellRT.rect.size.x + (m_ActualCellCountX - 1) * spacing.x,
+                m_ActualCellCountY * m_CellRT.rect.size.y + (m_ActualCellCountY - 1) * spacing.y
             );
 
             this.m_RequiredSpace = requiredSpace;
