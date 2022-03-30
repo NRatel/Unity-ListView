@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using NRatel.Fundamental;
 
 //要点
 // 1、paddingLeft、paddingRight 不需要手动设置了。
@@ -36,7 +37,7 @@ using UnityEngine.EventSystems;
 namespace NRatel
 {
     //2020.4.2 考虑不用List的方式，而是直接实现滑动接口并用dotween处理移动
-    public class PageView : ListView
+    public class PageView : ListViewV2
     {
         ////调整边距
         //protected override void FixPadding()
