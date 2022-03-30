@@ -221,7 +221,7 @@ namespace NRatel
             Debug.Log("m_CellCountOnNaturalAxisX, m_CellCountOnNaturalAxisY:" + m_CellCountOnNaturalAxisX + "," + m_CellCountOnNaturalAxisY);
         }
 
-        //二、计算真实行列数（约束至合法范围）
+        //二、行列数约束至合法范围
         private void CalculateActualCellCount()
         {
             int cellsPerMainAxis;  //沿startAxis轴的格子数
