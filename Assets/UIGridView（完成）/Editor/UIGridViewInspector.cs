@@ -67,7 +67,7 @@ namespace NRatel
             
             string[] horizontalAlignmentOptions = { "Left", "Center", "Right" };
             string[] verticalAlignmentOptions = { "Upper", "Middle", "Lower" };
-            string[] alignmentOptions = m_MovementAxis.enumValueIndex == 0 ? horizontalAlignmentOptions : verticalAlignmentOptions;
+            string[] alignmentOptions = m_MovementAxis.enumValueIndex == 0 ? verticalAlignmentOptions : horizontalAlignmentOptions;
             m_ChildAlignment.enumValueIndex = EditorGUILayout.Popup("Child Alignment", m_ChildAlignment.enumValueIndex, alignmentOptions);
 
             string[] horizontalConstraintOptions = { m_Constraint.enumDisplayNames[0], m_Constraint.enumDisplayNames[1] };
