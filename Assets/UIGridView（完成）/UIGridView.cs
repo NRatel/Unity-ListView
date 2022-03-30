@@ -159,7 +159,7 @@ namespace NRatel
             m_Tracker.Clear();
         }
 
-        //一、计算直观行列数（自然坐标轴）
+        //一、计算直观行列数（自然坐标轴上）
         public void CalcCellCountOnNaturalAxis()
         {
             int cellCountX = 1;  //默认最小1
@@ -217,14 +217,16 @@ namespace NRatel
 
             this.m_CellCountOnNaturalAxisX = cellCountX;
             this.m_CellCountOnNaturalAxisY = cellCountY;
+
+            Debug.Log("m_CellCountOnNaturalAxisX, m_CellCountOnNaturalAxisY:" + m_CellCountOnNaturalAxisX + "," + m_CellCountOnNaturalAxisY);
         }
 
-        //二、计算真实行列数（分别转置到自定义的排布轴）
+        //二、计算真实行列数（自定义排布轴上）（以延伸方向的轴为X轴）
         private void CalculateActualCellCount()
         {
             int cellsPerMainAxis;  //延伸轴上的格子数
-            int actualCellCountX;  //水平方向实际格子数（实际列数）
-            int actualCellCountY;  //竖直方向实际格子数（实际行数）
+            int actualCellCountX;  //实际列数
+            int actualCellCountY;  //实际行数
 
             if (startAxis == MovementAxis.Horizontal)
             {
@@ -242,6 +244,8 @@ namespace NRatel
             this.m_CellsPerMainAxis = cellsPerMainAxis;
             this.m_ActualCellCountX = actualCellCountX;
             this.m_ActualCellCountY = actualCellCountY;
+
+            Debug.Log("m_ActualCellCountX, m_ActualCellCountY:" + m_ActualCellCountX + "," + m_ActualCellCountY);
         }
 
         //三、计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
