@@ -225,7 +225,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -251}
+  m_AnchoredPosition: {x: 0, y: -367}
   m_SizeDelta: {x: 300, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &653326932
@@ -687,7 +687,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Viewport: {fileID: 1914716811}
   m_Content: {fileID: 1057025578}
-  m_MovementAxis: 1
+  m_MovementAxis: 0
   m_MovementType: 1
   m_Elasticity: 0.1
   m_Inertia: 1
@@ -698,7 +698,7 @@ MonoBehaviour:
       m_Calls: []
   m_StartCorner: 0
   m_Constraint: 0
-  m_ConstraintCount: 2
+  m_ConstraintCount: 5
   m_Spacing: {x: 10, y: 10}
   m_ChildAlignment: 1
   m_Padding:

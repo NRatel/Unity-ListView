@@ -22,8 +22,8 @@ namespace NRatel
         public enum Constraint
         {
             Flexible = 0,           // 不限定行或列数（灵活自适应）
-            FixedColumnCount = 1,   // 限定列数（水平轴时）
-            FixedRowCount = 2       // 限定行数（竖直轴时）
+            FixedRowCount = 1,      // 限定行数（水平滑动时）
+            FixedColumnCount = 2    // 限定列数（竖直滑动时）
         }
 
         public enum Alignment
@@ -303,8 +303,9 @@ namespace NRatel
                     float endPadding = cornerX == 0 ? padding.right : padding.left;
                     //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
                     int outColFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (m_CellRT.rect.size.x + spacing.x));
-                    //(m_ActualCellCountY - cellCount % m_ActualCellCountY)：最后一列未满时差几个。
-                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountY - (m_ActualCellCountY - m_CellCount % m_ActualCellCountY), 0, m_CellCount);
+                    //若最后一列未满，则从总数中减去。
+                    int theLastColOffsetCount = m_CellCount % m_ActualCellCountY != 0 ? (m_ActualCellCountY - m_CellCount % m_ActualCellCountY) : 0;
+                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountY - theLastColOffsetCount, 0, m_CellCount);
                 }
             }
             else
@@ -318,16 +319,17 @@ namespace NRatel
                 {
                     float startPadding = cornerY == 0 ? padding.top : padding.bottom;
                     //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromStart = Mathf.FloorToInt((-outHeightFromStart - startPadding + spacing.y) / (m_CellRT.rect.size.y + spacing.y));
-                    outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountX, 0, m_CellCount);
+                    int outRowFromStart = Mathf.FloorToInt((-outHeightFromStart - startPadding + spacing.y) / (m_CellRT.rect.size.y + spacing.y));
+                    outCountFromStart = Mathf.Clamp(outRowFromStart * m_ActualCellCountX, 0, m_CellCount);
                 }
                 if (outHeightFromEnd > 0)
                 {
                     float endPadding = cornerY == 0 ? padding.bottom : padding.top;
                     //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (m_CellRT.rect.size.y + spacing.y));
-                    //(m_ActualCellCountX - cellCount % m_ActualCellCountX)：最后一行未满时差几个。
-                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountX - (m_ActualCellCountX - m_CellCount % m_ActualCellCountX), 0, m_CellCount);
+                    int outRowFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (m_CellRT.rect.size.y + spacing.y));
+                    //若最后一行未满，则从总数中减去。
+                    int theLastRowOffsetCount = m_CellCount % m_ActualCellCountX != 0 ? (m_ActualCellCountX - m_CellCount % m_ActualCellCountX) : 0;
+                    outCountFromEnd = Mathf.Clamp(outRowFromEnd * m_ActualCellCountX - theLastRowOffsetCount, 0, m_CellCount);
                 }
             }
 

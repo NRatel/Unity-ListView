@@ -70,6 +70,7 @@ namespace NRatel
             string[] horizontalConstraintOptions = { m_Constraint.enumDisplayNames[0], m_Constraint.enumDisplayNames[1] };
             string[] verticalConstraintOptions = { m_Constraint.enumDisplayNames[0], m_Constraint.enumDisplayNames[2] };
             string[] constraintOptions = m_MovementAxis.enumValueIndex == 0 ? horizontalConstraintOptions : verticalConstraintOptions;
+
             int curConstraintIndex = m_Constraint.enumValueIndex > 0 ? 1 : 0;   //012=>01
             int newConstraintIndex = EditorGUILayout.Popup("Constraint", curConstraintIndex, constraintOptions);
             m_Constraint.enumValueIndex = newConstraintIndex > 0 ? (m_MovementAxis.enumValueIndex == 0 ? 1 : 2) : 0;    //01=>012
