@@ -235,7 +235,7 @@ namespace NRatel.Fundamental
                 cellRT.anchoredPosition = new Vector2(CalcCellPosX(index), cellRT.anchoredPosition.y);
 
                 //设置Cell数据，对Cell进行初始化
-                cellRT.GetComponent<Cell>().SetIndex(index);
+                cellRT.GetComponent<ListCell>().Refresh(index);
             }
         }
 
