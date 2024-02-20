@@ -63,9 +63,9 @@
     <Compile Include="Assets\UIGridView（完成）\UIScrollRect.cs" />
     <Compile Include="Assets\Res\ListCell.cs" />
     <Compile Include="Assets\特殊需求\右侧堆叠的ListView\ListViewS1.cs" />
+    <Compile Include="Assets\Res\GridCell.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV1\ListViewV1.cs" />
     <Compile Include="Assets\UIGridView（完成）\UIGridView.cs" />
-    <Compile Include="Assets\Res\GridCell.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

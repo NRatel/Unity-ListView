@@ -48,25 +48,24 @@ public class UIPanel_TestGridView : MonoBehaviour
 
     void StartShow()
     {
-        m_UIGridView.StartShow(m_CellRTTemplate, m_DataList.Count, OnCellCreated, OnCellAppear);
+        m_UIGridView.Init(m_CellRTTemplate, OnCreateCell, OnShowCell);
+        m_UIGridView.StartShow(m_DataList.Count, false);
     }
 
-    private void OnCellCreated(int index)
+    private RectTransform OnCreateCell(int index)
     {
-        RectTransform cellRT = m_UIGridView.GetCellRT(index);
-
+        RectTransform cellRT = GameObject.Instantiate<GameObject>(m_CellRTTemplate.gameObject).GetComponent<RectTransform>();
         cellRT.GetComponent<GridCell>().Init((_clickedIndex) =>
         {
             TestData testData = m_DataList[_clickedIndex];
-
             Debug.Log(string.Format("µ±Ç°µã»÷£¬Ë÷Òý£º{0}, ²âÊÔId£º{1}, ²âÊÔ×Ö·û´®£º{2}", _clickedIndex, testData.id, testData.str));
         });
+        return cellRT;
     }
 
-    private void OnCellAppear(int index)
+    private void OnShowCell(int index)
     {
         RectTransform cellRT = m_UIGridView.GetCellRT(index);
-
         cellRT.GetComponent<GridCell>().Refresh(index);
     }
 }
