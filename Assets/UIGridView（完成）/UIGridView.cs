@@ -635,7 +635,7 @@ namespace NRatel
             if ((currentValue == null && newValue == null) || (currentValue != null && currentValue.Equals(newValue)))  //过滤无效和未变
                 return;
             currentValue = newValue;
-            //Refresh();
+            //RefreshAll();
         }
 
         private RectTransform GetOrCreateCell(int index)
