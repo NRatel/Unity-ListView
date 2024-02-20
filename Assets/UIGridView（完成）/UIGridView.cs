@@ -205,7 +205,7 @@ namespace NRatel
             Vector2 cellPos0 = GetCellPos(0);
             Vector2 cellPosI = GetCellPos(index);
             Vector2 deltaXY = new Vector2(Mathf.Abs(cellPosI.x - cellPos0.x), Mathf.Abs(cellPosI.y - cellPos0.y)); //index相对0位置，x、y 距离差
-            Vector2 limitXY = new Vector2(m_Content.rect.size.x - m_Viewport.rect.size.x, m_Content.rect.size.y - m_Viewport.rect.size.y); //x、y 限制大小
+            Vector2 limitXY = new Vector2(Mathf.Max(m_Content.rect.size.x - m_Viewport.rect.size.x, 0), Mathf.Max(m_Content.rect.size.y - m_Viewport.rect.size.y, 0)); //x、y 限制大小，Mathf.Max同时兼容“Content比Viewport小”和“Content比Viewport大”两种情况
             Vector2 jumpToXY = new Vector2(Mathf.Min(deltaXY.x, limitXY.x), Mathf.Min(deltaXY.y, limitXY.y)); //不超过限制大小
 
             //Debug.Log("deltaXY: " + deltaXY);
