@@ -135,7 +135,7 @@ namespace NRatel
         /// <param name="stayPos">数量变化时是否尽量保持位置不变，若轴向发生变化，则必须传false</param>
         public void StartShow(int count, bool stayPos = true)
         {
-            Debug.Assert(m_OnCreateCell != null);
+            Debug.Assert(m_OnCreateCell != null, "请先初始化");
 
             this.m_CellCount = count;
 
@@ -145,7 +145,7 @@ namespace NRatel
         }
 
         /// <summary>
-        /// 用于数据内容变化（增删改）时的全部刷新（可见部分）
+        /// 用于元素数量未变时（仅数据变化）的全部刷新
         /// （注意，若已知某个索引变化，且数量未变，应使用 TryRefreshCellRT 刷新单个）
         /// </summary>
         public void RefreshAll()
