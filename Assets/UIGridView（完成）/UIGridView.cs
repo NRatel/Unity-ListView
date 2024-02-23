@@ -3,7 +3,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using NRatel;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,8 +32,8 @@ namespace NRatel
         {
             LeftOrUpper = 0,
             CenterOrMiddle = 1,
-            RightOrLower = 2,
-        }
+RightOrLower = 2,
+}
 
         public MovementAxis startAxis { get { return (MovementAxis)(1 - (int)m_MovementAxis); } }  //开始排列轴，与m_MovementAxis垂直
 
@@ -99,7 +98,7 @@ namespace NRatel
             ResetContentRT();
         }
 
-        //以模板Cell初始化，并以GameObject.Instantiate实例化模板Cell的方式创建Cell
+        //从Cell模板上取rect和pivot进行初始化，并以GameObject.Instantiate实例化Cell模板的方式创建Cell
         public void Init(RectTransform templateCellRT, Action<int> onShowCell)
         {
             this.m_CellRect = templateCellRT.rect;
@@ -108,7 +107,7 @@ namespace NRatel
             this.m_OnShowCell = onShowCell;
         }
 
-        //以模板Cell初始化，自行指定创建Cell的方法
+        //从Cell模板上取rect和pivot进行初始化，自行指定创建Cell的方法
         public void Init(RectTransform templateCellRT, Func<int, RectTransform> onCreateCell, Action<int> onShowCell)
         {
             this.m_CellRect = templateCellRT.rect;
@@ -117,7 +116,7 @@ namespace NRatel
             this.m_OnShowCell = onShowCell;
         }
 
-        //以rect和pivot初始化，自行指定创建Cell的方法
+        //用rect和pivot初始化，自行指定创建Cell的方法
         public void Init(Rect cellRect, Vector2 cellPivot, Func<int, RectTransform> onCreateCell, Action<int> onShowCell)
         {
             this.m_CellRect = cellRect;
@@ -233,7 +232,7 @@ namespace NRatel
         //根据轴向和起始角落，重置Content的锚点、中心点、位置和大小
         private void ResetContentRT()
         {
-            // 根据轴向和起始角落设置锚点、中心点
+// 根据轴向和起始角落设置锚点、中心点
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
@@ -355,7 +354,7 @@ namespace NRatel
         private void SetContentSizeOnMovementAxis()
         {
             RectTransform.Axis axis;
-            float size;
+float size;
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 axis = RectTransform.Axis.Horizontal;
@@ -589,7 +588,7 @@ namespace NRatel
         // 参数 "axis"：The axis to get alignment along. 0 is horizontal and 1 is vertical.    //轴索引，0是水平的，1是垂直的。
         // 返回值：The alignment as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom. //小数形式的对齐方式
         private float GetAlignmentOnAxis(int axis)
-        {
+{
             return (axis == (int)m_MovementAxis) ? 0.5f : (int)childAlignment * 0.5f;
         }
 
