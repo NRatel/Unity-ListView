@@ -49,45 +49,219 @@ using NRatel.Fundamental;
 
 namespace NRatel
 {
-    public class PageView : ListViewV2
+    public class PageView : ListViewV2, IBeginDragHandler, IEndDragHandler
     {
-        //是否开启循环翻页
-        [SerializeField]
-        public bool loop = false;
+        [Header("Page Settings")]
+        [SerializeField] private bool loop = true;
+        [SerializeField] private bool carousel = false;
+        [SerializeField] private bool fixSpacingX = false;
+        [SerializeField] private float snapSpeed = 15f;
+        [SerializeField] private float carouselInterval = 3f;
+        [SerializeField] private float velocityThreshold = 500f;
 
-        //是否开启轮播
-        [SerializeField]
-        public bool carousel = false;
+        private int currentPage;
+        private bool isDragging;
+        private Coroutine snapCoroutine;
+        private Coroutine carouselCoroutine;
 
-        //是否强设 spacingX
-        [SerializeField]
-        public bool fixSpacingX = false;
+        private const int expandCellCountForLoop = 2;
 
-        //轮播翻页速度
-        [SerializeField]
-        private float carouselSpeed = 1f;
-
-        //轮播每页停留时间
-        [SerializeField]
-        private float carouselStay = 1f;
-
-        //页宽
         private float pageWidth { get { return cellPrefabRT.rect.width; } }
+        private float addContentWidthForLoop { get { return loop ? cellPrefabRT.rect.width : 0; } }
 
-        //调整边距
-        protected override void FixPadding()
+        protected override void Start()
         {
-            if (!loop) { return; }
+            base.Start();
+            //TryStartCarousel();
+        }
+
+        #region override
+        //调整边距
+        protected override void FixPadding() 
+        {
+            if (loop) return;
             paddingLeft = paddingRight = (viewportRT.rect.width - cellPrefabRT.rect.width) / 2;
         }
 
-        //调整X间距
+        //调整间距
         protected override void FixSpacingX()
         {
-            if (!fixSpacingX) { return; }
+            if (!fixSpacingX) return;
             spacingX = viewportRT.rect.width - cellPrefabRT.rect.width;
         }
+
+        //调整视口容差
+        protected override void FixViewportOffset()
+        {
+            if (loop) 
+            {
+                viewportOffsetLeft = spacingX + expandCellCountForLoop / 2 * cellPrefabRT.rect.width;
+                viewportOffsetRight = spacingX + expandCellCountForLoop / 2 * cellPrefabRT.rect.width;
+            }
+            else
+            {
+                base.FixViewportOffset(); 
+            }
+        }
+
+        //计算并设置Content大小
+        protected override void CalcAndSetContentSize()
+        {
+            if (loop)
+            {
+                //loop 时，扩展N个Cell 计入Content宽度（暂设为2，实际由 viewport 和 cell 宽度的比值决定）
+                //loop 时，paddingLeft 和 paddingRight 不计入Content宽度
+                contentWidth = (cellCount + expandCellCountForLoop) * (cellPrefabRT.rect.width + spacingX) - spacingX;
+                contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
+
+                //注意，paddingLeft 影响 Content 起始位置
+                contentRT.anchoredPosition = new Vector2(paddingLeft + cellPrefabRT.rect.width * 1, 0);
+            }
+            else
+            {
+                base.CalcAndSetContentSize();
+            }
+        }
+
+        //计算Cell的X坐标
+        protected override float CalcCellPosX(int index)
+        {
+            return base.CalcCellPosX(index) + (loop ? cellPrefabRT.rect.width : 0);
+        }
+        #endregion
+
+        #region Drag Handling
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            isDragging = true;
+            //TryStopSnapping();
+            //TryStopCarousel();
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            isDragging = false;
+            //SnapToNearestPage();
+            //TryStartCarousel();
+        }
+        #endregion
+
+        #region Snap
+        private void SnapToNearestPage()
+        {
+            int direction = CalculateDirection();
+            currentPage = GetValidPageIndex(currentPage + direction);
+
+            float targetPosition = CalculatePagePosition(currentPage);
+            snapCoroutine = StartCoroutine(SmoothSnap(targetPosition));
+        }
+
+        private int CalculateDirection()
+        {
+            float velocity = scrollRect.velocity.x;
+            if (Mathf.Abs(velocity) > velocityThreshold)
+                return (int)Mathf.Sign(velocity);
+
+            float pageProgress = (contentRT.anchoredPosition.x - addContentWidthForLoop) % pageWidth / pageWidth;
+            return pageProgress > 0.5f ? 1 : -1;
+        }
+
+        private IEnumerator SmoothSnap(float targetX)
+        {
+            Vector2 startPos = contentRT.anchoredPosition;
+            Vector2 targetPos = new Vector2(targetX, startPos.y);
+            float progress = 0;
+
+            while (progress < 1)
+            {
+                progress = Mathf.Clamp01(progress + Time.deltaTime * snapSpeed);
+                contentRT.anchoredPosition = Vector2.Lerp(startPos, targetPos, progress);
+                yield return null;
+            }
+
+            HandleLoopPosition();
+        }
+
+        private void TryStopSnapping()
+        {
+            if (snapCoroutine == null) { return; }
+
+            StopCoroutine(snapCoroutine);
+            snapCoroutine = null;
+        }
+        #endregion
+
+        #region Loop
+        private void HandleLoopPosition()
+        {
+            if (!loop) return;
+
+            float loopThreshold = cellCount * pageWidth;
+            float currentPos = contentRT.anchoredPosition.x - addContentWidthForLoop;
+
+            if (currentPos > loopThreshold)
+            {
+                contentRT.anchoredPosition -= Vector2.right * loopThreshold;
+            }
+            else if (currentPos < -pageWidth)
+            {
+                contentRT.anchoredPosition += Vector2.right * loopThreshold;
+            }
+        }
+
+        private int GetValidPageIndex(int page)
+        {
+            if (loop) return (page % cellCount + cellCount) % cellCount;
+            return Mathf.Clamp(page, 0, cellCount - 1);
+        }
+        #endregion
+
+        #region Carousel
+        private void TryStartCarousel()
+        {
+            if (!carousel) { return; }
+            carouselCoroutine = StartCoroutine(CarouselRoutine());
+        }
+
+        private void TryStopCarousel()
+        {
+            if (!carousel) { return; }
+            if (carouselCoroutine == null) { return; }
+
+            StopCoroutine(carouselCoroutine);
+            carouselCoroutine = null;
+        }
+
+        private IEnumerator CarouselRoutine()
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(carouselInterval);
+                if (!isDragging && snapCoroutine == null)
+                {
+                    currentPage = GetValidPageIndex(currentPage + 1);
+                    SnapToNearestPage();
+                }
+            }
+        }
+        #endregion
+
+        #region Position Calculations
+        private float CalculatePagePosition(int page)
+        {
+            if (loop) return addContentWidthForLoop + page * pageWidth;
+            return Mathf.Clamp(page * pageWidth, 0, (cellCount - 1) * pageWidth);
+        }
+        #endregion
+
+        #region Utility Methods
+        public void JumpTo(int pageIndex)
+        {
+            currentPage = GetValidPageIndex(pageIndex);
+            contentRT.anchoredPosition = new Vector2(CalculatePagePosition(currentPage), 0);
+            HandleLoopPosition();
+        }
+        #endregion
     }
 }
-
 

@@ -563,7 +563,12 @@ MonoBehaviour:
   paddingLeft: 10
   paddingRight: 10
   spacingX: 10
-  snap: 0
+  loop: 1
+  carousel: 0
+  fixSpacingX: 0
+  snapSpeed: 15
+  carouselInterval: 3
+  velocityThreshold: 500
 --- !u!114 &1247502330
 MonoBehaviour:
   m_ObjectHideFlags: 0
