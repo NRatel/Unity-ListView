@@ -49,7 +49,7 @@ using NRatel.Fundamental;
 
 namespace NRatel
 {
-    public class PageView : ListViewV2, IBeginDragHandler, IEndDragHandler
+    public class PageView : ListViewV2  //, IBeginDragHandler, IEndDragHandler
     {
         [Header("Page Settings")]
         [SerializeField] private bool loop = true;
@@ -67,17 +67,17 @@ namespace NRatel
         //原始数量个Cell占用的宽度
         private float actualConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
 
-        //开启loop时，Content单侧扩展Cell的个数
-        private const int oneSideCellCountForLoop = 1;
+        //开启loop时，扩展宽度
+        private float expandWidthForLoop { get { return cellPrefabRT.rect.width * cellCount; } }
 
         //开启loop时，单侧扩展宽度
-        private float oneSideExpandWidthForLoop { get { return cellPrefabRT.rect.width * oneSideCellCountForLoop; } }
-
-        //开启loop时，两侧扩展宽度
-        private float twoSideExpandWidthForLoop { get { return oneSideExpandWidthForLoop * 2; } }
+        private float oneSideExpandWidthForLoop { get { return expandWidthForLoop / 2; } }
 
         //Content起始位置
         private float contentStartPosX { get { return -oneSideExpandWidthForLoop; } }
+
+        //循环阈值
+        private float loopThreshold { get { return oneSideExpandWidthForLoop / 2; } }
 
 
         protected override void Start()
@@ -86,11 +86,11 @@ namespace NRatel
             //TryStartCarousel();
         }
 
-        #region override
+        #region Override
         protected override void OnScrollValueChanged(Vector2 delta)
         {
-            base.OnScrollValueChanged(delta);   // 保持原有逻辑
             TryHandleLoopPos();               // 新增循环位置处理
+            base.OnScrollValueChanged(delta);   // 保持原有逻辑
         }
 
         //调整边距
@@ -128,10 +128,11 @@ namespace NRatel
             {
                 //loop 时，扩展N个Cell 计入Content宽度（实际数量可由 viewport 和 cell 宽度的比值决定 todo）
                 //loop 时，paddingLeft 和 paddingRight 无需计入Content宽度
-                contentWidth = actualConetontWidth + twoSideExpandWidthForLoop;
+                contentWidth = actualConetontWidth + expandWidthForLoop;
                 contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
 
                 //注意，paddingLeft 影响 Content 起始位置
+                Debug.Log("actualConetontWidth: " + actualConetontWidth);
                 Debug.Log("contentStartPosX: " + contentStartPosX);
                 contentRT.anchoredPosition = new Vector2(contentStartPosX, 0);
             }
@@ -160,90 +161,93 @@ namespace NRatel
         }
         #endregion
 
-        #region Drag Handling
-        public void OnBeginDrag(PointerEventData eventData)
-        {
-            isDragging = true;
-            //TryStopSnapping();
-            //TryStopCarousel();
-        }
+        //#region Drag Handling
+        //public void OnBeginDrag(PointerEventData eventData)
+        //{
+        //    isDragging = true;
+        //    //TryStopSnapping();
+        //    //TryStopCarousel();
+        //}
 
-        public void OnEndDrag(PointerEventData eventData)
-        {
-            isDragging = false;
-            //SnapToNearestPage();
-            //TryStartCarousel();
-        }
-        #endregion
+        //public void OnEndDrag(PointerEventData eventData)
+        //{
+        //    isDragging = false;
+        //    //SnapToNearestPage();
+        //    //TryStartCarousel();
+        //}
+        //#endregion
 
-        #region Snap
-        private void SnapToNearestPage()
-        {
-            int direction = CalculateDirection();
-            currentPage = GetValidPageIndex(currentPage + direction);
+        //#region Snap
+        //private void SnapToNearestPage()
+        //{
+        //    int direction = CalculateDirection();
+        //    currentPage = GetValidPageIndex(currentPage + direction);
 
-            float targetPosition = CalculatePagePosition(currentPage);
-            snapCoroutine = StartCoroutine(SmoothSnap(targetPosition));
-        }
+        //    float targetPosition = CalculatePagePosition(currentPage);
+        //    snapCoroutine = StartCoroutine(SmoothSnap(targetPosition));
+        //}
 
-        private int CalculateDirection()
-        {
-            //float velocity = scrollRect.velocity.x;
-            //if (Mathf.Abs(velocity) > velocityThreshold)
-            //    return (int)Mathf.Sign(velocity);
+        //private int CalculateDirection()
+        //{
+        //    //float velocity = scrollRect.velocity.x;
+        //    //if (Mathf.Abs(velocity) > velocityThreshold)
+        //    //    return (int)Mathf.Sign(velocity);
 
-            //float pageProgress = (contentRT.anchoredPosition.x - expanedContentWidthForLoop) % pageWidth / pageWidth;
-            //return pageProgress > 0.5f ? 1 : -1;
+        //    //float pageProgress = (contentRT.anchoredPosition.x - expanedContentWidthForLoop) % pageWidth / pageWidth;
+        //    //return pageProgress > 0.5f ? 1 : -1;
 
-            return -1;
-        }
+        //    return -1;
+        //}
 
-        private IEnumerator SmoothSnap(float targetX)
-        {
-            Vector2 startPos = contentRT.anchoredPosition;
-            Vector2 targetPos = new Vector2(targetX, startPos.y);
-            float progress = 0;
+        //private IEnumerator SmoothSnap(float targetX)
+        //{
+        //    Vector2 startPos = contentRT.anchoredPosition;
+        //    Vector2 targetPos = new Vector2(targetX, startPos.y);
+        //    float progress = 0;
 
-            while (progress < 1)
-            {
-                progress = Mathf.Clamp01(progress + Time.deltaTime * snapSpeed);
-                contentRT.anchoredPosition = Vector2.Lerp(startPos, targetPos, progress);
-                yield return null;
-            }
+        //    while (progress < 1)
+        //    {
+        //        progress = Mathf.Clamp01(progress + Time.deltaTime * snapSpeed);
+        //        contentRT.anchoredPosition = Vector2.Lerp(startPos, targetPos, progress);
+        //        yield return null;
+        //    }
 
-            TryHandleLoopPos();
-        }
+        //    TryHandleLoopPos();
+        //}
 
-        private void TryStopSnapping()
-        {
-            if (snapCoroutine == null) { return; }
+        //private void TryStopSnapping()
+        //{
+        //    if (snapCoroutine == null) { return; }
 
-            StopCoroutine(snapCoroutine);
-            snapCoroutine = null;
-        }
-        #endregion
+        //    StopCoroutine(snapCoroutine);
+        //    snapCoroutine = null;
+        //}
+        //#endregion
 
         #region Loop
         private void TryHandleLoopPos()
         {
             if (!loop) return;
 
-            //// 获取当前内容位置（需考虑初始偏移量）
-            //float currentPosX = contentRT.anchoredPosition.x;
-            //float loopThreshold = cellCount * pageWidth;
+            // 获取当前位置
+            float curPosX = contentRT.anchoredPosition.x;
 
-            //// 向右滑动越界处理
-            //if (currentPosX > loopThreshold)
-            //{
-            //    contentRT.anchoredPosition -= Vector2.right * loopThreshold;
-            //    Canvas.ForceUpdateCanvases(); // 强制刷新布局
-            //}
-            //// 向左滑动越界处理
-            //else if (currentPosX < -pageWidth)
-            //{
-            //    contentRT.anchoredPosition += Vector2.right * loopThreshold;
-            //    Canvas.ForceUpdateCanvases(); // 强制刷新布局
-            //}
+            //向右滑动，左侧超过阈值时
+            //1、原始左边界Content坐标为：0
+            //2、向左偏移， oneSideExpandWidthForLoop 到起始位置
+            //3、向右偏移，到阈值处
+            if (curPosX > 0 - oneSideExpandWidthForLoop + loopThreshold)
+            {
+                contentRT.anchoredPosition -= Vector2.right * (actualConetontWidth + spacingX);
+            }
+            //向左滑动，右侧超过阈值时
+            //1、原始右边界Content坐标为：-(actualConetontWidth - viewportRT.rect.width)
+            //2、向左偏移，oneSideExpandWidthForLoop 到起始位置
+            //3、向左偏移，到阈值处
+            else if (curPosX < -(actualConetontWidth - viewportRT.rect.width) - oneSideExpandWidthForLoop - loopThreshold)
+            {
+                contentRT.anchoredPosition += Vector2.right * (actualConetontWidth + spacingX);
+            }
         }
 
         private int GetValidPageIndex(int page)
@@ -253,53 +257,53 @@ namespace NRatel
         }
         #endregion
 
-        #region Carousel
-        private void TryStartCarousel()
-        {
-            if (!carousel) { return; }
-            carouselCoroutine = StartCoroutine(CarouselRoutine());
-        }
+        //#region Carousel
+        //private void TryStartCarousel()
+        //{
+        //    if (!carousel) { return; }
+        //    carouselCoroutine = StartCoroutine(CarouselRoutine());
+        //}
 
-        private void TryStopCarousel()
-        {
-            if (!carousel) { return; }
-            if (carouselCoroutine == null) { return; }
+        //private void TryStopCarousel()
+        //{
+        //    if (!carousel) { return; }
+        //    if (carouselCoroutine == null) { return; }
 
-            StopCoroutine(carouselCoroutine);
-            carouselCoroutine = null;
-        }
+        //    StopCoroutine(carouselCoroutine);
+        //    carouselCoroutine = null;
+        //}
 
-        private IEnumerator CarouselRoutine()
-        {
-            while (true)
-            {
-                yield return new WaitForSeconds(carouselInterval);
-                if (!isDragging && snapCoroutine == null)
-                {
-                    currentPage = GetValidPageIndex(currentPage + 1);
-                    SnapToNearestPage();
-                }
-            }
-        }
-        #endregion
+        //private IEnumerator CarouselRoutine()
+        //{
+        //    while (true)
+        //    {
+        //        yield return new WaitForSeconds(carouselInterval);
+        //        if (!isDragging && snapCoroutine == null)
+        //        {
+        //            currentPage = GetValidPageIndex(currentPage + 1);
+        //            SnapToNearestPage();
+        //        }
+        //    }
+        //}
+        //#endregion
 
-        #region Position Calculations
-        private float CalculatePagePosition(int page)
-        {
-            //if (loop) return expanedContentWidthForLoop + page * pageWidth;
-            //return Mathf.Clamp(page * pageWidth, 0, (cellCount - 1) * pageWidth);
-            return -1;
-        }
-        #endregion
+        //#region Position Calculations
+        //private float CalculatePagePosition(int page)
+        //{
+        //    //if (loop) return expanedContentWidthForLoop + page * pageWidth;
+        //    //return Mathf.Clamp(page * pageWidth, 0, (cellCount - 1) * pageWidth);
+        //    return -1;
+        //}
+        //#endregion
 
-        #region Utility Methods
-        public void JumpTo(int pageIndex)
-        {
-            currentPage = GetValidPageIndex(pageIndex);
-            contentRT.anchoredPosition = new Vector2(CalculatePagePosition(currentPage), 0);
-            TryHandleLoopPos();
-        }
-        #endregion
+        //#region Utility Methods
+        //public void JumpTo(int pageIndex)
+        //{
+        //    currentPage = GetValidPageIndex(pageIndex);
+        //    contentRT.anchoredPosition = new Vector2(CalculatePagePosition(currentPage), 0);
+        //    TryHandleLoopPos();
+        //}
+        //#endregion
     }
 }
 

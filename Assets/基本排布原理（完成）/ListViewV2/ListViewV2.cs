@@ -140,8 +140,8 @@ namespace NRatel.Fundamental
             //完全滑出右边界的数量（可为负）
             int outCountFromRight = Mathf.FloorToInt((outWidthFromRight - paddingRight + spacingX) / (cellPrefabRT.rect.width + spacingX));
 
-            Debug.Log($"outWidthFromLeft: {outWidthFromLeft}, outWidthFromRight: {outWidthFromRight}");
-            Debug.Log($"outCountFromLeft: {outCountFromLeft}, outCountFromRight: {outCountFromRight}");
+            //Debug.Log($"outWidthFromLeft: {outWidthFromLeft}, outWidthFromRight: {outWidthFromRight}");
+            //Debug.Log($"outCountFromLeft: {outCountFromLeft}, outCountFromRight: {outCountFromRight}");
 
             //应该显示的开始索引和结束索引
             int startIndex = (outCountFromLeft); // 省略了 先+1再-1。 从滑出的下一个开始，索引从0开始;

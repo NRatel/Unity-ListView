@@ -8,13 +8,25 @@ public class ListCell : MonoBehaviour
 {
     public Text text;
 
-    void Start()
+    private Image m_Image;
+    static private Dictionary<int, Color> sm_ColorCache;
+
+    private void Awake()
     {
-        GetComponent<Image>().color = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
+        m_Image = GetComponent<Image>();
+        sm_ColorCache = new Dictionary<int, Color>();
     }
 
     public void Refresh(int index)
     {
         text.text = index.ToString();
+
+        bool exist = sm_ColorCache.TryGetValue(index, out Color color);
+        if (!exist) 
+        {
+            color = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
+            sm_ColorCache[index] = color;
+        }
+        m_Image.color = color;
     }
 }
