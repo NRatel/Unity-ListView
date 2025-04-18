@@ -126,7 +126,7 @@ namespace NRatel.Fundamental
         //计算 应出现的索引 和 应消失的索引
         protected virtual void CalcIndexes()
         {
-            //始终以viewpoert左边界为参考原点，向右为正方向观察。则有：
+            //始终以viewpoert左边界为参考原点观察。则有：
             //content左边界 相对于 viewport左边界（含viewportOffset） 的位移为：
             float outWidthFromLeft = -(contentRT.anchoredPosition.x + viewportOffsetLeft);
             //content右边界 相对于 viewport右边界（含viewportOffset） 的位移为：
