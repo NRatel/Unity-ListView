@@ -17,7 +17,7 @@ using NRatel.Fundamental;
 //      可配置 是/否
 
 // 3、是否自动轮播（Carousel）
-//      可配置 是/否，滑动速度、页停留时间
+//      可配置 是/否，轮播翻页速度、页停留时间
 
 // 4、页宽。
 //      将 Cell宽度 作为页宽，而非 Viewport宽度。
@@ -44,18 +44,41 @@ namespace NRatel
 {
     public class PageView : ListViewV2
     {
-        public bool snap;
+        //是否开启循环翻页
+        [SerializeField]
+        public bool loop = false;
+
+        //是否开启轮播
+        [SerializeField]
+        public bool carousel = false;
+
+        //是否强设 spacingX
+        [SerializeField]
+        public bool fixSpacingX = false;
+
+        //轮播翻页速度
+        [SerializeField]
+        private float carouselSpeed = 1f;
+
+        //轮播每页停留时间
+        [SerializeField]
+        private float carouselStay = 1f;
+
+        //页宽
+        private float pageWidth { get { return cellPrefabRT.rect.width; } }
 
         //调整边距
         protected override void FixPadding()
         {
+            if (!loop) { return; }
             paddingLeft = paddingRight = (viewportRT.rect.width - cellPrefabRT.rect.width) / 2;
         }
 
-        //调整间距
+        //调整X间距
         protected override void FixSpacingX()
         {
-            //spacingX = viewportRT.rect.width - cellPrefabRT.rect.width;
+            if (!fixSpacingX) { return; }
+            spacingX = viewportRT.rect.width - cellPrefabRT.rect.width;
         }
     }
 }

@@ -77,10 +77,7 @@ namespace NRatel.Fundamental
 
         protected virtual void Start()
         {
-            if (cellCount < 0)
-            {
-                return;
-            }
+            if (cellCount < 0) { return; }
 
             FixPadding();
             FixSpacingX();
@@ -96,10 +93,7 @@ namespace NRatel.Fundamental
 
         protected virtual void OnScrollValueChanged(Vector2 delta)
         {
-            if (cellCount < 0)
-            {
-                return;
-            }
+            if (cellCount < 0) { return; }
 
             CalcIndexes();
             DisAppearCells();
