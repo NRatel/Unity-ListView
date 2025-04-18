@@ -128,16 +128,16 @@ namespace NRatel.Fundamental
         {
             //始终以viewpoert左边界为参考原点，向右为正方向观察。则有：
             //content左边界 相对于 viewport左边界（含viewportOffset） 的位移为：
-            float outWidthFromLeft = 0 + contentRT.anchoredPosition.x + viewportOffsetLeft;
+            float outWidthFromLeft = -(contentRT.anchoredPosition.x + viewportOffsetLeft);
             //content右边界 相对于 viewport右边界（含viewportOffset） 的位移为：
             float outWidthFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
 
             //计算完全滑出左边界和完全滑出右边的数量。 要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
             int outCountFromLeft = 0;    //完全滑出左边界的数量
             int outCountFromRight = 0;   //完全滑出右边界的数量
-            if (outWidthFromLeft < 0)
+            if (outWidthFromLeft > 0)
             {
-                outCountFromLeft = Mathf.FloorToInt((-outWidthFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
+                outCountFromLeft = Mathf.FloorToInt((outWidthFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
                 outCountFromLeft = Mathf.Clamp(outCountFromLeft, 0, cellCount);
             }
             if (outWidthFromRight > 0)
@@ -146,13 +146,14 @@ namespace NRatel.Fundamental
                 outCountFromRight = Mathf.Clamp(outCountFromRight, 0, cellCount);
             }
 
-            //Debug.Log("outFromLeft, outFromRight: " + outFromLeft + ", " + outFromRight);
+            Debug.Log($"outWidthFromLeft: {outWidthFromLeft}, outWidthFromRight: {outWidthFromRight}");
+            //Debug.Log($"outCountFromLeft: {outCountFromLeft}, outCountFromRight: {outCountFromRight}");
 
             //应该显示的开始索引和结束索引
             int startIndex = (outCountFromLeft); // 省略了 先+1再-1。 从滑出的下一个开始，索引从0开始;
             int endIndex = (cellCount - 1 - outCountFromRight);
 
-            //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
+            //Debug.Log($"startIndex: {startIndex}, endIndex: {endIndex}");
 
             for (int index = startIndex; index <= endIndex; index++)
             {
@@ -267,7 +268,7 @@ namespace NRatel.Fundamental
             //X = 左边界间隙 + 由Cell的pivot决定的起始偏移值 + 前面已有Cell的宽度总和 + 前面已有的间距总和
             float x = paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
 
-            Debug.Log("index, cellPosX" + index + "," + x);
+            //Debug.Log("index, cellPosX" + index + "," + x);
             return x;
         }
 
