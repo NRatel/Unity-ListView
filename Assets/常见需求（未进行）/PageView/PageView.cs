@@ -64,10 +64,21 @@ namespace NRatel
         private Coroutine snapCoroutine;
         private Coroutine carouselCoroutine;
 
-        private const int expandCellCountForLoop = 2;
+        //原始数量个Cell占用的宽度
+        private float actualConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
 
-        private float pageWidth { get { return cellPrefabRT.rect.width; } }
-        private float addContentWidthForLoop { get { return loop ? cellPrefabRT.rect.width : 0; } }
+        //开启loop时，Content单侧扩展Cell的个数
+        private const int oneSideCellCountForLoop = 1;
+
+        //开启loop时，单侧扩展宽度
+        private float oneSideExpandWidthForLoop { get { return cellPrefabRT.rect.width * oneSideCellCountForLoop; } }
+
+        //开启loop时，两侧扩展宽度
+        private float twoSideExpandWidthForLoop { get { return oneSideExpandWidthForLoop * 2; } }
+
+        //Content起始位置
+        private float contentStartPosX { get { return -oneSideExpandWidthForLoop; } }
+
 
         protected override void Start()
         {
@@ -76,6 +87,12 @@ namespace NRatel
         }
 
         #region override
+        protected override void OnScrollValueChanged(Vector2 delta)
+        {
+            base.OnScrollValueChanged(delta);   // 保持原有逻辑
+            TryHandleLoopPos();               // 新增循环位置处理
+        }
+
         //调整边距
         protected override void FixPadding() 
         {
@@ -95,8 +112,8 @@ namespace NRatel
         {
             if (loop) 
             {
-                viewportOffsetLeft = spacingX + expandCellCountForLoop / 2 * cellPrefabRT.rect.width;
-                viewportOffsetRight = spacingX + expandCellCountForLoop / 2 * cellPrefabRT.rect.width;
+                viewportOffsetLeft = spacingX + oneSideExpandWidthForLoop;
+                viewportOffsetRight = spacingX + oneSideExpandWidthForLoop;
             }
             else
             {
@@ -109,13 +126,14 @@ namespace NRatel
         {
             if (loop)
             {
-                //loop 时，扩展N个Cell 计入Content宽度（暂设为2，实际由 viewport 和 cell 宽度的比值决定）
-                //loop 时，paddingLeft 和 paddingRight 不计入Content宽度
-                contentWidth = (cellCount + expandCellCountForLoop) * (cellPrefabRT.rect.width + spacingX) - spacingX;
+                //loop 时，扩展N个Cell 计入Content宽度（实际数量可由 viewport 和 cell 宽度的比值决定 todo）
+                //loop 时，paddingLeft 和 paddingRight 无需计入Content宽度
+                contentWidth = actualConetontWidth + twoSideExpandWidthForLoop;
                 contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
 
                 //注意，paddingLeft 影响 Content 起始位置
-                contentRT.anchoredPosition = new Vector2(paddingLeft + cellPrefabRT.rect.width * 1, 0);
+                Debug.Log("contentStartPosX: " + contentStartPosX);
+                contentRT.anchoredPosition = new Vector2(contentStartPosX, 0);
             }
             else
             {
@@ -123,10 +141,22 @@ namespace NRatel
             }
         }
 
+        //认为任意索引都是有效的
+        protected override bool IsValidIndex(int index)
+        {
+            return true;
+        }
+
+        //使索引有效（将任意索引数转到 [0~cellCount-1] 中）
+        protected override int ValidateIndex(int index)
+        {
+            return (index % cellCount + cellCount) % cellCount;
+        }
+
         //计算Cell的X坐标
         protected override float CalcCellPosX(int index)
         {
-            return base.CalcCellPosX(index) + (loop ? cellPrefabRT.rect.width : 0);
+            return base.CalcCellPosX(index) + (loop ? -contentStartPosX : 0);
         }
         #endregion
 
@@ -158,12 +188,14 @@ namespace NRatel
 
         private int CalculateDirection()
         {
-            float velocity = scrollRect.velocity.x;
-            if (Mathf.Abs(velocity) > velocityThreshold)
-                return (int)Mathf.Sign(velocity);
+            //float velocity = scrollRect.velocity.x;
+            //if (Mathf.Abs(velocity) > velocityThreshold)
+            //    return (int)Mathf.Sign(velocity);
 
-            float pageProgress = (contentRT.anchoredPosition.x - addContentWidthForLoop) % pageWidth / pageWidth;
-            return pageProgress > 0.5f ? 1 : -1;
+            //float pageProgress = (contentRT.anchoredPosition.x - expanedContentWidthForLoop) % pageWidth / pageWidth;
+            //return pageProgress > 0.5f ? 1 : -1;
+
+            return -1;
         }
 
         private IEnumerator SmoothSnap(float targetX)
@@ -179,7 +211,7 @@ namespace NRatel
                 yield return null;
             }
 
-            HandleLoopPosition();
+            TryHandleLoopPos();
         }
 
         private void TryStopSnapping()
@@ -192,21 +224,26 @@ namespace NRatel
         #endregion
 
         #region Loop
-        private void HandleLoopPosition()
+        private void TryHandleLoopPos()
         {
             if (!loop) return;
 
-            float loopThreshold = cellCount * pageWidth;
-            float currentPos = contentRT.anchoredPosition.x - addContentWidthForLoop;
+            //// 获取当前内容位置（需考虑初始偏移量）
+            //float currentPosX = contentRT.anchoredPosition.x;
+            //float loopThreshold = cellCount * pageWidth;
 
-            if (currentPos > loopThreshold)
-            {
-                contentRT.anchoredPosition -= Vector2.right * loopThreshold;
-            }
-            else if (currentPos < -pageWidth)
-            {
-                contentRT.anchoredPosition += Vector2.right * loopThreshold;
-            }
+            //// 向右滑动越界处理
+            //if (currentPosX > loopThreshold)
+            //{
+            //    contentRT.anchoredPosition -= Vector2.right * loopThreshold;
+            //    Canvas.ForceUpdateCanvases(); // 强制刷新布局
+            //}
+            //// 向左滑动越界处理
+            //else if (currentPosX < -pageWidth)
+            //{
+            //    contentRT.anchoredPosition += Vector2.right * loopThreshold;
+            //    Canvas.ForceUpdateCanvases(); // 强制刷新布局
+            //}
         }
 
         private int GetValidPageIndex(int page)
@@ -249,8 +286,9 @@ namespace NRatel
         #region Position Calculations
         private float CalculatePagePosition(int page)
         {
-            if (loop) return addContentWidthForLoop + page * pageWidth;
-            return Mathf.Clamp(page * pageWidth, 0, (cellCount - 1) * pageWidth);
+            //if (loop) return expanedContentWidthForLoop + page * pageWidth;
+            //return Mathf.Clamp(page * pageWidth, 0, (cellCount - 1) * pageWidth);
+            return -1;
         }
         #endregion
 
@@ -259,7 +297,7 @@ namespace NRatel
         {
             currentPage = GetValidPageIndex(pageIndex);
             contentRT.anchoredPosition = new Vector2(CalculatePagePosition(currentPage), 0);
-            HandleLoopPosition();
+            TryHandleLoopPos();
         }
         #endregion
     }

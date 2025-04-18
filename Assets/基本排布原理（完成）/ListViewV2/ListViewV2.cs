@@ -228,7 +228,8 @@ namespace NRatel.Fundamental
                 cellRT.anchoredPosition = new Vector2(CalcCellPosX(index), cellRT.anchoredPosition.y);
 
                 //设置Cell数据，对Cell进行初始化
-                cellRT.GetComponent<ListCell>().Refresh(index);
+                int validIndex = ValidateIndex(index);
+                cellRT.GetComponent<ListCell>().Refresh(validIndex);
             }
         }
 
@@ -260,9 +261,16 @@ namespace NRatel.Fundamental
             }
         }
 
+        //是否有效索引
         protected virtual bool IsValidIndex(int index)
         {
             return index >= 0 && index < cellCount;
+        }
+
+        //使索引有效
+        protected virtual int ValidateIndex(int index)
+        {
+            return index;
         }
 
         //计算Cell的X坐标
