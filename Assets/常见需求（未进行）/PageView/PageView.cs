@@ -40,6 +40,13 @@ using NRatel.Fundamental;
 //      ①、保持用户指定值。但应满足：spacingX <= Viewport宽度 - Cell宽度。
 //      ②、直接强设为：spacingX = Viewport宽度 - Cell宽度，即 每个Cell独占一页
 
+// 7、cell 数量要求
+//      根据是否开启loop，要求不同。
+//      ①、不开启loop时，
+//          无要求
+//      ②、开启loop时，
+//          需保证：同一时刻下，Viewport中不会出现多个同一Cell。
+
 namespace NRatel
 {
     public class PageView : ListViewV2
