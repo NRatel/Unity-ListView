@@ -133,21 +133,15 @@ namespace NRatel.Fundamental
             float outWidthFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
 
             //计算完全滑出左边界和完全滑出右边的数量。 要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-            int outCountFromLeft = 0;    //完全滑出左边界的数量
-            int outCountFromRight = 0;   //完全滑出右边界的数量
-            if (outWidthFromLeft > 0)
-            {
-                outCountFromLeft = Mathf.FloorToInt((outWidthFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
-                outCountFromLeft = Mathf.Clamp(outCountFromLeft, 0, cellCount);
-            }
-            if (outWidthFromRight > 0)
-            {
-                outCountFromRight = Mathf.FloorToInt((outWidthFromRight - paddingRight + spacingX) / (cellPrefabRT.rect.width + spacingX));
-                outCountFromRight = Mathf.Clamp(outCountFromRight, 0, cellCount);
-            }
+
+            //完全滑出左边界的数量（可为负）
+            int outCountFromLeft = Mathf.FloorToInt((outWidthFromLeft - paddingLeft + spacingX) / (cellPrefabRT.rect.width + spacingX));
+
+            //完全滑出右边界的数量（可为负）
+            int outCountFromRight = Mathf.FloorToInt((outWidthFromRight - paddingRight + spacingX) / (cellPrefabRT.rect.width + spacingX));
 
             Debug.Log($"outWidthFromLeft: {outWidthFromLeft}, outWidthFromRight: {outWidthFromRight}");
-            //Debug.Log($"outCountFromLeft: {outCountFromLeft}, outCountFromRight: {outCountFromRight}");
+            Debug.Log($"outCountFromLeft: {outCountFromLeft}, outCountFromRight: {outCountFromRight}");
 
             //应该显示的开始索引和结束索引
             int startIndex = (outCountFromLeft); // 省略了 先+1再-1。 从滑出的下一个开始，索引从0开始;
@@ -211,6 +205,8 @@ namespace NRatel.Fundamental
         {
             foreach (int index in disAppearIndexes)
             {
+                if (!IsValidIndex(index)) { continue; }
+
                 RectTransform cellRT = cellRTDict[index];
                 cellRTDict.Remove(index);
                 cellRT.gameObject.SetActive(false);
@@ -223,6 +219,8 @@ namespace NRatel.Fundamental
         {
             foreach (int index in appearIndexes)
             {
+                if (!IsValidIndex(index)) { continue; }
+
                 RectTransform cellRT = GetOrCreateCell(index);
                 cellRTDict[index] = cellRT;
 
@@ -260,6 +258,11 @@ namespace NRatel.Fundamental
                 //索引大的在下
                 kvp.Value.SetAsFirstSibling();
             }
+        }
+
+        protected virtual bool IsValidIndex(int index)
+        {
+            return index >= 0 && index < cellCount;
         }
 
         //计算Cell的X坐标
