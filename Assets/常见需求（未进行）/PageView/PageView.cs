@@ -50,15 +50,20 @@ using System;
 
 namespace NRatel
 {
-    public class PageView : ListViewV2  //, IBeginDragHandler, IEndDragHandler
+    public class PageView : ListViewV2, IBeginDragHandler, IEndDragHandler
     {
         [Header("Page Settings")]
-        [SerializeField] private bool loop = true;
-        [SerializeField] private bool carousel = false;
-        [SerializeField] private bool fixSpacingX = false;
-        [SerializeField] private float snapSpeed = 15f;
-        [SerializeField] private float carouselInterval = 3f;
-        [SerializeField] private float velocityThreshold = 500f;
+        [SerializeField] private bool loop = true;                      //开启循环？
+        [SerializeField] private bool cellOccupyPage = false;           //使Cell占用一页（强设将spacingX）
+
+        [Header("Snap Settings")]
+        [SerializeField] private float snapVelocity = 10f;              //Snap速度
+        [SerializeField] private float snapWaitScrollVelocityX = 10f;   //开启惯性时，等待基本停稳才开始Snap
+
+        [Header("Carousel Settings")]
+        [SerializeField] private bool carousel = false;                 //开启轮播？
+        [SerializeField] private float carouselInterval = 3f;           //轮播启动间隔
+        [SerializeField] private float carouselVelocity = 500f;        //
 
         private bool isDragging;
         private Coroutine snapCoroutine;
@@ -102,7 +107,7 @@ namespace NRatel
         //调整间距
         protected override void FixSpacingX()
         {
-            if (!fixSpacingX) return;
+            if (!cellOccupyPage) return;
             spacingX = viewportRT.rect.width - cellPrefabRT.rect.width;
         }
 
@@ -237,48 +242,65 @@ namespace NRatel
         // Snap协程实现
         private IEnumerator SnapRoutine()
         {
+            //如果开启惯性，则等待其基本停稳
+            if (scrollRect.inertia)
+            {
+                yield return new WaitUntil(() => 
+                {
+                    //Debug.Log("scrollRect.velocity.x: " + scrollRect.velocity.x);
+                    return Mathf.Abs(scrollRect.velocity.x) < snapWaitScrollVelocityX; 
+                });
+
+                //停止惯性速度
+                scrollRect.velocity = Vector2.zero;
+            }
+
             isSnapping = true;
 
-            float viewportWidth = viewportRT.rect.width;
-            float cellWidth = cellPrefabRT.rect.width;
-            float cellStep = cellWidth + spacingX;
+            //找离Viewport中心最近的那个Cell。
 
-            // 计算视口中心在Content空间中的位置
-            float viewportCenterInContent = -contentRT.anchoredPosition.x + viewportWidth / 2f;
+            //注意这里的相对位置计算要求 Content和Viewport没有缩放
+            Debug.Assert(contentRT.localScale == Vector3.one);
+            Debug.Assert(viewportRT.localScale == Vector3.one);
 
-            // 确定目标索引
-            int targetIndex = loop ?
-                Mathf.RoundToInt((viewportCenterInContent - cellWidth / 2f) / cellStep) :
-                Mathf.RoundToInt((viewportCenterInContent - paddingLeft - cellWidth / 2f) / cellStep);
+            float minDistance = Mathf.Infinity;
+            int minDistanceIndex = -1;
+            foreach (var t in cellRTDict)
+            {
+                //Cell距离Content左边界的距离（标量）
+                //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，若不想影响，考虑加个bool选项补偿掉。
+                float widthFromContentLeft = t.Value.anchoredPosition.x;
+                //Cell距离Viewport左边界的距离（标量）
+                float widthFromViewportLeft = widthFromContentLeft + contentRT.anchoredPosition.x;
+                //Cell距离Viewport中心的距离（矢量，若>0：在中心的右边）
+                float distanceToViewportCenter = widthFromViewportLeft - viewportRT.rect.width / 2f;
 
-            targetIndex = Mathf.Clamp(targetIndex, 0, cellCount - 1);
+                //Debug.Log($"【SnapRoutine】, index: {t.Key}, distanceToViewportCenter: {distanceToViewportCenter}");
+
+                if (Mathf.Abs(distanceToViewportCenter) < Mathf.Abs(minDistance))
+                {
+                    minDistance = distanceToViewportCenter;
+                    minDistanceIndex = t.Key;
+                }
+            }
+
+            Debug.Log($"【SnapRoutine】minIndex: {minDistanceIndex}, minDistance: {minDistance}");
 
             // 计算目标位置
-            float cellCenter = loop ?
-                targetIndex * cellStep + cellWidth / 2f :
-                paddingLeft + targetIndex * cellStep + cellWidth / 2f;
+            float targetPosX = contentRT.anchoredPosition.x - minDistance;
+            Vector2 targetPos = new Vector2(targetPosX, contentRT.anchoredPosition.y);
 
-            Vector2 targetPos = new Vector2(
-                viewportWidth / 2f - cellCenter,
-                contentRT.anchoredPosition.y
-            );
-
-            // 平滑移动动画
-            while (Vector2.Distance(contentRT.anchoredPosition, targetPos) > 0.1f)
+            // 平滑移动到目标
+            while (!Mathf.Approximately(contentRT.anchoredPosition.x, targetPos.x))
             {
-                contentRT.anchoredPosition = Vector2.Lerp(
-                    contentRT.anchoredPosition,
-                    targetPos,
-                    snapSpeed * Time.deltaTime
-                );
+                contentRT.anchoredPosition = Vector2.Lerp(contentRT.anchoredPosition, targetPos, snapVelocity * Time.deltaTime);
                 yield return null;
             }
 
             contentRT.anchoredPosition = targetPos;
-            currentPage = ValidateIndex(targetIndex);
+            currentPage = minDistanceIndex;
             isSnapping = false;
 
-            TryHandleLoopPos();
             onSnapCompleted?.Invoke();
             TryStartCarousel();
         }
