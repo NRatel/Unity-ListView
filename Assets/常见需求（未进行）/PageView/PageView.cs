@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using NRatel.Fundamental;
+using System;
 
 //要点：
 // 1、自动吸附对齐（Snap）
@@ -62,6 +63,8 @@ namespace NRatel
         private bool isDragging;
         private Coroutine snapCoroutine;
         private Coroutine carouselCoroutine;
+
+        public event Action onSnapCompleted;
 
         //核心内容宽度
         private float actualConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
@@ -168,7 +171,6 @@ namespace NRatel
         {
             isDragging = false;
             TryStartSnap();
-            TryStartCarousel();
         }
         #endregion
 
@@ -217,7 +219,12 @@ namespace NRatel
         private IEnumerator SnapRoutine()
         {
             //todo
+            //移动 contentRT.anchoredPosition 的 x值，使当前 Content中将离viewport中心最近的那个cell，在移动后处于viewport中心。
             yield return null;
+
+            //结束后，回调事件并开始轮播
+            onSnapCompleted?.Invoke();
+            TryStartCarousel();
         }
         #endregion
 
@@ -240,6 +247,7 @@ namespace NRatel
         private IEnumerator CarouselRoutine()
         {
             //todo
+            //每隔N秒，翻到下一个
             yield return null;
         }
         #endregion
