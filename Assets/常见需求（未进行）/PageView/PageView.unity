@@ -563,11 +563,11 @@ MonoBehaviour:
   paddingLeft: 30
   paddingRight: 30
   spacingX: 10
-  loop: 1
-  cellOccupyPage: 0
-  snapVelocity: 10
+  loop: 0
+  cellOccupyPage: 1
+  snapVelocity: 500
   snapWaitScrollVelocityX: 50
-  carousel: 0
+  carousel: 1
   carouselInterval: 3
   carouselVelocity: 500
 --- !u!114 &1247502330
@@ -625,7 +625,7 @@ MonoBehaviour:
   m_Vertical: 0
   m_MovementType: 1
   m_Elasticity: 0.1
-  m_Inertia: 1
+  m_Inertia: 0
   m_DecelerationRate: 0.135
   m_ScrollSensitivity: 1
   m_Viewport: {fileID: 1018716122}

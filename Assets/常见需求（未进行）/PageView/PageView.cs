@@ -57,8 +57,8 @@ namespace NRatel
         [SerializeField] private bool cellOccupyPage = false;           //使Cell占用一页（强设将spacingX）
 
         [Header("Snap Settings")]
-        [SerializeField] private float snapVelocity = 10f;              //Snap速度
-        [SerializeField] private float snapWaitScrollVelocityX = 10f;   //开启惯性时，等待基本停稳才开始Snap
+        [SerializeField] private float snapVelocity = 500f;             //Snap速度
+        [SerializeField] private float snapWaitScrollVelocityX = 50f;   //开启惯性时，等待基本停稳才开始Snap
 
         [Header("Carousel Settings")]
         [SerializeField] private bool carousel = false;                 //开启轮播？
@@ -67,10 +67,11 @@ namespace NRatel
 
         public event Action onSnapCompleted;
 
-        private bool isDragging;
-
-        private int currentPage = 0;
+        private bool isDragging = false;
         private bool isSnapping = false;
+        private bool isCarousel = false;
+
+        private int curPage = 0;
 
         private Coroutine snapCoroutine;
         private Coroutine carouselCoroutine;
@@ -228,6 +229,7 @@ namespace NRatel
             snapCoroutine = null;
         }
 
+        private float snapAddedX = 0f;
         private IEnumerator SnapRoutine()
         {
             //如果开启惯性，则等待其基本停稳
@@ -243,7 +245,8 @@ namespace NRatel
                 scrollRect.velocity = Vector2.zero;
             }
 
-            isSnapping = true;
+            // 重置 Snap X已增加量
+            snapAddedX = 0f;
 
             #region 找离Viewport中心最近的那个Cell。
             //注意这里的相对位置计算要求 Content和Viewport没有缩放
@@ -274,21 +277,26 @@ namespace NRatel
 
             Debug.Log($"【SnapRoutine】minIndex: {minDistanceIndex}, minDistance: {minDistance}");
 
-            // 计算目标位置
-            // 只需将 content 反向移动 minDistance
-            float targetPosX = contentRT.anchoredPosition.x - minDistance;
-            Vector2 targetPos = new Vector2(targetPosX, contentRT.anchoredPosition.y);
+            // 只需将 content 反向移动 minDistance。
+            // 但注意 loop会重置位置，因此不能“计算并移动到目标位置”，而是“累计偏移”
 
-            // 平滑移动到目标
-            while (!Mathf.Approximately(contentRT.anchoredPosition.x, targetPos.x))
+            // 计算目标X增加量
+            float targetAddPosX = -minDistance;
+            Debug.Log($"【SnapRoutine】targetAddPosX: {targetAddPosX}");
+
+            float direction = Mathf.Sign(targetAddPosX);
+            float velocityRate = 1;
+
+            // 平滑增加位移
+            while (Mathf.Abs(snapAddedX) < Mathf.Abs(targetAddPosX))
             {
-                contentRT.anchoredPosition = Vector2.Lerp(contentRT.anchoredPosition, targetPos, snapVelocity * Time.deltaTime);
+                float addX = snapVelocity * Time.deltaTime * direction * velocityRate;
+                snapAddedX += addX;
+                contentRT.anchoredPosition = new Vector2(contentRT.anchoredPosition.x + addX, contentRT.anchoredPosition.y);
                 yield return null;
             }
 
-            contentRT.anchoredPosition = targetPos;
-            currentPage = minDistanceIndex;
-            isSnapping = false;
+            curPage = minDistanceIndex;
 
             onSnapCompleted?.Invoke();
             TryStartCarousel();
@@ -311,11 +319,62 @@ namespace NRatel
             carouselCoroutine = null;
         }
 
+        private float carouselAddedX = 0f;
         private IEnumerator CarouselRoutine()
         {
-            //todo
-            //每隔N秒，翻到下一个
-            yield return null;
+            Debug.Log("【CarouselRoutine】 111111111111");
+
+            // 等待轮播间隔
+            yield return new WaitForSeconds(carouselInterval);
+
+            Debug.Log("【CarouselRoutine】 22222222222");
+
+            // 重置 Carousel X已增加量
+            carouselAddedX = 0f;
+
+            // 计算目标X增加量
+            float targetAddPosX;
+            if (loop)
+            {
+                // 开启循环时，总是向后翻到下一页，但是要注意 conent位置会被重置
+                // 这就意味着，逻辑不能是“移动到1页后的目标位置”，而是“位置增加量为1页”。
+                // todo：上面Snap的逻辑也是如此。
+                targetAddPosX = -(cellPrefabRT.rect.width + spacingX);
+            }
+            else 
+            {
+                // 未开启循环时，若当前处于最后一页，则向后翻回到第一页，否则翻到下一页
+                if (curPage < cellCount - 1)
+                {
+                    targetAddPosX = -(cellPrefabRT.rect.width + spacingX);
+                }
+                else 
+                {
+                    targetAddPosX = (cellPrefabRT.rect.width + spacingX) * (cellCount - 1);
+                }
+            }
+
+            Debug.Log($"【CarouselRoutine】targetAddPosX: {targetAddPosX}");
+
+            float direction = Mathf.Sign(targetAddPosX);
+            float velocityRate = Mathf.Abs(targetAddPosX) / Mathf.Abs(cellPrefabRT.rect.width + spacingX);
+
+            // 平滑增加位移
+            while (Mathf.Abs(carouselAddedX) < Mathf.Abs(targetAddPosX))
+            {
+                float addX = carouselVelocity * Time.deltaTime * direction * velocityRate;
+                carouselAddedX += addX;
+                contentRT.anchoredPosition = new Vector2(contentRT.anchoredPosition.x + addX, contentRT.anchoredPosition.y);
+                yield return null;
+            }
+
+            Debug.Log($"【CarouselRoutine】3333333333333333333");
+
+            //停止惯性速度
+            scrollRect.velocity = Vector2.zero;
+
+            //执行对齐，对齐结束后将继续启动轮播
+            TryStartSnap();
         }
         #endregion
     }
