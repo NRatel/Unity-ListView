@@ -563,7 +563,7 @@ MonoBehaviour:
   paddingLeft: 30
   paddingRight: 30
   spacingX: 10
-  loop: 1
+  loop: 0
   carousel: 0
   fixSpacingX: 0
   snapSpeed: 15

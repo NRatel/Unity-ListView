@@ -88,8 +88,8 @@ namespace NRatel
         #region Override
         protected override void OnScrollValueChanged(Vector2 delta)
         {
-            TryHandleLoopPos();                 // 新增循环位置处理
-            base.OnScrollValueChanged(delta);   // 保持原有逻辑
+            if (isSnapping) { TryHandleLoopPos(); } // 新增循环位置处理
+            base.OnScrollValueChanged(delta);       // 保持原有逻辑
         }
 
         //调整边距
@@ -137,19 +137,22 @@ namespace NRatel
         //设置初始位置
         protected override void SetContentStartPos()
         {
-            contentRT.anchoredPosition = new Vector2(0 + contentStartOffsetX, 0);
+            if (loop) { contentRT.anchoredPosition = new Vector2(0 + contentStartOffsetX, 0); ; }
+            else { base.SetContentStartPos(); }
         }
 
-        //认为任意索引都是有效的
+        //loop时，认为任意索引都是有效的
         protected override bool IsValidIndex(int index)
         {
-            return true;
+            if (loop) { return true; }
+            else { return base.IsValidIndex(index); }
         }
 
-        //使索引有效（将任意索引数转到 [0~cellCount-1] 中）
+        //loop时，将任意索引数转到 [0~cellCount-1] 中
         protected override int ValidateIndex(int index)
         {
-            return (index % cellCount + cellCount) % cellCount;
+            if (loop) { return (index % cellCount + cellCount) % cellCount; }
+            else { return base.ValidateIndex(index); }
         }
 
         //计算Cell的X坐标
@@ -216,13 +219,66 @@ namespace NRatel
             snapCoroutine = null;
         }
 
+        //private IEnumerator SnapRoutine()
+        //{
+        //    //todo
+        //    //移动 contentRT.anchoredPosition 的 x值，使当前 Content中将离viewport中心最近的那个cell，在移动后处于viewport中心。
+        //    yield return null;
+
+        //    //结束后，回调事件并开始轮播
+        //    onSnapCompleted?.Invoke();
+        //    TryStartCarousel();
+        //}
+
+        // 新增字段
+        private int currentPage = 0;
+        private bool isSnapping = false;
+
+        // Snap协程实现
         private IEnumerator SnapRoutine()
         {
-            //todo
-            //移动 contentRT.anchoredPosition 的 x值，使当前 Content中将离viewport中心最近的那个cell，在移动后处于viewport中心。
-            yield return null;
+            isSnapping = true;
 
-            //结束后，回调事件并开始轮播
+            float viewportWidth = viewportRT.rect.width;
+            float cellWidth = cellPrefabRT.rect.width;
+            float cellStep = cellWidth + spacingX;
+
+            // 计算视口中心在Content空间中的位置
+            float viewportCenterInContent = -contentRT.anchoredPosition.x + viewportWidth / 2f;
+
+            // 确定目标索引
+            int targetIndex = loop ?
+                Mathf.RoundToInt((viewportCenterInContent - cellWidth / 2f) / cellStep) :
+                Mathf.RoundToInt((viewportCenterInContent - paddingLeft - cellWidth / 2f) / cellStep);
+
+            targetIndex = Mathf.Clamp(targetIndex, 0, cellCount - 1);
+
+            // 计算目标位置
+            float cellCenter = loop ?
+                targetIndex * cellStep + cellWidth / 2f :
+                paddingLeft + targetIndex * cellStep + cellWidth / 2f;
+
+            Vector2 targetPos = new Vector2(
+                viewportWidth / 2f - cellCenter,
+                contentRT.anchoredPosition.y
+            );
+
+            // 平滑移动动画
+            while (Vector2.Distance(contentRT.anchoredPosition, targetPos) > 0.1f)
+            {
+                contentRT.anchoredPosition = Vector2.Lerp(
+                    contentRT.anchoredPosition,
+                    targetPos,
+                    snapSpeed * Time.deltaTime
+                );
+                yield return null;
+            }
+
+            contentRT.anchoredPosition = targetPos;
+            currentPage = ValidateIndex(targetIndex);
+            isSnapping = false;
+
+            TryHandleLoopPos();
             onSnapCompleted?.Invoke();
             TryStartCarousel();
         }
