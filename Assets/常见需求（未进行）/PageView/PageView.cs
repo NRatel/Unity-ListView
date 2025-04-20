@@ -63,13 +63,17 @@ namespace NRatel
         [Header("Carousel Settings")]
         [SerializeField] private bool carousel = false;                 //开启轮播？
         [SerializeField] private float carouselInterval = 3f;           //轮播启动间隔
-        [SerializeField] private float carouselVelocity = 500f;        //
-
-        private bool isDragging;
-        private Coroutine snapCoroutine;
-        private Coroutine carouselCoroutine;
+        [SerializeField] private float carouselVelocity = 500f;         //轮播时移动的速度
 
         public event Action onSnapCompleted;
+
+        private bool isDragging;
+
+        private int currentPage = 0;
+        private bool isSnapping = false;
+
+        private Coroutine snapCoroutine;
+        private Coroutine carouselCoroutine;
 
         //核心内容宽度
         private float actualConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
@@ -142,7 +146,7 @@ namespace NRatel
         //设置初始位置
         protected override void SetContentStartPos()
         {
-            if (loop) { contentRT.anchoredPosition = new Vector2(0 + contentStartOffsetX, 0); ; }
+            if (loop) { contentRT.anchoredPosition = new Vector2(contentStartOffsetX, contentRT.anchoredPosition.y); }
             else { base.SetContentStartPos(); }
         }
 
@@ -224,22 +228,6 @@ namespace NRatel
             snapCoroutine = null;
         }
 
-        //private IEnumerator SnapRoutine()
-        //{
-        //    //todo
-        //    //移动 contentRT.anchoredPosition 的 x值，使当前 Content中将离viewport中心最近的那个cell，在移动后处于viewport中心。
-        //    yield return null;
-
-        //    //结束后，回调事件并开始轮播
-        //    onSnapCompleted?.Invoke();
-        //    TryStartCarousel();
-        //}
-
-        // 新增字段
-        private int currentPage = 0;
-        private bool isSnapping = false;
-
-        // Snap协程实现
         private IEnumerator SnapRoutine()
         {
             //如果开启惯性，则等待其基本停稳
@@ -257,8 +245,7 @@ namespace NRatel
 
             isSnapping = true;
 
-            //找离Viewport中心最近的那个Cell。
-
+            #region 找离Viewport中心最近的那个Cell。
             //注意这里的相对位置计算要求 Content和Viewport没有缩放
             Debug.Assert(contentRT.localScale == Vector3.one);
             Debug.Assert(viewportRT.localScale == Vector3.one);
@@ -283,10 +270,12 @@ namespace NRatel
                     minDistanceIndex = t.Key;
                 }
             }
+            #endregion
 
             Debug.Log($"【SnapRoutine】minIndex: {minDistanceIndex}, minDistance: {minDistance}");
 
             // 计算目标位置
+            // 只需将 content 反向移动 minDistance
             float targetPosX = contentRT.anchoredPosition.x - minDistance;
             Vector2 targetPos = new Vector2(targetPosX, contentRT.anchoredPosition.y);
 

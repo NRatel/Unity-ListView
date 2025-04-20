@@ -127,7 +127,7 @@ namespace NRatel.Fundamental
         //设置起始位置
         protected virtual void SetContentStartPos()
         {
-            contentRT.anchoredPosition = Vector2.zero;
+            contentRT.anchoredPosition = new Vector2(0, contentRT.anchoredPosition.y);
         }
 
         //计算 应出现的索引 和 应消失的索引
