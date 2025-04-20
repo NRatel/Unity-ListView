@@ -84,6 +84,7 @@ namespace NRatel.Fundamental
             FixViewportOffset();
 
             CalcAndSetContentSize();
+            SetContentStartPos();
 
             CalcIndexes();
             DisAppearCells();
@@ -121,6 +122,12 @@ namespace NRatel.Fundamental
             //当cellCount大于0时，Content总宽度 = 左边界间隙 + 所有Cell的宽度总和 + 相邻间距总和 + 右边界间隙
             contentWidth = paddingLeft + cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1) + paddingRight;
             contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
+        }
+
+        //设置起始位置
+        protected virtual void SetContentStartPos()
+        {
+            contentRT.anchoredPosition = Vector2.zero;
         }
 
         //计算 应出现的索引 和 应消失的索引

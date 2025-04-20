@@ -64,20 +64,18 @@ namespace NRatel
         private Coroutine snapCoroutine;
         private Coroutine carouselCoroutine;
 
-        //原始数量个Cell占用的宽度
+        //核心内容宽度
         private float actualConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
 
-        //开启loop时，扩展宽度
-        private float expandWidthForLoop { get { return cellPrefabRT.rect.width * cellCount; } }
+        //开启loop时，扩展后宽度
+        private float expandedContentWidth { get { return actualConetontWidth * 2; } }
 
-        //开启loop时，单侧扩展宽度
-        private float oneSideExpandWidthForLoop { get { return expandWidthForLoop / 2; } }
-
-        //Content起始位置
-        private float contentStartPosX { get { return -oneSideExpandWidthForLoop; } }
+        //Content初始偏移，使 content左边界与viewport左边界对齐
+        private float contentStartOffsetX { get { return -(expandedContentWidth - actualConetontWidth) / 2f; } }
 
         //循环阈值
-        private float loopThreshold { get { return oneSideExpandWidthForLoop / 2; } }
+        //private float loopThreshold { get { return 0; } }
+        private float loopThreshold { get { return (expandedContentWidth - actualConetontWidth) / 4f; } }
 
 
         protected override void Start()
@@ -96,8 +94,8 @@ namespace NRatel
         //调整边距
         protected override void FixPadding() 
         {
-            if (loop) return;
-            paddingLeft = paddingRight = (viewportRT.rect.width - cellPrefabRT.rect.width) / 2;
+            if (loop) { paddingLeft = paddingRight = 0; }
+            else { paddingLeft = paddingRight = (viewportRT.rect.width - cellPrefabRT.rect.width) / 2; }
         }
 
         //调整间距
@@ -110,10 +108,10 @@ namespace NRatel
         //调整视口容差
         protected override void FixViewportOffset()
         {
-            if (loop) 
+            if (loop)
             {
-                viewportOffsetLeft = spacingX + oneSideExpandWidthForLoop;
-                viewportOffsetRight = spacingX + oneSideExpandWidthForLoop;
+                viewportOffsetLeft = Mathf.Abs(contentStartOffsetX);
+                viewportOffsetRight = viewportOffsetLeft;
             }
             else
             {
@@ -126,20 +124,19 @@ namespace NRatel
         {
             if (loop)
             {
-                //loop 时，扩展N个Cell 计入Content宽度（实际数量可由 viewport 和 cell 宽度的比值决定 todo）
-                //loop 时，paddingLeft 和 paddingRight 无需计入Content宽度
-                contentWidth = actualConetontWidth + expandWidthForLoop;
+                contentWidth = expandedContentWidth;
                 contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
-
-                //注意，paddingLeft 影响 Content 起始位置
-                Debug.Log("actualConetontWidth: " + actualConetontWidth);
-                Debug.Log("contentStartPosX: " + contentStartPosX);
-                contentRT.anchoredPosition = new Vector2(contentStartPosX, 0);
             }
             else
             {
                 base.CalcAndSetContentSize();
             }
+        }
+
+        //设置初始位置
+        protected override void SetContentStartPos()
+        {
+            contentRT.anchoredPosition = new Vector2(0 + contentStartOffsetX, 0);
         }
 
         //认为任意索引都是有效的
@@ -157,7 +154,7 @@ namespace NRatel
         //计算Cell的X坐标
         protected override float CalcCellPosX(int index)
         {
-            return base.CalcCellPosX(index) + (loop ? -contentStartPosX : 0);
+            return base.CalcCellPosX(index) + (loop ? -contentStartOffsetX : 0);
         }
         #endregion
 
@@ -230,21 +227,22 @@ namespace NRatel
             if (!loop) return;
 
             // 获取当前位置
-            float curPosX = contentRT.anchoredPosition.x;
+            float curContentPosX = contentRT.anchoredPosition.x;
 
-            //向右滑动，左侧超过阈值时
-            //1、原始左边界Content坐标为：0
-            //2、向左偏移， oneSideExpandWidthForLoop 到起始位置
-            //3、向右偏移，到阈值处
-            if (curPosX > 0 - oneSideExpandWidthForLoop + loopThreshold)
+            //初始 Content坐标 contentStartPosX
+
+            //1、列表核心内容的左边界 处于 Viewport左边界时，Content的X坐标
+            float leftContentPosX = contentStartOffsetX;
+            //2、列表核心内容的右边界 处于 Viewport右边界时，Content的X坐标
+            float rightContentPosX = contentStartOffsetX - (actualConetontWidth - viewportRT.rect.width);
+
+            //向右滑动时，左边界坐标向左偏移loopThreshold
+            if (curContentPosX > leftContentPosX + loopThreshold)
             {
                 contentRT.anchoredPosition -= Vector2.right * (actualConetontWidth + spacingX);
             }
-            //向左滑动，右侧超过阈值时
-            //1、原始右边界Content坐标为：-(actualConetontWidth - viewportRT.rect.width)
-            //2、向左偏移，oneSideExpandWidthForLoop 到起始位置
-            //3、向左偏移，到阈值处
-            else if (curPosX < -(actualConetontWidth - viewportRT.rect.width) - oneSideExpandWidthForLoop - loopThreshold)
+            //向左滑动时，右边界坐标向右偏移loopThreshold
+            else if (curContentPosX < rightContentPosX - loopThreshold)
             {
                 contentRT.anchoredPosition += Vector2.right * (actualConetontWidth + spacingX);
             }
