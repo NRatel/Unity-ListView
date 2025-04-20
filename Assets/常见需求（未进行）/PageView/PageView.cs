@@ -97,7 +97,7 @@ namespace NRatel
         #region Override
         protected override void OnScrollValueChanged(Vector2 delta)
         {
-            if (isSnapping) { TryHandleLoopPos(); } // 新增循环位置处理
+            TryHandleLoopPos();                     // 新增循环位置处理
             base.OnScrollValueChanged(delta);       // 保持原有逻辑
         }
 
