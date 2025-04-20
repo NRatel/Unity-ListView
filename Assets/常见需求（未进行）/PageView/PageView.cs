@@ -296,6 +296,9 @@ namespace NRatel
                 yield return null;
             }
 
+            // 修正位置为当前页准确位置 todo
+            //contentRT.anchoredPosition = 
+
             curPage = minDistanceIndex;
 
             onSnapCompleted?.Invoke();
