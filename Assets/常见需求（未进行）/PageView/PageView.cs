@@ -48,6 +48,14 @@ using System;
 //      ②、开启loop时，
 //          需保证：同一时刻下，Viewport中不会出现多个同一Cell。
 
+// 8、开启loop时，移动插值不能是 “到目标点”，而是要“累计移动量”
+
+// 9、Snap 与惯性速度的冲突
+
+// 10、Snap 与回弹的冲突
+
+// 11、开始loop时，重置Content位置，影响了其内部的 速度值计算
+
 namespace NRatel
 {
     public class PageView : ListViewV2, IBeginDragHandler, IEndDragHandler
