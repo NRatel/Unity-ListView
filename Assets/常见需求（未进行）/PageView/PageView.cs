@@ -225,8 +225,9 @@ namespace NRatel
 
         private IEnumerator SnapRoutine()
         {
-            //如果开启惯性，则等待其基本停稳
-            if (scrollRect.inertia)
+            //如果开启惯性/边缘回弹，则需先等待其基本停稳
+            //考虑：是否应该强制关闭回弹？或者开启轮播时应该关闭回弹？
+            if (scrollRect.inertia || scrollRect.movementType == ScrollRect.MovementType.Elastic)
             {
                 yield return new WaitUntil(() => 
                 {
@@ -357,7 +358,7 @@ namespace NRatel
                 movedDistanceX += addX;
                 contentRT.anchoredPosition += new Vector2(addX, 0);
 
-                Debug.Log($"movedDistanceX: {movedDistanceX}");
+                //Debug.Log($"movedDistanceX: {movedDistanceX}");
 
                 yield return null;
             }

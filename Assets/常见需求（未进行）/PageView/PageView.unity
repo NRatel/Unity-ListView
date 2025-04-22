@@ -563,11 +563,11 @@ MonoBehaviour:
   paddingLeft: 10
   paddingRight: 10
   spacingX: 10
-  loop: 0
-  cellOccupyPage: 1
+  loop: 1
+  cellOccupyPage: 0
   snapSpeed: 500
   snapWaitScrollVelocityX: 50
-  carousel: 0
+  carousel: 1
   carouselInterval: 3
   carouselSpeed: 500
 --- !u!114 &1247502330
