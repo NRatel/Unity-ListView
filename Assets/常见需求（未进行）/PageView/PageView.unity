@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0, g: 0, b: 0, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -352,6 +351,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
   m_AdditionalShaderChannelsFlag: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -462,7 +462,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1018716121}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
   m_Name: 
@@ -560,16 +560,16 @@ MonoBehaviour:
   cellPrefabRT: {fileID: 7913374827684128912, guid: 0351d333f2388c44abeab53e02dfe18b,
     type: 3}
   cellCount: 10
-  paddingLeft: 30
-  paddingRight: 30
+  paddingLeft: 10
+  paddingRight: 10
   spacingX: 10
   loop: 0
   cellOccupyPage: 1
-  snapVelocity: 500
+  snapSpeed: 500
   snapWaitScrollVelocityX: 50
-  carousel: 1
+  carousel: 0
   carouselInterval: 3
-  carouselVelocity: 500
+  carouselSpeed: 500
 --- !u!114 &1247502330
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -625,7 +625,7 @@ MonoBehaviour:
   m_Vertical: 0
   m_MovementType: 1
   m_Elasticity: 0.1
-  m_Inertia: 0
+  m_Inertia: 1
   m_DecelerationRate: 0.135
   m_ScrollSensitivity: 1
   m_Viewport: {fileID: 1018716122}
