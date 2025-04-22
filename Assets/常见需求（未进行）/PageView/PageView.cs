@@ -225,15 +225,38 @@ namespace NRatel
 
         private IEnumerator SnapRoutine()
         {
-            //如果开启惯性/边缘回弹，则需先等待其基本停稳
-            //考虑：是否应该强制关闭回弹？或者开启轮播时应该关闭回弹？
-            if (scrollRect.inertia || scrollRect.movementType == ScrollRect.MovementType.Elastic)
+            Debug.Log($"【SnapRoutine】Snap 进入");
+            //如果开启回弹，则需先等待回弹结束
+            if (scrollRect.movementType == ScrollRect.MovementType.Elastic)
+            {
+                float leftPosX = 0;
+                float rightPosX = -(contentRT.rect.width - viewportRT.rect.width);
+                float offsetThreshold = 0.1f;
+
+                //当前正向左边界回弹
+                if (contentRT.anchoredPosition.x > leftPosX) 
+                {
+                    yield return new WaitUntil(() => { return contentRT.anchoredPosition.x <= leftPosX + offsetThreshold; });
+                    contentRT.anchoredPosition = new Vector2(leftPosX, contentRT.anchoredPosition.y);
+                }
+                //当前正向右边界回弹
+                else if (contentRT.anchoredPosition.x < rightPosX)
+                {
+                    yield return new WaitUntil(() => { return contentRT.anchoredPosition.x > rightPosX - offsetThreshold; });
+                    contentRT.anchoredPosition = new Vector2(rightPosX, contentRT.anchoredPosition.y);
+                }
+                Debug.Log($"【SnapRoutine】等待回弹结束");
+            } 
+
+            //如果开启惯性，则需先等待其基本停稳
+            if (scrollRect.inertia)
             {
                 yield return new WaitUntil(() => 
                 {
                     //Debug.Log("scrollRect.velocity.x: " + scrollRect.velocity.x);
                     return Mathf.Abs(scrollRect.velocity.x) < snapWaitScrollVelocityX; 
                 });
+                Debug.Log($"【SnapRoutine】等待惯性速度结束");
             }
 
             #region 找离Viewport中心最近的那个Cell。
@@ -261,6 +284,8 @@ namespace NRatel
                     minDistanceIndex = t.Key;
                 }
             }
+
+            //兼容开启弹性时，从左右全部拉出屏幕的情况
             #endregion
 
             // 只需将 content 反向移动 minDistance。
@@ -342,7 +367,7 @@ namespace NRatel
         private IEnumerator DoMoveContentPosX(float planMoveDistanceX, float speed)
         {
             //先停止任何惯性速度
-            scrollRect.velocity = Vector2.zero;
+            scrollRect.StopMovement();  //m_Velocity = Vector2.zero
 
             //重置累计字段
             movedDistanceX = 0f;
