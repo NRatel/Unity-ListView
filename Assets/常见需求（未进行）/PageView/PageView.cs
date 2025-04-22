@@ -237,16 +237,14 @@ namespace NRatel
                 if (contentRT.anchoredPosition.x > leftPosX) 
                 {
                     yield return new WaitUntil(() => { return contentRT.anchoredPosition.x <= leftPosX + offsetThreshold; });
-                    contentRT.anchoredPosition = new Vector2(leftPosX, contentRT.anchoredPosition.y);
                 }
                 //当前正向右边界回弹
                 else if (contentRT.anchoredPosition.x < rightPosX)
                 {
                     yield return new WaitUntil(() => { return contentRT.anchoredPosition.x > rightPosX - offsetThreshold; });
-                    contentRT.anchoredPosition = new Vector2(rightPosX, contentRT.anchoredPosition.y);
                 }
-                Debug.Log($"【SnapRoutine】等待回弹结束");
-            } 
+                //Debug.Log($"【SnapRoutine】等待回弹结束");
+            }
 
             //如果开启惯性，则需先等待其基本停稳
             if (scrollRect.inertia)
@@ -256,7 +254,7 @@ namespace NRatel
                     //Debug.Log("scrollRect.velocity.x: " + scrollRect.velocity.x);
                     return Mathf.Abs(scrollRect.velocity.x) < snapWaitScrollVelocityX; 
                 });
-                Debug.Log($"【SnapRoutine】等待惯性速度结束");
+                //Debug.Log($"【SnapRoutine】等待惯性停稳");
             }
 
             #region 找离Viewport中心最近的那个Cell。
@@ -295,11 +293,11 @@ namespace NRatel
 
             // 计算计划移动距离
             float planMoveDistanceX = -minDistance;
-            Debug.Log($"【SnapRoutine】Snap 开始，目标索引:{minDistanceIndex}, 移动距离: {planMoveDistanceX}");
+            //Debug.Log($"【SnapRoutine】Snap 开始，目标索引:{minDistanceIndex}, 移动距离: {planMoveDistanceX}");
 
             yield return DoMoveContentPosX(planMoveDistanceX, snapSpeed);
 
-            Debug.Log($"【SnapRoutine】Snap 结束");
+            //Debug.Log($"【SnapRoutine】Snap 结束");
 
             curPage = minDistanceIndex;
             onSnapCompleted?.Invoke();
@@ -352,11 +350,11 @@ namespace NRatel
                 }
             }
 
-            Debug.Log($"【CarouselRoutine】Carousel开始, 移动距离: {planMoveDistanceX}");
+            //Debug.Log($"【CarouselRoutine】Carousel开始, 移动距离: {planMoveDistanceX}");
 
             yield return DoMoveContentPosX(planMoveDistanceX, carouselSpeed * speedRate);
 
-            Debug.Log($"【CarouselRoutine】Carousel 结束");
+            //Debug.Log($"【CarouselRoutine】Carousel 结束");
 
             //执行对齐，对齐结束后将继续启动轮播
             TryStartSnap();
