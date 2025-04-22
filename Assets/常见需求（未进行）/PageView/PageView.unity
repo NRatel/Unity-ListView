@@ -563,7 +563,7 @@ MonoBehaviour:
   paddingLeft: 10
   paddingRight: 10
   spacingX: 10
-  loop: 1
+  loop: 0
   cellOccupyPage: 0
   snapSpeed: 500
   snapWaitScrollVelocityX: 50
@@ -623,7 +623,7 @@ MonoBehaviour:
   m_Content: {fileID: 1082149553}
   m_Horizontal: 1
   m_Vertical: 0
-  m_MovementType: 1
+  m_MovementType: 2
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135

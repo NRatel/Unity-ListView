@@ -339,7 +339,7 @@ namespace NRatel
         #endregion
 
         private float movedDistanceX = 0f;
-        private IEnumerator DoMoveContentPosX(float planMoveDistanceX, float speed) 
+        private IEnumerator DoMoveContentPosX(float planMoveDistanceX, float speed)
         {
             //先停止任何惯性速度
             scrollRect.velocity = Vector2.zero;
@@ -353,18 +353,25 @@ namespace NRatel
             // 平滑增加位移
             while (Mathf.Abs(movedDistanceX) < Mathf.Abs(planMoveDistanceX))
             {
-                float deltaTime = Time.deltaTime; //或 Time.unscaledDeltaTime
-                float addX = velocity * deltaTime;
-                movedDistanceX += addX;
-                contentRT.anchoredPosition += new Vector2(addX, 0);
+                float addX = velocity * Time.deltaTime; //若要忽略时间缩放，改用 Time.unscaledDeltaTime;
 
-                //Debug.Log($"movedDistanceX: {movedDistanceX}");
+                // 检查是否会超过目标距离
+                if (Mathf.Abs(movedDistanceX + addX) >= Mathf.Abs(planMoveDistanceX))
+                {
+                    // 直接设置到精确位置，并break
+                    float remainingDistance = planMoveDistanceX - movedDistanceX;
+                    contentRT.anchoredPosition += new Vector2(remainingDistance, 0);
+                    movedDistanceX = planMoveDistanceX;
+                    break;
+                }
+                else
+                {
+                    movedDistanceX += addX;
+                    contentRT.anchoredPosition += new Vector2(addX, 0);
+                }
 
                 yield return null;
             }
-
-            // 修正最后一次多加的数值
-            contentRT.anchoredPosition -= new Vector2(movedDistanceX - planMoveDistanceX, 0);
         }
     }
 }
