@@ -60,12 +60,12 @@
   <ItemGroup>
     <Compile Include="Assets\UIGridView（完成）\UIPanel_TestGridView.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV2\ListViewV2.cs" />
-    <Compile Include="Assets\常见需求（未进行）\PageView\PageView.cs" />
-    <Compile Include="Assets\常见需求（未进行）\多种不规则Cell的列表（如聊天窗口）\ListViewForChat.cs" />
+    <Compile Include="Assets\PageView（近完成）\PageView.cs" />
+    <Compile Include="Assets\多种不规则Cell的列表（如聊天窗口）\ListViewForChat.cs" />
     <Compile Include="Assets\UIGridView（完成）\UIScrollRect.cs" />
-    <Compile Include="Assets\Res\ListCell.cs" />
+    <Compile Include="Assets\CellRes\ListCell.cs" />
     <Compile Include="Assets\特殊需求\右侧堆叠的ListView\ListViewS1.cs" />
-    <Compile Include="Assets\Res\GridCell.cs" />
+    <Compile Include="Assets\CellRes\GridCell.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV1\ListViewV1.cs" />
     <Compile Include="Assets\UIGridView（完成）\UIGridView.cs" />
   </ItemGroup>
@@ -934,10 +934,6 @@
       <HintPath>Library\ScriptAssemblies\Unity.TextMeshPro.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEditor.UI">
-      <HintPath>Library\ScriptAssemblies\UnityEditor.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="Unity.PlasticSCM.Editor">
       <HintPath>Library\ScriptAssemblies\Unity.PlasticSCM.Editor.dll</HintPath>
       <Private>False</Private>
@@ -946,12 +942,16 @@
       <HintPath>Library\ScriptAssemblies\Unity.Rider.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>Library\ScriptAssemblies\UnityEngine.UI.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="UnityEditor.UI.csproj">
+      <Project>{99FB7CC9-9CD3-6487-147B-C8E9B53F4EC9}</Project>
+      <Name>UnityEditor.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="UnityEngine.UI.csproj">
+      <Project>{D68EA862-6E72-6A5D-83B4-3068E2F4ED15}</Project>
+      <Name>UnityEngine.UI</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="GenerateTargetFrameworkMonikerAttribute" />
