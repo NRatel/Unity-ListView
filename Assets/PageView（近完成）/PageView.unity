@@ -499,10 +499,10 @@ RectTransform:
   m_Father: {fileID: 1018716122}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 300}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!1 &1247502327
 GameObject:
@@ -563,7 +563,7 @@ MonoBehaviour:
   paddingLeft: 10
   paddingRight: 10
   spacingX: 10
-  loop: 0
+  loop: 1
   cellOccupyPage: 0
   snapSpeed: 500
   snapWaitScrollVelocityX: 50

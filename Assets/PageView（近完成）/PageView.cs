@@ -42,20 +42,38 @@ using System.Reflection;
 //      ①、保持用户指定值。但应满足：spacingX <= Viewport宽度 - Cell宽度。
 //      ②、直接强设为：spacingX = Viewport宽度 - Cell宽度，即 每个Cell独占一页
 
-// 7、Snap 与惯性速度的冲突
+// 7、Snap 实现：
+//      ①、找离Viewport中心最近的那个Cell
+//      ②、与惯性速度的冲突
+//      ③、与回弹的冲突
 
-// 8、Snap 与回弹的冲突
+// 8、Carousel 实现：
+//      ①、协程中等待计时
 
-// 9、开启loop时，重置 Content 注意不应碰到边界，更不应触发回弹（可以考虑强制关闭回弹）
+// 9、BeginDrag、EndDrag、Snap、Carousel 的闭环衔接
 
-// 10、开启loop时，移动插值不能是 “到目标点”，而是要“累计移动量”
+// 10、Loop 实现：
+//      先看这种情况：核心内容宽度 > viewport 宽度
 
-// 11、开启loop时，需要将原核心内容扩展为N倍宽。
-//      多少倍合适呢？      
-//      另外，若不想在同一时刻下，在Viewport中不出现多个同一Cell，对于原始 cell 的数量也有要求，暂不关心。
+//      拆分为3个关键问题，可将问题简化
+//          ①、使 Content 在移动时，非原核心内容区也能够显示 0~Count-1 范围内的 Cell元素，让越界索引不要提前retrun，而是在显示时转到 0~Count-1 之中。
+//          ②、将 Content 宽度扩为原核心内容宽度扩展的N倍，使其满足位置重置的基本条件。
+//          ③、滑动时，从初始位置开始，只要向左/向右滑出超过1页，就将 Content 重置回起始位置。
+//              （注意，滑动过程，完全无需考虑Cell显示问题，完全由①处理，可将Content想象为一张整图）
+//              （注意这里说的 1页 = 1核心内容宽度 + 1个spacingX）
+//      问题：
+//          ①、至少应该扩展为几倍？
+//              支持从初始位置开始，向左向右各滑动1页，需要在两侧至少各扩展出1页。
+//              但为了避免 翻超1页触及边缘 触发回弹，可以额外多出1页或2页。
+//              注意，扩宽 Content 更多倍是毫无成本的！这里只是思考至少应该扩展为几倍。
+//              所以，直接定为 5倍。
+//          ②、再回头来思考 核心内容宽度 < viewport宽度 的倍数
+//              在上面的基础上，只需简单处理：将 核心内容宽度 先翻倍，使超过 viewport宽度。
+//              注意，这种情况下，在Viewport中会出现多个同一Cell，属于正常现象。
+//          ③、重置Content位置，似乎影响到了其内部的 速度值计算，待处理
 
-// 12、开始loop时，重置Content位置，似乎影响到了其内部的 速度值计算，待处理
-
+// 11、开启 loop 对 Snap 和 Carousel 的影响
+//      ①、因为 loop 会重置 Content 的位置，所以 Snap 和 Carousel 时的移动插值不能是 “从当前位置到目标点”了，而是要变成“累计移动量”
 
 namespace NRatel
 {
@@ -81,16 +99,16 @@ namespace NRatel
         private Coroutine m_CarouselCoroutine;
 
         //核心内容宽度
-        private float actualConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
+        private float coreConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
 
         //开启loop时，扩展后宽度
-        private float expandedContentWidth { get { return actualConetontWidth * 2; } }
+        private float expandedContentWidth { get { return coreConetontWidth * 2; } }
 
         //Content初始偏移，使 content左边界与viewport左边界对齐
-        private float contentStartOffsetX { get { return -(expandedContentWidth - actualConetontWidth) / 2f; } }
+        private float contentStartOffsetX { get { return -(expandedContentWidth - coreConetontWidth) / 2f; } }
 
         //循环阈值
-        private float loopThreshold { get { return (expandedContentWidth - actualConetontWidth) / 4f; } }
+        private float loopThreshold { get { return (expandedContentWidth - coreConetontWidth) / 4f; } }
 
         protected override void Start()
         {
@@ -199,10 +217,10 @@ namespace NRatel
             //1、列表核心内容的左边界 处于 Viewport左边界时，Content的X坐标
             float leftContentPosX = contentStartOffsetX;
             //2、列表核心内容的右边界 处于 Viewport右边界时，Content的X坐标
-            float rightContentPosX = contentStartOffsetX - (actualConetontWidth - viewportRT.rect.width);
+            float rightContentPosX = contentStartOffsetX - (coreConetontWidth - viewportRT.rect.width);
 
             //循环偏移值
-            Vector2 loopOffset = Vector2.right * (actualConetontWidth + spacingX);
+            Vector2 loopOffset = Vector2.right * (coreConetontWidth + spacingX);
 
             // 反射获取 scrollRect 的 m_PrevPosition 字段
             Type type = scrollRect.GetType();
