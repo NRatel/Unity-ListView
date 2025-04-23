@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using NRatel.Fundamental;
 using System;
+using System.Reflection;
 
 //要点：
 // 1、自动吸附对齐（Snap）
@@ -14,7 +15,7 @@ using System;
 //          若放手时中心页已变，则吸附到新页。
 //          若放手时中心页未变，则根据放手速度矢量决定是否翻页（超过阈值则翻页）。
 
-// 2、是否循环翻页（Loop）
+// 2、是否首尾无限循环（Loop）
 //      可配置 是/否
 
 // 3、是否自动轮播（Carousel）
@@ -41,20 +42,20 @@ using System;
 //      ①、保持用户指定值。但应满足：spacingX <= Viewport宽度 - Cell宽度。
 //      ②、直接强设为：spacingX = Viewport宽度 - Cell宽度，即 每个Cell独占一页
 
-// 7、cell 数量要求
-//      根据是否开启loop，要求不同。
-//      ①、不开启loop时，
-//          无要求
-//      ②、开启loop时，
-//          需保证：同一时刻下，Viewport中不会出现多个同一Cell。
+// 7、Snap 与惯性速度的冲突
 
-// 8、开启loop时，移动插值不能是 “到目标点”，而是要“累计移动量”
+// 8、Snap 与回弹的冲突
 
-// 9、Snap 与惯性速度的冲突
+// 9、开启loop时，重置 Content 注意不应碰到边界，更不应触发回弹（可以考虑强制关闭回弹）
 
-// 10、Snap 与回弹的冲突
+// 10、开启loop时，移动插值不能是 “到目标点”，而是要“累计移动量”
 
-// 11、开始loop时，重置Content位置，影响了其内部的 速度值计算
+// 11、开启loop时，需要将原核心内容扩展为N倍宽。
+//      多少倍合适呢？      
+//      另外，若不想在同一时刻下，在Viewport中不出现多个同一Cell，对于原始 cell 的数量也有要求，暂不关心。
+
+// 12、开始loop时，重置Content位置，似乎影响到了其内部的 速度值计算，待处理
+
 
 namespace NRatel
 {
@@ -195,22 +196,43 @@ namespace NRatel
             // 获取当前位置
             float curContentPosX = contentRT.anchoredPosition.x;
 
-            //初始 Content坐标 contentStartPosX
-
             //1、列表核心内容的左边界 处于 Viewport左边界时，Content的X坐标
             float leftContentPosX = contentStartOffsetX;
             //2、列表核心内容的右边界 处于 Viewport右边界时，Content的X坐标
             float rightContentPosX = contentStartOffsetX - (actualConetontWidth - viewportRT.rect.width);
 
-            //向右滑动时，左边界坐标向左偏移loopThreshold
+            //循环偏移值
+            Vector2 loopOffset = Vector2.right * (actualConetontWidth + spacingX);
+
+            // 反射获取 scrollRect 的 m_PrevPosition 字段
+            Type type = scrollRect.GetType();
+            FieldInfo fieldInfo = type.GetField("m_PrevPosition", BindingFlags.NonPublic | BindingFlags.Instance);
+            Vector2 oldValue = (Vector2)fieldInfo.GetValue(scrollRect);
+
+            Debug.Log($"cur: {curContentPosX}, left: {leftContentPosX + loopThreshold}, right: {rightContentPosX - loopThreshold}, loopOffset: {loopOffset}");
+
+            Debug.Assert(leftContentPosX + loopThreshold > rightContentPosX - loopThreshold);
+
+            //向右滑动时
+            //cur: -166, left: -197.5, right: -882.5, loopOffset: (800.00, 0.00)
+            //cur: -966, left: -197.5, right: -882.5, loopOffset: (800.00, 0.00)
+
+            //-166 > -197.5, 
+            //-966 < -882.5, 
             if (curContentPosX > leftContentPosX + loopThreshold)
             {
-                contentRT.anchoredPosition -= Vector2.right * (actualConetontWidth + spacingX);
+                contentRT.anchoredPosition -= loopOffset;
+                //fieldInfo.SetValue(scrollRect, oldValue - loopOffset);
+
+                Debug.Log($"aaaaaaaaaa: {Time.frameCount}");
             }
-            //向左滑动时，右边界坐标向右偏移loopThreshold
+            //向左滑动时
             else if (curContentPosX < rightContentPosX - loopThreshold)
             {
-                contentRT.anchoredPosition += Vector2.right * (actualConetontWidth + spacingX);
+                contentRT.anchoredPosition += loopOffset;
+                //fieldInfo.SetValue(scrollRect, oldValue + loopOffset);
+
+                Debug.Log($"bbbbbbbbbb: {Time.frameCount}");
             }
         }
         #endregion
@@ -231,7 +253,7 @@ namespace NRatel
 
         private IEnumerator SnapRoutine()
         {
-            Debug.Log($"【SnapRoutine】Snap 进入");
+            //Debug.Log($"【SnapRoutine】Snap 进入");
             //如果开启回弹，则需先等待回弹结束
             if (scrollRect.movementType == ScrollRect.MovementType.Elastic)
             {
