@@ -235,7 +235,7 @@ namespace NRatel.Fundamental
                 cellRT.anchoredPosition = new Vector2(CalcCellPosX(index), cellRT.anchoredPosition.y);
 
                 //设置Cell数据，对Cell进行初始化
-                int validIndex = ValidateIndex(index);
+                int validIndex = ConvertIndexToValid(index);
                 cellRT.GetComponent<ListCell>().Refresh(validIndex);
             }
         }
@@ -268,14 +268,14 @@ namespace NRatel.Fundamental
             }
         }
 
-        //是否有效索引
+        //是否有效索引（只将显示索引显示到列表中，默认为 0~cellCount 之间）
         protected virtual bool IsValidIndex(int index)
         {
             return index >= 0 && index < cellCount;
         }
 
-        //使索引有效
-        protected virtual int ValidateIndex(int index)
+        //转换索引至有效（默认无需处理）
+        protected virtual int ConvertIndexToValid(int index)
         {
             return index;
         }

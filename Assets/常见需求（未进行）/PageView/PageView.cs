@@ -61,24 +61,23 @@ namespace NRatel
     public class PageView : ListViewV2, IBeginDragHandler, IEndDragHandler
     {
         [Header("Page Settings")]
-        [SerializeField] private bool loop = true;                      //开启循环？
-        [SerializeField] private bool cellOccupyPage = false;           //使Cell占用一页（强设将spacingX）
+        [SerializeField] public bool loop = true;                      //开启循环？
+        [SerializeField] public bool cellOccupyPage = false;           //使Cell占用一页（强设将spacingX）
 
         [Header("Snap Settings")]
-        [SerializeField] private float snapSpeed = 500f;                //Snap速度
-        [SerializeField] private float snapWaitScrollVelocityX = 50f;   //开启惯性时，等待基本停稳才开始Snap
+        [SerializeField] public float snapSpeed = 500f;                //Snap速度
+        [SerializeField] public float snapWaitScrollVelocityX = 50f;   //开启惯性时，等待基本停稳才开始Snap
 
         [Header("Carousel Settings")]
-        [SerializeField] private bool carousel = false;                 //开启轮播？
-        [SerializeField] private float carouselInterval = 3f;           //轮播启动间隔
-        [SerializeField] private float carouselSpeed = 500f;            //轮播时移动的速度
+        [SerializeField] public bool carousel = false;                 //开启轮播？
+        [SerializeField] public float carouselInterval = 3f;           //轮播启动间隔
+        [SerializeField] public float carouselSpeed = 500f;            //轮播时移动的速度
 
         public event Action onSnapCompleted;
 
-        private int curPage = 0;
-
-        private Coroutine snapCoroutine;
-        private Coroutine carouselCoroutine;
+        private int m_CurPage = 0;
+        private Coroutine m_SnapCoroutine;
+        private Coroutine m_CarouselCoroutine;
 
         //核心内容宽度
         private float actualConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
@@ -91,7 +90,6 @@ namespace NRatel
 
         //循环阈值
         private float loopThreshold { get { return (expandedContentWidth - actualConetontWidth) / 4f; } }
-
 
         protected override void Start()
         {
@@ -155,7 +153,7 @@ namespace NRatel
             else { base.SetContentStartPos(); }
         }
 
-        //loop时，认为任意索引都是有效的
+        //loop时，认为任意索引都是有效的，以使非 0~cellCount 的区域能够显示元素，之后再在 ConvertIndexToValid 转换
         protected override bool IsValidIndex(int index)
         {
             if (loop) { return true; }
@@ -163,10 +161,10 @@ namespace NRatel
         }
 
         //loop时，将任意索引数转到 [0~cellCount-1] 中
-        protected override int ValidateIndex(int index)
+        protected override int ConvertIndexToValid(int index)
         {
             if (loop) { return (index % cellCount + cellCount) % cellCount; }
-            else { return base.ValidateIndex(index); }
+            else { return base.ConvertIndexToValid(index); }
         }
 
         //计算Cell的X坐标
@@ -220,15 +218,15 @@ namespace NRatel
         #region Snap
         private void TryStartSnap()
         {
-            snapCoroutine = StartCoroutine(SnapRoutine());
+            m_SnapCoroutine = StartCoroutine(SnapRoutine());
         }
 
         private void TryStopSnap()
         {
-            if (snapCoroutine == null) { return; }
+            if (m_SnapCoroutine == null) { return; }
 
-            StopCoroutine(snapCoroutine);
-            snapCoroutine = null;
+            StopCoroutine(m_SnapCoroutine);
+            m_SnapCoroutine = null;
         }
 
         private IEnumerator SnapRoutine()
@@ -307,7 +305,7 @@ namespace NRatel
 
             //Debug.Log($"【SnapRoutine】Snap 结束");
 
-            curPage = minDistanceIndex;
+            m_CurPage = minDistanceIndex;
             onSnapCompleted?.Invoke();
             TryStartCarousel();
         }
@@ -317,16 +315,16 @@ namespace NRatel
         private void TryStartCarousel()
         {
             if (!carousel) { return; }
-            carouselCoroutine = StartCoroutine(CarouselRoutine());
+            m_CarouselCoroutine = StartCoroutine(CarouselRoutine());
         }
 
         private void TryStopCarousel()
         {
             if (!carousel) { return; }
-            if (carouselCoroutine == null) { return; }
+            if (m_CarouselCoroutine == null) { return; }
 
-            StopCoroutine(carouselCoroutine);
-            carouselCoroutine = null;
+            StopCoroutine(m_CarouselCoroutine);
+            m_CarouselCoroutine = null;
         }
 
         private IEnumerator CarouselRoutine()
@@ -345,7 +343,7 @@ namespace NRatel
             }
             else 
             {
-                if (curPage < cellCount - 1)
+                if (m_CurPage < cellCount - 1)
                 {
                     // 未开启循环时，若当前处于非最后一页，则翻到下一页
                     planMoveDistanceX = -(cellPrefabRT.rect.width + spacingX);
