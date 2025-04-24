@@ -102,13 +102,10 @@ namespace NRatel
         private float coreConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
 
         //开启loop时，扩展后宽度
-        private float expandedContentWidth { get { return coreConetontWidth * 2; } }
+        private float expandedContentWidth { get { return coreConetontWidth + (coreConetontWidth + spacingX) * 4; } }
 
-        //Content初始偏移，使 content左边界与viewport左边界对齐
+        //Content初始偏移，使初始时 核心内容的左边界与viewport左边界对齐
         private float contentStartOffsetX { get { return -(expandedContentWidth - coreConetontWidth) / 2f; } }
-
-        //循环阈值
-        private float loopThreshold { get { return (expandedContentWidth - coreConetontWidth) / 4f; } }
 
         protected override void Start()
         {
@@ -211,46 +208,23 @@ namespace NRatel
         {
             if (!loop) return;
 
-            // 获取当前位置
+            //获取当前位置
             float curContentPosX = contentRT.anchoredPosition.x;
+            //滑动重置宽度
+            float resetWidth = coreConetontWidth + spacingX;
+            //Content向左时，Content重置点坐标
+            float leftResetPosX = contentStartOffsetX - resetWidth;
+            //Content向右时，Content重置点坐标
+            float rightResetPosX = contentStartOffsetX + resetWidth;
 
-            //1、列表核心内容的左边界 处于 Viewport左边界时，Content的X坐标
-            float leftContentPosX = contentStartOffsetX;
-            //2、列表核心内容的右边界 处于 Viewport右边界时，Content的X坐标
-            float rightContentPosX = contentStartOffsetX - (coreConetontWidth - viewportRT.rect.width);
-
-            //循环偏移值
-            Vector2 loopOffset = Vector2.right * (coreConetontWidth + spacingX);
-
-            // 反射获取 scrollRect 的 m_PrevPosition 字段
-            Type type = scrollRect.GetType();
-            FieldInfo fieldInfo = type.GetField("m_PrevPosition", BindingFlags.NonPublic | BindingFlags.Instance);
-            Vector2 oldValue = (Vector2)fieldInfo.GetValue(scrollRect);
-
-            Debug.Log($"cur: {curContentPosX}, left: {leftContentPosX + loopThreshold}, right: {rightContentPosX - loopThreshold}, loopOffset: {loopOffset}");
-
-            Debug.Assert(leftContentPosX + loopThreshold > rightContentPosX - loopThreshold);
-
-            //向右滑动时
-            //cur: -166, left: -197.5, right: -882.5, loopOffset: (800.00, 0.00)
-            //cur: -966, left: -197.5, right: -882.5, loopOffset: (800.00, 0.00)
-
-            //-166 > -197.5, 
-            //-966 < -882.5, 
-            if (curContentPosX > leftContentPosX + loopThreshold)
+            if (curContentPosX < leftResetPosX)
             {
-                contentRT.anchoredPosition -= loopOffset;
-                //fieldInfo.SetValue(scrollRect, oldValue - loopOffset);
-
-                Debug.Log($"aaaaaaaaaa: {Time.frameCount}");
+                contentRT.anchoredPosition += Vector2.right * resetWidth;
             }
             //向左滑动时
-            else if (curContentPosX < rightContentPosX - loopThreshold)
+            else if (curContentPosX > rightResetPosX)
             {
-                contentRT.anchoredPosition += loopOffset;
-                //fieldInfo.SetValue(scrollRect, oldValue + loopOffset);
-
-                Debug.Log($"bbbbbbbbbb: {Time.frameCount}");
+                contentRT.anchoredPosition += Vector2.left * resetWidth;
             }
         }
         #endregion
