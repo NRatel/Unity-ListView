@@ -81,7 +81,7 @@ namespace NRatel.Fundamental
 
         protected virtual void Start()
         {
-            if (cellCount < 0) { return; }
+            if (cellCount <= 0) { return; }
 
             FixPadding();
             FixSpacingX();
@@ -98,7 +98,7 @@ namespace NRatel.Fundamental
 
         protected virtual void OnScrollValueChanged(Vector2 delta)
         {
-            if (cellCount < 0) { return; }
+            if (cellCount <= 0) { return; }
 
             CalcIndexes();
             DisAppearCells();
@@ -124,7 +124,7 @@ namespace NRatel.Fundamental
         {
             //计算和设置Content总宽度
             //当cellCount大于0时，Content总宽度 = 左边界间隙 + 所有Cell的宽度总和 + 相邻间距总和 + 右边界间隙
-            contentWidth = paddingLeft + cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1) + paddingRight;
+            contentWidth = cellCount > 0 ? paddingLeft + cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1) + paddingRight : 0;
             contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
         }
 

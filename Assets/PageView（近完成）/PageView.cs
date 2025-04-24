@@ -58,15 +58,15 @@ using System.Reflection;
 //      拆分为3个关键问题，可将问题简化
 //          ①、使 Content 在移动时，非原核心内容区也能够显示 0~Count-1 范围内的 Cell元素，让越界索引不要提前retrun，而是在显示时转到 0~Count-1 之中。
 //          ②、将 Content 宽度扩为原核心内容宽度扩展的N倍，使其满足位置重置的基本条件。
-//          ③、滑动时，从初始位置开始，只要向左/向右滑出超过1页，就将 Content 重置回起始位置。
+//          ③、滑动时，从初始位置开始，只要向左/向右滑出超过1个重置单位，就将 Content 重置回起始位置。
 //              （注意，滑动过程，完全无需考虑Cell显示问题，完全由①处理，可将Content想象为一张整图）
-//              （注意这里说的 1页 = 1核心内容宽度 + 1个spacingX）
+//              （注意这里说的 1个重置单位 = 1核心内容宽度 + 1个spacingX）
 //      问题：
 //          ①、至少应该扩展为几倍？
-//              支持从初始位置开始，向左向右各滑动1页，需要在两侧至少各扩展出1页。
-//              但为了避免 翻超1页触及边缘 触发回弹，可以额外多出1页或2页。
-//              注意，扩宽 Content 更多倍是毫无成本的！这里只是思考至少应该扩展为几倍。
-//              所以，直接定为 5倍。
+//              支持从初始位置开始，向左向右各滑动1个重置单位，需要在两侧至少各扩展出1个重置单位。
+//              但为了避免 翻超1个重置单位触及边缘 触发回弹，可以额外多出1或2个重置单位。
+//              注意，扩宽 Content 更多倍是毫无成本的！这里只是思考至少应该扩展几倍。
+//              所以，直接定为 2+2=4倍。
 //          ②、再回头来思考 核心内容宽度 < viewport宽度 的倍数
 //              在上面的基础上，只需简单处理：将 核心内容宽度 先翻倍，使超过 viewport宽度。
 //              注意，这种情况下，在Viewport中会出现多个同一Cell，属于正常现象。
@@ -101,14 +101,16 @@ namespace NRatel
         //核心内容宽度
         private float coreConetontWidth { get { return cellPrefabRT.rect.width * cellCount + spacingX * (cellCount - 1); } }
 
-        //开启loop时，扩展后宽度
-        private float expandedContentWidth { get { return coreConetontWidth + (coreConetontWidth + spacingX) * 4; } }
+        //开启loop时，重置宽度
+        private float loopResetWidth { get { return (coreConetontWidth + spacingX) * Mathf.CeilToInt(viewportRT.rect.width / coreConetontWidth); } }
 
+        //开启loop时，扩展后宽度
+        private float expandedContentWidth { get { return coreConetontWidth + loopResetWidth * 4; } }
 
         protected override void Start()
         {
             base.Start();
-            TryStartCarousel();
+            if (cellCount > 0) { TryStartCarousel(); }
         }
 
         #region Override
@@ -116,7 +118,7 @@ namespace NRatel
 
         protected override void OnScrollValueChanged(Vector2 delta)
         {
-            TryHandleLoopPos();                     // 新增循环位置处理
+            if (cellCount > 0) { TryHandleLoopPos(); }
             base.OnScrollValueChanged(delta);       // 保持原有逻辑
         }
 
@@ -139,7 +141,7 @@ namespace NRatel
         {
             if (loop)
             {
-                contentWidth = expandedContentWidth;
+                contentWidth = cellCount > 0 ? expandedContentWidth : 0;
                 contentRT.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
             }
             else
@@ -185,21 +187,19 @@ namespace NRatel
             float contentStartPosX = -cellStartOffsetX;
             //获取当前位置
             float curContentPosX = contentRT.anchoredPosition.x;
-            //滑动重置宽度
-            float resetWidth = coreConetontWidth + spacingX;
             //Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
-            float leftResetPosX = contentStartPosX - resetWidth;
+            float leftResetPosX = contentStartPosX - loopResetWidth;
             //Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
-            float rightResetPosX = contentStartPosX + resetWidth;
+            float rightResetPosX = contentStartPosX + loopResetWidth;
 
             if (curContentPosX < leftResetPosX)
             {
-                contentRT.anchoredPosition += Vector2.right * resetWidth;
+                contentRT.anchoredPosition += Vector2.right * loopResetWidth;
             }
             //向左滑动时
             else if (curContentPosX > rightResetPosX)
             {
-                contentRT.anchoredPosition += Vector2.left * resetWidth;
+                contentRT.anchoredPosition += Vector2.left * loopResetWidth;
             }
         }
         #endregion
