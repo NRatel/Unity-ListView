@@ -47,6 +47,10 @@ namespace NRatel.Fundamental
         protected List<int> appearIndexes;      //将要出现的索引集合   //使用List而非单个，可以支持Content位置跳变
         protected List<int> disAppearIndexes;   //将要消失的索引集合   //使用List而非单个，可以支持Content位置跳变
 
+        //仅用于子类功能扩展
+        //默认情况下 Cell 从 Content 的 paddingLeft 处开始显示
+        protected virtual float cellStartOffsetX { get { return 0f; } }
+
         protected virtual void Awake()
         {
             cellRTDict = new Dictionary<int, RectTransform>();
@@ -127,17 +131,19 @@ namespace NRatel.Fundamental
         //设置起始位置
         protected virtual void SetContentStartPos()
         {
-            contentRT.anchoredPosition = new Vector2(0, contentRT.anchoredPosition.y);
+            contentRT.anchoredPosition = new Vector2(-cellStartOffsetX, contentRT.anchoredPosition.y);
         }
 
         //计算 应出现的索引 和 应消失的索引
         protected virtual void CalcIndexes()
         {
+            float contentStartPosX = -cellStartOffsetX;
+
             //始终以viewpoert左边界为参考原点观察。则有：
             //content左边界 相对于 viewport左边界（含viewportOffset） 的位移为：
-            float outWidthFromLeft = -(contentRT.anchoredPosition.x + viewportOffsetLeft);
+            float outWidthFromLeft = contentStartPosX  - (contentRT.anchoredPosition.x + viewportOffsetLeft);
             //content右边界 相对于 viewport右边界（含viewportOffset） 的位移为：
-            float outWidthFromRight = 0 + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
+            float outWidthFromRight = contentStartPosX + contentRT.anchoredPosition.x + contentWidth - (viewportRT.rect.width + viewportOffsetRight);
 
             //计算完全滑出左边界和完全滑出右边的数量。 要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
 
@@ -284,7 +290,7 @@ namespace NRatel.Fundamental
         protected virtual float CalcCellPosX(int index)
         {
             //X = 左边界间隙 + 由Cell的pivot决定的起始偏移值 + 前面已有Cell的宽度总和 + 前面已有的间距总和
-            float x = paddingLeft + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
+            float x = paddingLeft + cellStartOffsetX + pivotOffsetX + cellPrefabRT.rect.width * index + spacingX * index;
 
             //Debug.Log("index, cellPosX" + index + "," + x);
             return x;

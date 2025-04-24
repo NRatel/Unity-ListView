@@ -104,8 +104,6 @@ namespace NRatel
         //开启loop时，扩展后宽度
         private float expandedContentWidth { get { return coreConetontWidth + (coreConetontWidth + spacingX) * 4; } }
 
-        //Content初始偏移，使初始时 核心内容的左边界与viewport左边界对齐
-        private float contentStartOffsetX { get { return -(expandedContentWidth - coreConetontWidth) / 2f; } }
 
         protected override void Start()
         {
@@ -114,6 +112,8 @@ namespace NRatel
         }
 
         #region Override
+        protected override float cellStartOffsetX { get { return (expandedContentWidth - coreConetontWidth) / 2f; } }
+
         protected override void OnScrollValueChanged(Vector2 delta)
         {
             TryHandleLoopPos();                     // 新增循环位置处理
@@ -134,20 +134,6 @@ namespace NRatel
             spacingX = viewportRT.rect.width - cellPrefabRT.rect.width;
         }
 
-        //调整视口容差
-        protected override void FixViewportOffset()
-        {
-            if (loop)
-            {
-                viewportOffsetLeft = Mathf.Abs(contentStartOffsetX);
-                viewportOffsetRight = viewportOffsetLeft;
-            }
-            else
-            {
-                base.FixViewportOffset(); 
-            }
-        }
-
         //计算并设置Content大小
         protected override void CalcAndSetContentSize()
         {
@@ -162,13 +148,6 @@ namespace NRatel
             }
         }
 
-        //设置初始位置
-        protected override void SetContentStartPos()
-        {
-            if (loop) { contentRT.anchoredPosition = new Vector2(contentStartOffsetX, contentRT.anchoredPosition.y); }
-            else { base.SetContentStartPos(); }
-        }
-
         //loop时，认为任意索引都是有效的，以使非 0~cellCount 的区域能够显示元素，之后再在 ConvertIndexToValid 转换
         protected override bool IsValidIndex(int index)
         {
@@ -181,12 +160,6 @@ namespace NRatel
         {
             if (loop) { return (index % cellCount + cellCount) % cellCount; }
             else { return base.ConvertIndexToValid(index); }
-        }
-
-        //计算Cell的X坐标
-        protected override float CalcCellPosX(int index)
-        {
-            return base.CalcCellPosX(index) + (loop ? -contentStartOffsetX : 0);
         }
         #endregion
 
@@ -208,14 +181,16 @@ namespace NRatel
         {
             if (!loop) return;
 
+            //Content初始位置
+            float contentStartPosX = -cellStartOffsetX;
             //获取当前位置
             float curContentPosX = contentRT.anchoredPosition.x;
             //滑动重置宽度
             float resetWidth = coreConetontWidth + spacingX;
-            //Content向左时，Content重置点坐标
-            float leftResetPosX = contentStartOffsetX - resetWidth;
-            //Content向右时，Content重置点坐标
-            float rightResetPosX = contentStartOffsetX + resetWidth;
+            //Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
+            float leftResetPosX = contentStartPosX - resetWidth;
+            //Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
+            float rightResetPosX = contentStartPosX + resetWidth;
 
             if (curContentPosX < leftResetPosX)
             {
