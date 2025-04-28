@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class GridCell : MonoBehaviour
+public class ClickableCell : MonoBehaviour
 {
     public Text text;
     public Button btnClick;

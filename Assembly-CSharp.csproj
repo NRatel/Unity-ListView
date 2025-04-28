@@ -63,11 +63,13 @@
     <Compile Include="Assets\PageView（近完成）\PageView.cs" />
     <Compile Include="Assets\多种不规则Cell的列表（如聊天窗口）\ListViewForChat.cs" />
     <Compile Include="Assets\Basics\UIScrollRect.cs" />
-    <Compile Include="Assets\CellRes\ListCell.cs" />
+    <Compile Include="Assets\CellRes\DisplayableCell.cs" />
     <Compile Include="Assets\特殊需求\右侧堆叠的ListView\ListViewS1.cs" />
-    <Compile Include="Assets\CellRes\GridCell.cs" />
+    <Compile Include="Assets\CellRes\ClickableCell.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV1\ListViewV1.cs" />
     <Compile Include="Assets\UIGridView（完成）\UIGridView.cs" />
+    <Compile Include="Assets\UIListView\UIListView.cs" />
+    <Compile Include="Assets\UIListView\UIPanel_TestListView.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

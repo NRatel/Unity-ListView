@@ -69,7 +69,7 @@ namespace NRatel.Fundamental
                 cellRT.anchorMin = new Vector2(0, cellRT.anchorMin.y);
                 cellRT.anchorMax = new Vector2(0, cellRT.anchorMax.y);
                 cells.Add(cell);
-                cellRT.GetComponent<ListCell>().Refresh(i);
+                cellRT.GetComponent<DisplayableCell>().Refresh(i);
             }
         }
 

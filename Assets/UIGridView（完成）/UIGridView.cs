@@ -600,10 +600,7 @@ namespace NRatel
 
         private Vector2 GetCellPos(int index)
         {
-            //一、计算索引
-            int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
-            int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
-
+            //一、数据索引转位置索引
             int posIndexX;   //X位置索引
             int posIndexY;   //Y位置索引
             if (startAxis == MovementAxis.Horizontal)
@@ -621,13 +618,13 @@ namespace NRatel
                 posIndexY = ((index % m_CellsPerMainAxis) + m_CellsPerMainAxis) % m_CellsPerMainAxis;   //负数索引也转到 [0,m_CellsPerMainAxis) 中（循环归一化算法）
             }
 
-            //根据起始角进行转置
-            if (cornerX == 1)  //如果是从右往左
-                posIndexX = m_ActualCellCountX - 1 - posIndexX;
-            if (cornerY == 1) //如果是从下往上
-                posIndexY = m_ActualCellCountY - 1 - posIndexY;
+            //二、根据起始角落进行转置
+            int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
+            int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
+            if (cornerX == 1) { posIndexX = m_ActualCellCountX - 1 - posIndexX; }   //如果是从右往左
+            if (cornerY == 1) { posIndexY = m_ActualCellCountY - 1 - posIndexY; }   //如果是从下往上
 
-            //二、计算坐标
+            //三、计算坐标
             Vector2 scaleFactor = Vector2.one;  //不考虑元素缩放
 
             // x轴：初始位置+宽度*中心点偏移*缩放系数 (x轴是向正方向)(从左上到右下)

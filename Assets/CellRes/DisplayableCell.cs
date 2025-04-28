@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ListCell : MonoBehaviour
+public class DisplayableCell : MonoBehaviour
 {
     public Text text;
 

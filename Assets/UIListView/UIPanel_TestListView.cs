@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using NRatel;
 
-public class UIPanel_TestGridView : MonoBehaviour
+public class UIPanel_TestListView : MonoBehaviour
 {
     public class TestData
     {
@@ -13,7 +13,7 @@ public class UIPanel_TestGridView : MonoBehaviour
     }
 
     [SerializeField]
-    private UIGridView m_UIGridView;
+    private UIListView m_UIListView;
 
     [SerializeField]
     private RectTransform m_CellRTTemplate;
@@ -48,8 +48,8 @@ public class UIPanel_TestGridView : MonoBehaviour
 
     void StartShow()
     {
-        m_UIGridView.Init(m_CellRTTemplate, OnCreateCell, OnShowCell);
-        m_UIGridView.StartShow(m_DataList.Count, false);
+        m_UIListView.Init(m_CellRTTemplate, OnCreateCell, OnShowCell);
+        m_UIListView.StartShow(m_DataList.Count, false);
     }
 
     private RectTransform OnCreateCell(int index)
@@ -65,7 +65,7 @@ public class UIPanel_TestGridView : MonoBehaviour
 
     private void OnShowCell(int index)
     {
-        RectTransform cellRT = m_UIGridView.GetCellRT(index);
+        RectTransform cellRT = m_UIListView.GetCellRT(index);
         cellRT.GetComponent<ClickableCell>().Refresh(index);
     }
 }

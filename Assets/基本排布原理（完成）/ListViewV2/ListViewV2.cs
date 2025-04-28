@@ -242,7 +242,7 @@ namespace NRatel.Fundamental
 
                 //设置Cell数据，对Cell进行初始化
                 int validIndex = ConvertIndexToValid(index);
-                cellRT.GetComponent<ListCell>().Refresh(validIndex);
+                cellRT.GetComponent<DisplayableCell>().Refresh(validIndex);
             }
         }
 
