@@ -372,10 +372,7 @@ namespace NRatel
         //计算起始Offset
         private void CalculateStartOffset()
         {
-            Vector2 startOffset = new Vector2(
-                GetStartOffset(0, m_RequiredSpace.x),
-                GetStartOffset(1, m_RequiredSpace.y)
-            );
+            Vector2 startOffset = new Vector2(GetStartOffset(0, m_RequiredSpace.x), GetStartOffset(1, m_RequiredSpace.y));
             this.m_StartOffset = startOffset;
         }
 
@@ -390,51 +387,41 @@ namespace NRatel
 
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                //content起始边界 相对于 viewport起始边界的位移（滑动轴延伸方向为正方向）：
-                float outWidthFromStart = m_Content.anchoredPosition.x * (cornerX == 0 ? 1 : -1);
-                //content结束边界 相对于 viewport结束边界的位移（滑动轴延伸方向为正方向）：
+                //content起始边界 相对于 viewport起始边界的位移宽度：
+                float outWidthFromStart = -m_Content.anchoredPosition.x * (cornerX == 0 ? 1 : -1);
+                //content结束边界 相对于 viewport结束边界的位移宽度：
                 float outWidthFromEnd = (m_Content.anchoredPosition.x + (m_Content.rect.width - m_Viewport.rect.width) * (cornerX == 0 ? 1 : -1)) * (cornerX == 0 ? 1 : -1);
 
-                if (outWidthFromStart < 0)
-                {
-                    float startPadding = cornerX == 0 ? padding.left : padding.right;
-                    //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromStart = Mathf.FloorToInt((-outWidthFromStart - startPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
-                    outCountFromStart = Mathf.Clamp(outColFromStart * m_ActualCellCountY, 0, m_CellCount);
-                }
-                if (outWidthFromEnd > 0)
-                {
-                    float endPadding = cornerX == 0 ? padding.right : padding.left;
-                    //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outColFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
-                    //若最后一列未满，则从总数中减去。
-                    int theLastColOffsetCount = m_CellCount % m_ActualCellCountY != 0 ? (m_ActualCellCountY - m_CellCount % m_ActualCellCountY) : 0;
-                    outCountFromEnd = Mathf.Clamp(outColFromEnd * m_ActualCellCountY - theLastColOffsetCount, 0, m_CellCount);
-                }
+                float startPadding = cornerX == 0 ? padding.left : padding.right;
+                //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                int outColFromStart = Mathf.FloorToInt((outWidthFromStart - startPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
+                outCountFromStart = outColFromStart * m_ActualCellCountY;
+
+                float endPadding = cornerX == 0 ? padding.right : padding.left;
+                //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                int outColFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
+                //若最后一列未满，则从总数中减去。
+                int theLastColOffsetCount = m_CellCount % m_ActualCellCountY != 0 ? (m_ActualCellCountY - m_CellCount % m_ActualCellCountY) : 0;
+                outCountFromEnd = outColFromEnd * m_ActualCellCountY - theLastColOffsetCount;
             }
             else
             {
-                //content起始边界 相对于 viewport起始边界的位移（滑动轴延伸方向为正方向）：
-                float outHeightFromStart = m_Content.anchoredPosition.y * (cornerY == 0 ? -1 : 1);
-                //content结束边界 相对于 viewport结束边界的位移（滑动轴延伸方向为正方向）：
+                //content起始边界 相对于 viewport起始边界的位移宽度：
+                float outHeightFromStart = -m_Content.anchoredPosition.y * (cornerY == 0 ? -1 : 1);
+                //content结束边界 相对于 viewport结束边界的位移宽度：
                 float outHeightFromEnd = (m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height) * (cornerY == 0 ? -1 : 1)) * (cornerY == 0 ? -1 : 1);
 
-                if (outHeightFromStart < 0)
-                {
-                    float startPadding = cornerY == 0 ? padding.top : padding.bottom;
-                    //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outRowFromStart = Mathf.FloorToInt((-outHeightFromStart - startPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
-                    outCountFromStart = Mathf.Clamp(outRowFromStart * m_ActualCellCountX, 0, m_CellCount);
-                }
-                if (outHeightFromEnd > 0)
-                {
-                    float endPadding = cornerY == 0 ? padding.bottom : padding.top;
-                    //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                    int outRowFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
-                    //若最后一行未满，则从总数中减去。
-                    int theLastRowOffsetCount = m_CellCount % m_ActualCellCountX != 0 ? (m_ActualCellCountX - m_CellCount % m_ActualCellCountX) : 0;
-                    outCountFromEnd = Mathf.Clamp(outRowFromEnd * m_ActualCellCountX - theLastRowOffsetCount, 0, m_CellCount);
-                }
+                float startPadding = cornerY == 0 ? padding.top : padding.bottom;
+                //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                int outRowFromStart = Mathf.FloorToInt((outHeightFromStart - startPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
+                outCountFromStart = outRowFromStart * m_ActualCellCountX;
+
+                float endPadding = cornerY == 0 ? padding.bottom : padding.top;
+                //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                int outRowFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
+                //若最后一行未满，则从总数中减去。
+                int theLastRowOffsetCount = m_CellCount % m_ActualCellCountX != 0 ? (m_ActualCellCountX - m_CellCount % m_ActualCellCountX) : 0;
+                outCountFromEnd = outRowFromEnd * m_ActualCellCountX - theLastRowOffsetCount;
             }
 
             //应该显示的开始索引和结束索引
@@ -510,6 +497,8 @@ namespace NRatel
         {
             foreach (int index in m_DisAppearIndexes)
             {
+                if (!IsValidIndex(index)) { continue; }
+
                 RectTransform cellRT = m_CellRTDict[index];
                 m_CellRTDict.Remove(index);
                 cellRT.gameObject.SetActive(false);
@@ -522,10 +511,14 @@ namespace NRatel
         {
             foreach (int index in m_AppearIndexes)
             {
+                if (!IsValidIndex(index)) { continue; }
+
                 RectTransform cellRT = GetOrCreateCell(index);
                 m_CellRTDict[index] = cellRT;
                 cellRT.anchoredPosition = GetCellPos(index);        //设置Cell位置
-                m_OnShowCell?.Invoke(index);                        //Cell出现/刷新回调
+
+                int validIndex = ConvertIndexToValid(index);
+                m_OnShowCell?.Invoke(validIndex);                   //Cell出现/刷新回调
             }
         }
 
@@ -568,11 +561,24 @@ namespace NRatel
             }
         }
 
+        //是否有效索引（只将显示索引显示到列表中，默认为 0~cellCount 之间）
+        protected virtual bool IsValidIndex(int index)
+        {
+            return index >= 0 && index < m_CellCount;
+        }
+
+        //转换索引至有效（默认无需处理）
+        protected virtual int ConvertIndexToValid(int index)
+        {
+            return index;
+        }
+
+        //计算 开始排布Cell的起始位置
         private float GetStartOffset(int axis, float requiredSpaceWithoutPadding)
         {
             float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //该轴上子元素需要的总尺寸 + 边距
-            float availableSpace = m_Content.rect.size[axis];       //该轴上 LayoutGroup 的实际有效尺寸
-            float surplusSpace = availableSpace - requiredSpace;    //剩余尺寸（可以是负的）
+            float availableSpace = m_Content.rect.size[axis];       //该轴上 Content 的实际可用尺寸
+            float surplusSpace = availableSpace - requiredSpace;    //剩余可用尺寸（可以是负的）
             float alignmentOnAxis = GetAlignmentOnAxis(axis);       //获取小数形式的子元素对齐方式
 
             //水平方向从左开始，竖直方向从上开始。
@@ -602,13 +608,17 @@ namespace NRatel
             int posIndexY;   //Y位置索引
             if (startAxis == MovementAxis.Horizontal)
             {
-                posIndexX = index % m_CellsPerMainAxis;
-                posIndexY = index / m_CellsPerMainAxis;
+                //posIndexX = index % m_CellsPerMainAxis;
+                //posIndexY = index / m_CellsPerMainAxis;
+                posIndexX = ((index % m_CellsPerMainAxis) + m_CellsPerMainAxis) % m_CellsPerMainAxis;   //负数索引也转到 [0,m_CellsPerMainAxis) 中（循环归一化算法）
+                posIndexY = Mathf.FloorToInt((float)index / m_CellsPerMainAxis);
             }
             else
             {
-                posIndexX = index / m_CellsPerMainAxis;
-                posIndexY = index % m_CellsPerMainAxis;
+                //posIndexX = index / m_CellsPerMainAxis;
+                //posIndexY = index % m_CellsPerMainAxis;
+                posIndexX = Mathf.FloorToInt((float)index / m_CellsPerMainAxis);
+                posIndexY = ((index % m_CellsPerMainAxis) + m_CellsPerMainAxis) % m_CellsPerMainAxis;   //负数索引也转到 [0,m_CellsPerMainAxis) 中（循环归一化算法）
             }
 
             //根据起始角进行转置
