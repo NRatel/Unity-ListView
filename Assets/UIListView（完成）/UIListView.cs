@@ -41,10 +41,10 @@ namespace NRatel
 
         protected DrivenRectTransformTracker m_Tracker;
 
-        private int m_ActualCellCountX;
-        private int m_ActualCellCountY;
-        private Vector2 m_RequiredSpace;
-        private Vector2 m_StartOffset;
+        protected int m_ActualCellCountX;
+        protected int m_ActualCellCountY;
+        protected Vector2 m_RequiredSpace;
+        protected Vector2 m_StartOffset;
 
         protected Dictionary<int, RectTransform> m_CellRTDict;                      //index-Cell字典    
         protected Stack<RectTransform> m_UnUseCellRTStack;                          //空闲Cell堆栈
@@ -56,12 +56,12 @@ namespace NRatel
         protected List<int> m_DisAppearIndexes;                                     //将要消失的索引集合   //使用List而非单个，可以支持Content位置跳变
         protected List<int> m_StayIndexes;                                          //保持的索引集合       //使用List而非单个，可以支持Content位置跳变
 
-        private Rect m_CellRect;                                                    //Cell Rect（必需）
-        private Vector2 m_CellPivot;                                                //Cell中心点（必需）
-        private Func<int, RectTransform> m_OnCreateCell;                            //创建Cell的方法（必需）
-        private Action<int> m_OnShowCell;                                           //展示Cell的方法（出现/刷新时回调）（必需）
+        protected Rect m_CellRect;                                                    //Cell Rect（必需）
+        protected Vector2 m_CellPivot;                                                //Cell中心点（必需）
+        protected Func<int, RectTransform> m_OnCreateCell;                            //创建Cell的方法（必需）
+        protected Action<int> m_OnShowCell;                                           //展示Cell的方法（出现/刷新时回调）（必需）
 
-        private int m_CellCount;                                                    //显示数量
+        protected int m_CellCount;                                                    //显示数量
 
         protected override void Awake()
         {
@@ -132,6 +132,8 @@ namespace NRatel
         /// </summary>
         public void RefreshAll()
         {
+            FixPadding();
+            FixSpacing();
             CalcCellCountOnNaturalAxis();
             CalculateRequiredSpace();
             SetContentSizeOnMovementAxis();
@@ -244,8 +246,14 @@ namespace NRatel
             m_Tracker.Clear();
         }
 
+        //调整边距
+        protected virtual void FixPadding() { }
+
+        //调整间距
+        protected virtual void FixSpacing() { }
+
         //计算直观行列数（自然坐标轴上）
-        public void CalcCellCountOnNaturalAxis()
+        protected void CalcCellCountOnNaturalAxis()
         {
             this.m_ActualCellCountX = m_MovementAxis == MovementAxis.Horizontal ? m_CellCount : 1;
             this.m_ActualCellCountY = m_MovementAxis == MovementAxis.Vertical ? m_CellCount : 1;

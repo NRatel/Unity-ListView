@@ -80,17 +80,17 @@ namespace NRatel
     public class PageView : ListViewV2, IBeginDragHandler, IEndDragHandler
     {
         [Header("Page Settings")]
-        [SerializeField] public bool loop = true;                      //开启循环？
-        [SerializeField] public bool cellOccupyPage = false;           //使Cell占用一页（强设将spacingX）
+        [SerializeField] public bool loop = true;                       //开启循环？
+        [SerializeField] public bool cellOccupyPage = false;            //使Cell占用一页（强设将spacingX）
 
         [Header("Snap Settings")]
-        [SerializeField] public float snapSpeed = 500f;                //Snap速度
-        [SerializeField] public float snapWaitScrollVelocityX = 50f;   //开启惯性时，等待基本停稳才开始Snap
+        [SerializeField] public float snapSpeed = 500f;                 //Snap速度
+        [SerializeField] public float snapWaitScrollSpeedX = 50f;       //开启惯性时，等待基本停稳才开始Snap
 
         [Header("Carousel Settings")]
-        [SerializeField] public bool carousel = false;                 //开启轮播？
-        [SerializeField] public float carouselInterval = 3f;           //轮播启动间隔
-        [SerializeField] public float carouselSpeed = 500f;            //轮播时移动的速度
+        [SerializeField] public bool carousel = false;                  //开启轮播？
+        [SerializeField] public float carouselInterval = 3f;            //轮播启动间隔
+        [SerializeField] public float carouselSpeed = 500f;             //轮播时移动的速度
 
         public event Action onSnapCompleted;
 
@@ -247,7 +247,7 @@ namespace NRatel
                 yield return new WaitUntil(() => 
                 {
                     //Debug.Log("scrollRect.velocity.x: " + scrollRect.velocity.x);
-                    return Mathf.Abs(scrollRect.velocity.x) < snapWaitScrollVelocityX; 
+                    return Mathf.Abs(scrollRect.velocity.x) < snapWaitScrollSpeedX; 
                 });
                 //Debug.Log($"【SnapRoutine】等待惯性停稳");
             }
