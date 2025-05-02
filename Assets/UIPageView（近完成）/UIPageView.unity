@@ -757,7 +757,7 @@ MonoBehaviour:
     m_Right: 10
     m_Top: 10
     m_Bottom: 10
-  loop: 0
+  loop: 1
   cellOccupyPage: 0
   snap: 0
   snapSpeed: 500

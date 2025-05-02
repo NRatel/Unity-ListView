@@ -230,7 +230,7 @@ namespace NRatel
             }
             else
             {
-                int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
+                int cornerY = (int)m_StartCorner % 2;  //0：上， 1下（注意与UIGridView不同）
                 m_Content.anchorMin = new Vector2(0, 1 - cornerY);
                 m_Content.anchorMax = new Vector2(1, 1 - cornerY);
                 m_Content.pivot = new Vector2(0.5f, 1 - cornerY);
@@ -320,34 +320,51 @@ namespace NRatel
         //计算应出现的索引、应消失的索引 和 未变的索引
         protected void CalcIndexes()
         {
-            int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
-            int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
+            float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
+            float contentStartPosY = -m_CellStartOffsetOnMovementAxis;    //todo
 
-            int outCountFromStart = 0;  //完全滑出起始边界的数量
-            int outCountFromEnd = 0;    //完全滑出结束边界的数量
+            int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
+            int cornerY = (int)m_StartCorner % 2;  //0：上， 1下 （注意，不同于 UIGridView）
+
+            int outCountFromStart;  //完全滑出起始边界的数量
+            int outCountFromEnd;    //完全滑出结束边界的数量
 
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 //content起始边界 相对于 viewport起始边界的位移宽度：
-                float outWidthFromStart = -m_Content.anchoredPosition.x * (cornerX == 0 ? 1 : -1);
+                float outWidthFromStart = (contentStartPosX - m_Content.anchoredPosition.x) * (cornerX == 0 ? 1 : -1);
+                //content结束边界 相对于 viewport结束边界的位移宽度：
+                float outWidthFromEnd = (contentStartPosX + m_Content.anchoredPosition.x + (m_Content.rect.width - m_Viewport.rect.width) * (cornerX == 0 ? 1 : -1)) * (cornerX == 0 ? 1 : -1);
+
                 float startPadding = cornerX == 0 ? padding.left : padding.right;
-                //滑出的数量，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                float endPadding = cornerX == 0 ? padding.right : padding.left;
+
+                //完全滑出左边界的数量（可为负），要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。（可为负）
                 outCountFromStart = Mathf.FloorToInt((outWidthFromStart - startPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
+                //完全滑出右边界的数量（可为负），要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。（可为负）
+                outCountFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
             }
             else
             {
                 //content起始边界 相对于 viewport起始边界的位移宽度：
-                float outHeightFromStart = -m_Content.anchoredPosition.y * (cornerY == 0 ? -1 : 1);
+                float outHeightFromStart = (contentStartPosY - m_Content.anchoredPosition.y) * (cornerY == 0 ? -1 : 1);
+                //content结束边界 相对于 viewport结束边界的位移宽度：
+                float outHeightFromEnd = (contentStartPosY + m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height) * (cornerY == 0 ? -1 : 1)) * (cornerY == 0 ? -1 : 1);
+
                 float startPadding = cornerY == 0 ? padding.top : padding.bottom;
-                //滑出的数量，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
-                outCountFromEnd = Mathf.FloorToInt((outHeightFromStart - startPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
+                float endPadding = cornerY == 0 ? padding.bottom : padding.top;
+
+                //完全滑出上边界的数量（可为负），要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
+                outCountFromStart = Mathf.FloorToInt((outHeightFromStart - startPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
+                //完全滑出下边界的数量（可为负），要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。（可为负）
+                outCountFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
             }
 
             //应该显示的开始索引和结束索引
             int startIndex = (outCountFromStart); // 省略了先+1再-1。 从滑出的下一个开始，索引从0开始;
             int endIndex = (m_CellCount - 1 - outCountFromEnd);
 
-            //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
+            Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
 
             for (int index = startIndex; index <= endIndex; index++)
             {

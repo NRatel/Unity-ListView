@@ -45,7 +45,7 @@ namespace NRatel
 
         #region Override
         //开启loop时，将在初始时偏移Content沿滑动方向的位置，使基本居中，故需反向调整 首个Cell在Content上的初始位置
-        //protected override float m_CellStartOffsetOnMovementAxis { get { return (expandedContentWidth - coreConetontWidth) / 2f; } }
+        protected override float m_CellStartOffsetOnMovementAxis { get { return (expandedContentWidth - coreConetontWidth) / 2f; } }
 
         protected override void OnScrollValueChanged(Vector2 delta)
         {

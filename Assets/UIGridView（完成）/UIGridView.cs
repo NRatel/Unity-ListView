@@ -242,7 +242,7 @@ namespace NRatel
             }
             else
             {
-                int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
+                int cornerY = (int)m_StartCorner / 2;  //0：上， 1下（注意与UIListView不同）
                 m_Content.anchorMin = new Vector2(0, 1 - cornerY);
                 m_Content.anchorMax = new Vector2(1, 1 - cornerY);
                 m_Content.pivot = new Vector2(0.5f, 1 - cornerY);
@@ -388,10 +388,10 @@ namespace NRatel
         private void CalcIndexes()
         {
             int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
-            int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
+            int cornerY = (int)m_StartCorner / 2;  //0：上， 1下（注意，不同于 UIListView）
 
-            int outCountFromStart = 0;  //完全滑出起始边界的数量
-            int outCountFromEnd = 0;    //完全滑出结束边界的数量
+            int outCountFromStart;  //完全滑出起始边界的数量
+            int outCountFromEnd;    //完全滑出结束边界的数量
 
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
