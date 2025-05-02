@@ -44,7 +44,7 @@ namespace NRatel
         protected int m_ActualCellCountX;
         protected int m_ActualCellCountY;
         protected Vector2 m_RequiredSpace;
-        protected Vector2 m_StartOffset;
+        protected Vector2 m_CellStartOffset;
 
         protected Dictionary<int, RectTransform> m_CellRTDict;                      //index-Cell字典    
         protected Stack<RectTransform> m_UnUseCellRTStack;                          //空闲Cell堆栈
@@ -137,7 +137,7 @@ namespace NRatel
             CalcCellCountOnNaturalAxis();
             CalculateRequiredSpace();
             SetContentSizeOnMovementAxis();
-            CalculateStartOffset();
+            CalculateCellStartOffset();
 
             CalcIndexes();
             DisAppearCells();
@@ -270,7 +270,7 @@ namespace NRatel
         }
 
         //设置滑动轴方向的Content大小
-        private void SetContentSizeOnMovementAxis()
+        protected virtual void SetContentSizeOnMovementAxis()
         {
             RectTransform.Axis axis;
             float size;
@@ -289,10 +289,18 @@ namespace NRatel
         }
 
         //计算起始Offset
-        private void CalculateStartOffset()
+        //注意：使 元素对齐方式只影响 非滑动轴方向
+        //因为滑动轴方向 Content大小由元素数决定，不同于UGUI的Layout,
+        private void CalculateCellStartOffset()
         {
-            Vector2 startOffset = new Vector2(GetStartOffset(0, m_RequiredSpace.x), GetStartOffset(1, m_RequiredSpace.y));
-            this.m_StartOffset = startOffset;
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                m_CellStartOffset = new Vector2(padding.left, GetCellStartOffset((int)MovementAxis.Vertical, m_RequiredSpace.y));                
+            }
+            else
+            {
+                m_CellStartOffset = new Vector2(GetCellStartOffset((int)MovementAxis.Horizontal, m_RequiredSpace.x), padding.top);
+            }
         }
 
         //计算应出现的索引、应消失的索引 和 未变的索引
@@ -470,10 +478,8 @@ namespace NRatel
             return index;
         }
 
-        //childAlignment 对排布位置的影响
-        //横向滑动时，影响 Y轴 对齐方式
-        //竖向滑动时，影响 X轴 对齐方式
-        private float GetStartOffset(int axis, float requiredSpaceWithoutPadding)
+        //计算 开始排布Cell的起始位置（核心为：Cell在 “剩余可用尺寸”中如何对齐）
+        private float GetCellStartOffset(int axis, float requiredSpaceWithoutPadding)
         {
             float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //该轴上子元素需要的总尺寸 + 边距
             float availableSpace = m_Content.rect.size[axis];       //该轴上 Content 的实际可用尺寸
@@ -485,7 +491,9 @@ namespace NRatel
             // 若对齐方式为居左，则 alignmentOnAxis 为 0， 结果为 padding.left + 0，可以达到居左效果；
             // 若对齐方式为居中，则 alignmentOnAxis 为 0.5， 结果为 padding.left + 0.5*剩余距离，可以达到居中效果；
             // 若对齐方式为居右，则 alignmentOnAxis 为 1， 结果为 padding.left + 1*剩余距离，可以达到居右效果。
-            return (axis == 0 ? padding.left : padding.top) + surplusSpace * alignmentOnAxis;
+            float cellStartOffset = (axis == 0 ? padding.left : padding.top) + surplusSpace * alignmentOnAxis;
+
+            return cellStartOffset;
         }
 
         // Returns the alignment on the specified axis as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom.
@@ -521,12 +529,12 @@ namespace NRatel
             Vector2 scaleFactor = Vector2.one;  //不考虑元素缩放
 
             // x轴：初始位置+宽度*中心点偏移*缩放系数 (x轴是向正方向)(从左上到右下)
-            float anchoredPosX = (m_StartOffset.x + (m_CellRect.size.x + spacing.x) * posIndexX) + m_CellRect.size.x * m_CellPivot.x * scaleFactor.x;
+            float anchoredPosX = (m_CellStartOffset.x + (m_CellRect.size.x + spacing.x) * posIndexX) + m_CellRect.size.x * m_CellPivot.x * scaleFactor.x;
 
             // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
-            float anchoredPosY = -(m_StartOffset.y + (m_CellRect.size.y + spacing.y) * posIndexY) - m_CellRect.size.y * (1f - m_CellPivot.y) * scaleFactor.y;
+            float anchoredPosY = -(m_CellStartOffset.y + (m_CellRect.size.y + spacing.y) * posIndexY) - m_CellRect.size.y * (1f - m_CellPivot.y) * scaleFactor.y;
 
-            Debug.Log($"index: {index}, posIndexX: {posIndexX}, posIndexY: {posIndexY}, anchoredPosX: {anchoredPosX}, anchoredPosY: {anchoredPosY}, m_StartOffset.x: {m_StartOffset.x}");
+            Debug.Log($"index: {index}, posIndexX: {posIndexX}, posIndexY: {posIndexY}, anchoredPosX: {anchoredPosX}, anchoredPosY: {anchoredPosY}, m_StartOffset.x: {m_CellStartOffset.x}");
 
             return new Vector2(anchoredPosX, anchoredPosY);
         }

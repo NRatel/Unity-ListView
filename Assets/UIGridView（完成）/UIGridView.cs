@@ -61,7 +61,7 @@ namespace NRatel
         private int m_ActualCellCountX;
         private int m_ActualCellCountY;
         private Vector2 m_RequiredSpace;
-        private Vector2 m_StartOffset;
+        private Vector2 m_CellStartOffset;
 
         protected Dictionary<int, RectTransform> m_CellRTDict;                      //index-Cell字典    
         protected Stack<RectTransform> m_UnUseCellRTStack;                          //空闲Cell堆栈
@@ -152,7 +152,7 @@ namespace NRatel
             CalcCellCountOnNaturalAxis();
             CalculateRequiredSpace();
             SetContentSizeOnMovementAxis();
-            CalculateStartOffset();
+            CalculateCellStartOffset();
 
             CalcIndexes();
             DisAppearCells();
@@ -369,11 +369,10 @@ namespace NRatel
             m_Content.SetSizeWithCurrentAnchors(axis, size);
         }
 
-        //计算起始Offset
-        private void CalculateStartOffset()
+        //计算Cell起始Offset
+        private void CalculateCellStartOffset()
         {
-            Vector2 startOffset = new Vector2(GetStartOffset(0, m_RequiredSpace.x), GetStartOffset(1, m_RequiredSpace.y));
-            this.m_StartOffset = startOffset;
+            m_CellStartOffset = new Vector2(GetCellStartOffset(0, m_RequiredSpace.x), GetCellStartOffset(1, m_RequiredSpace.y));
         }
 
         //计算应出现的索引、应消失的索引 和 未变的索引
@@ -573,8 +572,8 @@ namespace NRatel
             return index;
         }
 
-        //计算 开始排布Cell的起始位置
-        private float GetStartOffset(int axis, float requiredSpaceWithoutPadding)
+        //计算 开始排布Cell的起始位置（核心为：计算Cell在“剩余可用尺寸”中，居何对齐）
+        private float GetCellStartOffset(int axis, float requiredSpaceWithoutPadding)
         {
             float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //该轴上子元素需要的总尺寸 + 边距
             float availableSpace = m_Content.rect.size[axis];       //该轴上 Content 的实际可用尺寸
@@ -628,10 +627,10 @@ namespace NRatel
             Vector2 scaleFactor = Vector2.one;  //不考虑元素缩放
 
             // x轴：初始位置+宽度*中心点偏移*缩放系数 (x轴是向正方向)(从左上到右下)
-            float anchoredPosX = (m_StartOffset.x + (m_CellRect.size.x + spacing.x) * posIndexX) + m_CellRect.size.x * m_CellPivot.x * scaleFactor.x;
+            float anchoredPosX = (m_CellStartOffset.x + (m_CellRect.size.x + spacing.x) * posIndexX) + m_CellRect.size.x * m_CellPivot.x * scaleFactor.x;
 
             // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
-            float anchoredPosY = -(m_StartOffset.y + (m_CellRect.size.y + spacing.y) * posIndexY) - m_CellRect.size.y * (1f - m_CellPivot.y) * scaleFactor.y;
+            float anchoredPosY = -(m_CellStartOffset.y + (m_CellRect.size.y + spacing.y) * posIndexY) - m_CellRect.size.y * (1f - m_CellPivot.y) * scaleFactor.y;
 
             return new Vector2(anchoredPosX, anchoredPosY);
         }

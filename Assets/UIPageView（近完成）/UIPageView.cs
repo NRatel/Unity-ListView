@@ -43,8 +43,8 @@ namespace NRatel
         }
 
         #region Override
-        //开启loop时，将在初始时偏移Content沿滑动方向的位置，使基本居中，故需反向调整 首个Cell在Content上的初始位置
-        protected override float cellStartOffsetX { get { return (expandedContentWidth - coreConetontWidth) / 2f; } }
+        ////开启loop时，将在初始时偏移Content沿滑动方向的位置，使基本居中，故需反向调整 首个Cell在Content上的初始位置
+        //protected override float cellStartOffsetX { get { return (expandedContentWidth - coreConetontWidth) / 2f; } }
 
         protected override void OnScrollValueChanged(Vector2 delta)
         {
@@ -72,21 +72,24 @@ namespace NRatel
         protected override void FixSpacing()
         {
             if (!cellOccupyPage) return;
-            spacing.x = m_Viewport.rect.width - m_CellRect.width;
+
+            float fixedSpacing = m_Viewport.rect.width - m_CellRect.width;
+            if (m_MovementAxis == MovementAxis.Horizontal) { spacing = new Vector2(fixedSpacing, spacing.y); }
+            else { spacing = new Vector2(spacing.x, fixedSpacing); }
         }
 
         //计算并设置Content大小
-        protected override void CalcAndSetContentSize()
+        protected override void SetContentSizeOnMovementAxis()
         {
-            if (loop)
-            {
-                contentWidth = m_CellCount > 0 ? expandedContentWidth : 0;
-                m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
-            }
-            else
-            {
-                base.CalcAndSetContentSize();
-            }
+            //if (loop)
+            //{
+            //    contentWidth = m_CellCount > 0 ? expandedContentWidth : 0;
+            //    m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
+            //}
+            //else
+            //{
+            //    base.CalcAndSetContentSize();
+            //}
         }
 
         //loop时，认为任意索引都是有效的，以使非 0~m_CellCount 的区域能够显示元素，之后再在 ConvertIndexToValid 转换
@@ -126,24 +129,24 @@ namespace NRatel
         {
             if (!loop) return;
 
-            //Content初始位置
-            float contentStartPosX = -cellStartOffsetX;
-            //获取当前位置
-            float curContentPosX = m_Content.anchoredPosition.x;
-            //Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
-            float leftResetPosX = contentStartPosX - loopResetWidth;
-            //Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
-            float rightResetPosX = contentStartPosX + loopResetWidth;
+            ////Content初始位置
+            //float contentStartPosX = -cellStartOffsetX;
+            ////获取当前位置
+            //float curContentPosX = m_Content.anchoredPosition.x;
+            ////Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
+            //float leftResetPosX = contentStartPosX - loopResetWidth;
+            ////Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
+            //float rightResetPosX = contentStartPosX + loopResetWidth;
 
-            if (curContentPosX < leftResetPosX)
-            {
-                m_Content.anchoredPosition += Vector2.right * loopResetWidth;
-            }
-            //向左滑动时
-            else if (curContentPosX > rightResetPosX)
-            {
-                m_Content.anchoredPosition += Vector2.left * loopResetWidth;
-            }
+            //if (curContentPosX < leftResetPosX)
+            //{
+            //    m_Content.anchoredPosition += Vector2.right * loopResetWidth;
+            //}
+            ////向左滑动时
+            //else if (curContentPosX > rightResetPosX)
+            //{
+            //    m_Content.anchoredPosition += Vector2.left * loopResetWidth;
+            //}
         }
         #endregion
 
