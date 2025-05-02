@@ -13,6 +13,7 @@ namespace NRatel
         [SerializeField] public bool cellOccupyPage = false;           //使Cell占用一页（强设将spacing.x）
 
         [Header("Snap Settings")]
+        [SerializeField] public bool snap = false;                     //开启Snap？
         [SerializeField] public float snapSpeed = 500f;                //Snap速度
         [SerializeField] public float snapWaitScrollSpeedX = 50f;      //开启惯性时，等待基本停稳才开始Snap
 
@@ -43,8 +44,8 @@ namespace NRatel
         }
 
         #region Override
-        ////开启loop时，将在初始时偏移Content沿滑动方向的位置，使基本居中，故需反向调整 首个Cell在Content上的初始位置
-        //protected override float cellStartOffsetX { get { return (expandedContentWidth - coreConetontWidth) / 2f; } }
+        //开启loop时，将在初始时偏移Content沿滑动方向的位置，使基本居中，故需反向调整 首个Cell在Content上的初始位置
+        //protected override float m_CellStartOffsetOnMovementAxis { get { return (expandedContentWidth - coreConetontWidth) / 2f; } }
 
         protected override void OnScrollValueChanged(Vector2 delta)
         {
@@ -81,15 +82,32 @@ namespace NRatel
         //计算并设置Content大小
         protected override void SetContentSizeOnMovementAxis()
         {
-            //if (loop)
-            //{
-            //    contentWidth = m_CellCount > 0 ? expandedContentWidth : 0;
-            //    m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, contentWidth);
-            //}
-            //else
-            //{
-            //    base.CalcAndSetContentSize();
-            //}
+            if (loop)
+            {
+                RectTransform.Axis axis;
+                float size;
+                if (m_MovementAxis == MovementAxis.Horizontal)
+                {
+                    axis = RectTransform.Axis.Horizontal;
+                    size = m_CellCount > 0 ? expandedContentWidth : 0;
+                }
+                else
+                {
+                    axis = RectTransform.Axis.Vertical;
+                    size = m_CellCount > 0 ? expandedContentWidth : 0;  //todo
+                }
+
+                m_Content.SetSizeWithCurrentAnchors(axis, size);
+            }
+            else 
+            {
+                base.SetContentSizeOnMovementAxis();
+            }
+        }
+
+        protected override void SetContentStartPos()
+        {
+            m_Content.anchoredPosition = new Vector2(-m_CellStartOffsetOnMovementAxis, m_Content.anchoredPosition.y);
         }
 
         //loop时，认为任意索引都是有效的，以使非 0~m_CellCount 的区域能够显示元素，之后再在 ConvertIndexToValid 转换
@@ -118,7 +136,7 @@ namespace NRatel
 
         public override void OnEndDrag(PointerEventData eventData)
         {
-            base.OnBeginDrag(eventData);
+            base.OnEndDrag(eventData);
 
             TryStartSnap();
         }
@@ -129,35 +147,37 @@ namespace NRatel
         {
             if (!loop) return;
 
-            ////Content初始位置
-            //float contentStartPosX = -cellStartOffsetX;
-            ////获取当前位置
-            //float curContentPosX = m_Content.anchoredPosition.x;
-            ////Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
-            //float leftResetPosX = contentStartPosX - loopResetWidth;
-            ////Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
-            //float rightResetPosX = contentStartPosX + loopResetWidth;
+            //Content初始位置
+            float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
+            //获取当前位置
+            float curContentPosX = m_Content.anchoredPosition.x;
+            //Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
+            float leftResetPosX = contentStartPosX - loopResetWidth;
+            //Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
+            float rightResetPosX = contentStartPosX + loopResetWidth;
 
-            //if (curContentPosX < leftResetPosX)
-            //{
-            //    m_Content.anchoredPosition += Vector2.right * loopResetWidth;
-            //}
-            ////向左滑动时
-            //else if (curContentPosX > rightResetPosX)
-            //{
-            //    m_Content.anchoredPosition += Vector2.left * loopResetWidth;
-            //}
+            if (curContentPosX < leftResetPosX)
+            {
+                m_Content.anchoredPosition += Vector2.right * loopResetWidth;
+            }
+            //向左滑动时
+            else if (curContentPosX > rightResetPosX)
+            {
+                m_Content.anchoredPosition += Vector2.left * loopResetWidth;
+            }
         }
         #endregion
 
         #region Snap
         private void TryStartSnap()
         {
+            if (!snap) { return; }
             m_SnapCoroutine = StartCoroutine(SnapRoutine());
         }
 
         private void TryStopSnap()
         {
+            if (!snap) { return; }
             if (m_SnapCoroutine == null) { return; }
 
             StopCoroutine(m_SnapCoroutine);

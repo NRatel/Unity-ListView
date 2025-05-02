@@ -71,6 +71,7 @@
     <Compile Include="Assets\UIPageView（近完成）\UIPageView.cs" />
     <Compile Include="Assets\UIListView（完成）\UIPanel_TestListView.cs" />
     <Compile Include="Assets\UIListView（完成）\UIListView.cs" />
+    <Compile Include="Assets\UIPageView（近完成）\UIPanel_TestPageView.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

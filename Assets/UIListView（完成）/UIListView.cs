@@ -56,12 +56,14 @@ namespace NRatel
         protected List<int> m_DisAppearIndexes;                                     //将要消失的索引集合   //使用List而非单个，可以支持Content位置跳变
         protected List<int> m_StayIndexes;                                          //保持的索引集合       //使用List而非单个，可以支持Content位置跳变
 
-        protected Rect m_CellRect;                                                    //Cell Rect（必需）
-        protected Vector2 m_CellPivot;                                                //Cell中心点（必需）
-        protected Func<int, RectTransform> m_OnCreateCell;                            //创建Cell的方法（必需）
-        protected Action<int> m_OnShowCell;                                           //展示Cell的方法（出现/刷新时回调）（必需）
+        protected Rect m_CellRect;                                                  //Cell Rect（必需）
+        protected Vector2 m_CellPivot;                                              //Cell中心点（必需）
+        protected Func<int, RectTransform> m_OnCreateCell;                          //创建Cell的方法（必需）
+        protected Action<int> m_OnShowCell;                                         //展示Cell的方法（出现/刷新时回调）（必需）
 
-        protected int m_CellCount;                                                    //显示数量
+        protected int m_CellCount;                                                  //显示数量
+
+        protected virtual float m_CellStartOffsetOnMovementAxis { get { return 0f; } }
 
         protected override void Awake()
         {
@@ -138,6 +140,7 @@ namespace NRatel
             CalculateRequiredSpace();
             SetContentSizeOnMovementAxis();
             CalculateCellStartOffset();
+            SetContentStartPos();
 
             CalcIndexes();
             DisAppearCells();
@@ -215,7 +218,7 @@ namespace NRatel
         }
 
         //根据轴向和起始角落，重置Content的锚点、中心点、位置和大小
-        private void ResetContentRT()
+        protected void ResetContentRT()
         {
             // 根据轴向和起始角落设置锚点、中心点
             if (m_MovementAxis == MovementAxis.Horizontal)
@@ -241,7 +244,7 @@ namespace NRatel
             m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, m_Viewport.rect.height);
         }
 
-        private void ResetTracker()
+        protected void ResetTracker()
         {
             m_Tracker.Clear();
         }
@@ -260,7 +263,7 @@ namespace NRatel
         }
 
         //计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
-        private void CalculateRequiredSpace()
+        protected void CalculateRequiredSpace()
         {
             Vector2 requiredSpace = new Vector2(
                 m_ActualCellCountX * m_CellRect.size.x + (m_ActualCellCountX - 1) * spacing.x,
@@ -291,20 +294,31 @@ namespace NRatel
         //计算Cell起始Offset
         //注意：使 元素对齐方式只影响 非滑动轴方向
         //因为滑动轴方向 Content大小由元素数决定。（不同于UGUI的Layout,滑动方向是自由大小）
-        private void CalculateCellStartOffset()
+        protected void CalculateCellStartOffset()
         {
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                m_CellStartOffset = new Vector2(padding.left, GetCellStartOffset((int)MovementAxis.Vertical, m_RequiredSpace.y));                
+                m_CellStartOffset = new Vector2(
+                    padding.left + m_CellStartOffsetOnMovementAxis, 
+                    GetCellStartOffset((int)MovementAxis.Vertical, m_RequiredSpace.y)
+                );
             }
             else
             {
-                m_CellStartOffset = new Vector2(GetCellStartOffset((int)MovementAxis.Horizontal, m_RequiredSpace.x), padding.top);
+                m_CellStartOffset = new Vector2(
+                    GetCellStartOffset((int)MovementAxis.Horizontal, m_RequiredSpace.x), 
+                    padding.top + m_CellStartOffsetOnMovementAxis
+                );
             }
         }
 
+        protected virtual void SetContentStartPos()
+        {
+            m_Content.anchoredPosition = Vector2.zero;
+        }
+
         //计算应出现的索引、应消失的索引 和 未变的索引
-        private void CalcIndexes()
+        protected void CalcIndexes()
         {
             int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
             int cornerY = (int)m_StartCorner / 2;  //0：上， 1下
@@ -398,7 +412,7 @@ namespace NRatel
         }
 
         //该消失的消失
-        private void DisAppearCells()
+        protected void DisAppearCells()
         {
             foreach (int index in m_DisAppearIndexes)
             {
@@ -412,7 +426,7 @@ namespace NRatel
         }
 
         //该出现的出现
-        private void AppearCells()
+        protected void AppearCells()
         {
             foreach (int index in m_AppearIndexes)
             {
@@ -428,7 +442,7 @@ namespace NRatel
         }
 
         //刷新保持的
-        private void RefreshStayCells()
+        protected void RefreshStayCells()
         {
             foreach (int index in m_StayIndexes)
             {
@@ -479,7 +493,7 @@ namespace NRatel
         }
 
         //计算 开始排布Cell的起始位置（核心为：Cell在 “剩余可用尺寸”中如何对齐）
-        private float GetCellStartOffset(int axis, float requiredSpaceWithoutPadding)
+        protected float GetCellStartOffset(int axis, float requiredSpaceWithoutPadding)
         {
             float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //该轴上子元素需要的总尺寸 + 边距
             float availableSpace = m_Content.rect.size[axis];       //该轴上 Content 的实际可用尺寸
@@ -500,12 +514,12 @@ namespace NRatel
         // 以小数形式返回指定轴上的对齐方式，其中0为左/上，0.5为中，1为右/下。（水平方向：0左，0.5中，1右）（竖直方向：0上，0.5中，1下）
         // 参数 "axis"：The axis to get alignment along. 0 is horizontal and 1 is vertical.    //轴索引，0是水平的，1是垂直的。
         // 返回值：The alignment as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom. //小数形式的对齐方式
-        private float GetAlignmentOnAxis(int axis)
+        protected float GetAlignmentOnAxis(int axis)
         {
             return (axis == (int)m_MovementAxis) ? 0.5f : (int)childAlignment * 0.5f;
         }
 
-        private Vector2 GetCellPos(int index)
+        protected Vector2 GetCellPos(int index)
         {
             //一、数据索引转位置索引
             int posIndexX;   //X位置索引
@@ -547,7 +561,7 @@ namespace NRatel
             //RefreshAll();
         }
 
-        private RectTransform GetOrCreateCell(int index)
+        protected RectTransform GetOrCreateCell(int index)
         {
             RectTransform cellRT;
             if (m_UnUseCellRTStack.Count > 0)
