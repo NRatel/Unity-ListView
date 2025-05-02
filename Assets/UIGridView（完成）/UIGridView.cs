@@ -370,9 +370,18 @@ namespace NRatel
         }
 
         //计算Cell起始Offset
+        //注意：使 元素对齐方式只影响 非滑动轴方向
+        //因为滑动轴方向 Content大小由元素数决定。（不同于UGUI的Layout,滑动方向是自由大小）
         private void CalculateCellStartOffset()
         {
-            m_CellStartOffset = new Vector2(GetCellStartOffset(0, m_RequiredSpace.x), GetCellStartOffset(1, m_RequiredSpace.y));
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                m_CellStartOffset = new Vector2(padding.left, GetCellStartOffset((int)MovementAxis.Vertical, m_RequiredSpace.y));
+            }
+            else
+            {
+                m_CellStartOffset = new Vector2(GetCellStartOffset((int)MovementAxis.Horizontal, m_RequiredSpace.x), padding.top);
+            }
         }
 
         //计算应出现的索引、应消失的索引 和 未变的索引

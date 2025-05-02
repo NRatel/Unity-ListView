@@ -288,9 +288,9 @@ namespace NRatel
             m_Content.SetSizeWithCurrentAnchors(axis, size);
         }
 
-        //计算起始Offset
+        //计算Cell起始Offset
         //注意：使 元素对齐方式只影响 非滑动轴方向
-        //因为滑动轴方向 Content大小由元素数决定，不同于UGUI的Layout,
+        //因为滑动轴方向 Content大小由元素数决定。（不同于UGUI的Layout,滑动方向是自由大小）
         private void CalculateCellStartOffset()
         {
             if (m_MovementAxis == MovementAxis.Horizontal)
