@@ -112,16 +112,27 @@ namespace NRatel
             {
                 if (m_MovementAxis == MovementAxis.Horizontal)
                 {
-                    float leftPos = 0;
-                    float rightPos = -(m_Content.rect.width - m_Viewport.rect.width);
+                    float leftPos;
+                    float rightPos;
                     float offsetThreshold = 0.1f;
 
-                    //当前正向左边界回弹
+                    if (m_StartCorner == StartCorner.LeftOrUpper) 
+                    {
+                        leftPos = 0;
+                        rightPos = -(m_Content.rect.width - m_Viewport.rect.width);
+                    }
+                    else 
+                    {
+                        leftPos = m_Content.rect.width - m_Viewport.rect.width;
+                        rightPos = 0;
+                    }
+
+                    //当前，Content正从右往左边界回弹
                     if (m_Content.anchoredPosition.x > leftPos)
                     {
                         yield return new WaitUntil(() => { return m_Content.anchoredPosition.x <= leftPos + offsetThreshold; });
                     }
-                    //当前正向右边界回弹
+                    //当前，Content正从左往右边界回弹
                     else if (m_Content.anchoredPosition.x < rightPos)
                     {
                         yield return new WaitUntil(() => { return m_Content.anchoredPosition.x >= rightPos - offsetThreshold; });
@@ -133,12 +144,23 @@ namespace NRatel
                     float downPos = m_Content.rect.height - m_Viewport.rect.height;
                     float offsetThreshold = 0.1f;
 
-                    //当前正向上边界回弹
+                    if (m_StartCorner == StartCorner.LeftOrUpper)
+                    {
+                        upPos = 0;
+                        downPos = m_Content.rect.height - m_Viewport.rect.height;
+                    }
+                    else
+                    {
+                        upPos = -(m_Content.rect.height - m_Viewport.rect.height);
+                        downPos = 0;
+                    }
+
+                    //当前，Content正从下往上边界回弹
                     if (m_Content.anchoredPosition.y < upPos)
                     {
                         yield return new WaitUntil(() => { return m_Content.anchoredPosition.y <= upPos + offsetThreshold; });
                     }
-                    //当前正向下边界回弹
+                    //当前，Content正从上往下边界回弹
                     else if (m_Content.anchoredPosition.y > downPos)
                     {
                         yield return new WaitUntil(() => { return m_Content.anchoredPosition.y >= downPos - offsetThreshold; });
@@ -243,7 +265,7 @@ namespace NRatel
             yield return new WaitForSeconds(m_CarouselInterval);
 
             float pageSize = m_MovementAxis == MovementAxis.Horizontal ? m_CellRect.width + spacing.x : m_CellRect.height + spacing.y;
-            int direction = m_MovementAxis == MovementAxis.Horizontal ? -1 : 1;
+            int direction = m_MovementAxis == MovementAxis.Horizontal ? (m_StartCorner == StartCorner.LeftOrUpper ? -1 : 1) : (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1);
 
             // 计算计划移动距离 和 速度倍率
             float planMoveDistance;
@@ -294,7 +316,7 @@ namespace NRatel
             float velocity = speed * Mathf.Sign(planMoveDistance);
 
             //移动正方向
-            Vector2 moveDirection = (m_MovementAxis == MovementAxis.Horizontal ? Vector2.right : Vector2.up);
+            Vector2 moveDirection = m_MovementAxis == MovementAxis.Horizontal ? Vector2.right : Vector2.down;
 
             // 平滑增加位移
             while (Mathf.Abs(m_MovedDistance) < Mathf.Abs(planMoveDistance))

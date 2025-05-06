@@ -14,7 +14,7 @@ namespace NRatel
     // 2、元素排布轨迹（4*2种，4个延伸方向*2侧）
     public class UIListView : UIScrollRect
     {
-        public enum Corner
+        public enum StartCorner
         {
             LeftOrUpper = 0,          //左或上
             RightOrLower = 1,         //右或下
@@ -27,8 +27,8 @@ namespace NRatel
             RightOrLower = 2,
         }
 
-        [SerializeField] protected Corner m_StartCorner = Corner.LeftOrUpper;
-        public Corner startCorner { get { return m_StartCorner; } set { SetProperty(ref m_StartCorner, value); } }
+        [SerializeField] protected StartCorner m_StartCorner = StartCorner.LeftOrUpper;
+        public StartCorner startCorner { get { return m_StartCorner; } set { SetProperty(ref m_StartCorner, value); } }
 
         [SerializeField] protected Vector2 m_Spacing = Vector2.zero;
         public Vector2 spacing { get { return m_Spacing; } set { SetProperty(ref m_Spacing, value); } }
@@ -615,8 +615,8 @@ namespace NRatel
             }
 
             //二、根据起始角落进行转置
-            if (m_MovementAxis == MovementAxis.Horizontal && m_StartCorner == Corner.RightOrLower) { posIndexX = m_ActualCellCountX - 1 - posIndexX; }   //如果是从右往左
-            if (m_MovementAxis == MovementAxis.Vertical && m_StartCorner == Corner.RightOrLower) { posIndexY = m_ActualCellCountY - 1 - posIndexY; }   //如果是从下往上
+            if (m_MovementAxis == MovementAxis.Horizontal && m_StartCorner == StartCorner.RightOrLower) { posIndexX = m_ActualCellCountX - 1 - posIndexX; }   //如果是从右往左
+            if (m_MovementAxis == MovementAxis.Vertical && m_StartCorner == StartCorner.RightOrLower) { posIndexY = m_ActualCellCountY - 1 - posIndexY; }   //如果是从下往上
 
             //三、计算坐标
             Vector2 scaleFactor = Vector2.one;  //不考虑元素缩放
