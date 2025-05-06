@@ -124,27 +124,27 @@ namespace NRatel
                     //当前正向右边界回弹
                     else if (m_Content.anchoredPosition.x < rightPos)
                     {
-                        yield return new WaitUntil(() => { return m_Content.anchoredPosition.x > rightPos - offsetThreshold; });
+                        yield return new WaitUntil(() => { return m_Content.anchoredPosition.x >= rightPos - offsetThreshold; });
                     }
                 }
                 else 
                 {
                     float upPos = 0;
-                    float downPos = -(m_Content.rect.height - m_Viewport.rect.height);
+                    float downPos = m_Content.rect.height - m_Viewport.rect.height;
                     float offsetThreshold = 0.1f;
 
-                    //当前正向左边界回弹
-                    if (m_Content.anchoredPosition.y > upPos)
+                    //当前正向上边界回弹
+                    if (m_Content.anchoredPosition.y < upPos)
                     {
                         yield return new WaitUntil(() => { return m_Content.anchoredPosition.y <= upPos + offsetThreshold; });
                     }
-                    //当前正向右边界回弹
-                    else if (m_Content.anchoredPosition.y < downPos)
+                    //当前正向下边界回弹
+                    else if (m_Content.anchoredPosition.y > downPos)
                     {
-                        yield return new WaitUntil(() => { return m_Content.anchoredPosition.y > downPos - offsetThreshold; });
+                        yield return new WaitUntil(() => { return m_Content.anchoredPosition.y >= downPos - offsetThreshold; });
                     }
                 }
-                //Debug.Log($"【SnapRoutine】等待回弹结束");
+                Debug.Log($"【SnapRoutine】等待回弹结束");
             }
 
             //如果开启惯性，则需先等待其基本停稳
@@ -156,7 +156,7 @@ namespace NRatel
                     if (m_MovementAxis == MovementAxis.Horizontal) { return Mathf.Abs(velocity.x) < m_SnapWaitScrollSpeed; }
                     else { return Mathf.Abs(velocity.y) < m_SnapWaitScrollSpeed; }
                 });
-                //Debug.Log($"【SnapRoutine】等待惯性停稳");
+                Debug.Log($"【SnapRoutine】等待惯性移动结束");
             }
 
             #region 找离Viewport中心最近的那个Cell。
@@ -171,23 +171,25 @@ namespace NRatel
                 float distanceToViewportCenter;
                 if (m_MovementAxis == MovementAxis.Horizontal)
                 {
-                    //Cell距离Content左边界的距离（标量）
-                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，若不想影响，考虑加个bool选项补偿掉。
-                    float widthFromContentLeft = t.Value.anchoredPosition.x;
-                    //Cell距离Viewport左边界的距离（标量）
-                    float widthFromViewportLeft = widthFromContentLeft + m_Content.anchoredPosition.x;
-                    //Cell距离Viewport中心的距离（矢量，若>0：在中心的右边）
-                    distanceToViewportCenter = widthFromViewportLeft - m_Viewport.rect.width / 2f;
+                    //Cell距离Content左边界的位移（向右为正方向）
+                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
+                    //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                    float distanceFromContentLeft = t.Value.anchoredPosition.x;
+                    //Cell距离Viewport左边界的位移（向右为正方向）
+                    float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x;
+                    //Cell距离Viewport中心的位移（向右为正方向，若>0：则在中心的右边）
+                    distanceToViewportCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
                 }
                 else 
                 {
-                    //Cell距离Content上边界的距离（标量）
-                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，若不想影响，考虑加个bool选项补偿掉。
-                    float heightFromContentUp = t.Value.anchoredPosition.y;
-                    //Cell距离Viewport上边界的距离（标量）
-                    float heightFromViewportUp = heightFromContentUp + m_Content.anchoredPosition.y;
-                    //Cell距离Viewport中心的距离（矢量，若>0：在中心的下边）
-                    distanceToViewportCenter = heightFromViewportUp - m_Viewport.rect.height / 2f;
+                    //Cell距离Content上边界的距离（向上为正方向）
+                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，
+                    //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                    float distanceFromContentUp = t.Value.anchoredPosition.y;
+                    //Cell距离Viewport上边界的距离（向上为正方向）
+                    float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y;
+                    //Cell距离Viewport中心的距离（向上为正方向，若<0：在中心的下边）
+                    distanceToViewportCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
                 }
 
                 //Debug.Log($"【SnapRoutine】, index: {t.Key}, distanceToViewportCenter: {distanceToViewportCenter}");
@@ -206,7 +208,7 @@ namespace NRatel
             // 而是要“每帧持续增加偏移，直到加够量”
 
             // 计算计划移动距离
-            float planMoveDistance = -minDistance;
+            float planMoveDistance = m_MovementAxis == MovementAxis.Horizontal ? -minDistance : minDistance;
             //Debug.Log($"【SnapRoutine】Snap 开始，目标索引:{minDistanceIndex}, 移动距离: {planMoveDistanceX}");
 
             yield return DoMoveContentPosOnMovementAxis(planMoveDistance, m_SnapSpeed);
@@ -279,14 +281,14 @@ namespace NRatel
         }
         #endregion
 
-        private float movedDistance = 0f;
+        private float m_MovedDistance = 0f;
         private IEnumerator DoMoveContentPosOnMovementAxis(float planMoveDistance, float speed)
         {
+            //重置累计字段
+            m_MovedDistance = 0f;
+
             //先停止任何惯性速度
             StopMovement();
-
-            //重置累计字段
-            movedDistance = 0f;
 
             //速度标量转向量
             float velocity = speed * Mathf.Sign(planMoveDistance);
@@ -295,22 +297,22 @@ namespace NRatel
             Vector2 moveDirection = (m_MovementAxis == MovementAxis.Horizontal ? Vector2.right : Vector2.up);
 
             // 平滑增加位移
-            while (Mathf.Abs(movedDistance) < Mathf.Abs(planMoveDistance))
+            while (Mathf.Abs(m_MovedDistance) < Mathf.Abs(planMoveDistance))
             {
                 float addDistance = velocity * Time.deltaTime;  //若要忽略时间缩放，改用 Time.unscaledDeltaTime;
 
                 // 检查是否会超过目标距离
-                if (Mathf.Abs(movedDistance + addDistance) >= Mathf.Abs(planMoveDistance))
+                if (Mathf.Abs(m_MovedDistance + addDistance) >= Mathf.Abs(planMoveDistance))
                 {
                     // 直接设置到精确位置，并break
-                    float remainingDistance = planMoveDistance - movedDistance;
+                    float remainingDistance = planMoveDistance - m_MovedDistance;
                     m_Content.anchoredPosition += (moveDirection * remainingDistance);
-                    movedDistance = planMoveDistance;
+                    m_MovedDistance = planMoveDistance;
                     break;
                 }
                 else
                 {
-                    movedDistance += addDistance;
+                    m_MovedDistance += addDistance;
                     m_Content.anchoredPosition += (moveDirection * addDistance);
                 }
 
