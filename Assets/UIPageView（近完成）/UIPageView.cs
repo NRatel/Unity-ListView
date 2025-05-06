@@ -193,25 +193,53 @@ namespace NRatel
                 float distanceToViewportCenter;
                 if (m_MovementAxis == MovementAxis.Horizontal)
                 {
-                    //Cell距离Content左边界的位移（向右为正方向）
-                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
-                    //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
-                    float distanceFromContentLeft = t.Value.anchoredPosition.x;
-                    //Cell距离Viewport左边界的位移（向右为正方向）
-                    float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x;
-                    //Cell距离Viewport中心的位移（向右为正方向，若>0：则在中心的右边）
-                    distanceToViewportCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
+                    if (m_StartCorner == StartCorner.LeftOrUpper)
+                    {
+                        //Cell距离Content左边界的位移（向右为正方向）
+                        //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
+                        //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                        float distanceFromContentLeft = t.Value.anchoredPosition.x;
+                        //Cell距离Viewport左边界的位移（向右为正方向）
+                        float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x;
+                        //Cell距离Viewport中心的位移（向右为正方向，若>0：则在中心的右边）
+                        distanceToViewportCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
+                    }
+                    else
+                    {
+                        //Cell距离Content右边界的位移（向右为正方向）
+                        //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
+                        //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                        float distanceFromContentLeft = t.Value.anchoredPosition.x;
+                        //Cell距离Viewport左边界的位移（向右为正方向）
+                        float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x - (m_Content.rect.width - m_Viewport.rect.width);
+                        //Cell距离Viewport中心的位移（向右为正方向，若>0：则在中心的右边）
+                        distanceToViewportCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
+                    }
                 }
-                else 
+                else
                 {
-                    //Cell距离Content上边界的距离（向上为正方向）
-                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，
-                    //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
-                    float distanceFromContentUp = t.Value.anchoredPosition.y;
-                    //Cell距离Viewport上边界的距离（向上为正方向）
-                    float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y;
-                    //Cell距离Viewport中心的距离（向上为正方向，若<0：在中心的下边）
-                    distanceToViewportCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
+                    if (m_StartCorner == StartCorner.LeftOrUpper)
+                    {
+                        //Cell距离Content上边界的距离（向上为正方向）
+                        //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，
+                        //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                        float distanceFromContentUp = t.Value.anchoredPosition.y;
+                        //Cell距离Viewport上边界的距离（向上为正方向）
+                        float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y;
+                        //Cell距离Viewport中心的距离（向上为正方向，若<0：在中心的下边）
+                        distanceToViewportCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
+                    }
+                    else 
+                    {
+                        ////Cell距离Content上边界的距离（向上为正方向）
+                        ////注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，
+                        ////若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                        //float distanceFromContentUp = t.Value.anchoredPosition.y;
+                        ////Cell距离Viewport上边界的距离（向上为正方向）
+                        //float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y - (m_Content.rect.height - m_Viewport.rect.height);
+                        ////Cell距离Viewport中心的距离（向上为正方向，若<0：在中心的下边）
+                        //distanceToViewportCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
+                    }  
                 }
 
                 //Debug.Log($"【SnapRoutine】, index: {t.Key}, distanceToViewportCenter: {distanceToViewportCenter}");
@@ -224,13 +252,11 @@ namespace NRatel
             }
             #endregion
 
-            // 只需将 content 反向移动 minDistance。
-            // 但注意 loop 会重置位置，
-            // 因此不能“直接计算出目标位置，然后插值”
-            // 而是要“每帧持续增加偏移，直到加够量”
-
             // 计算计划移动距离
-            float planMoveDistance = m_MovementAxis == MovementAxis.Horizontal ? -minDistance : minDistance;
+            // 只需将 content 反向移动 minDistance。
+            // （注意 loop 会重置位置，因此不能“直接计算出目标位置，然后插值” 而是要“每帧持续增加偏移，直到加够量”）
+            float planMoveDistance = -minDistance;
+
             //Debug.Log($"【SnapRoutine】Snap 开始，目标索引:{minDistanceIndex}, 移动距离: {planMoveDistanceX}");
 
             yield return DoMoveContentPosOnMovementAxis(planMoveDistance, m_SnapSpeed);
@@ -264,8 +290,11 @@ namespace NRatel
             // 等待轮播间隔
             yield return new WaitForSeconds(m_CarouselInterval);
 
+            //页宽/高
             float pageSize = m_MovementAxis == MovementAxis.Horizontal ? m_CellRect.width + spacing.x : m_CellRect.height + spacing.y;
-            int direction = m_MovementAxis == MovementAxis.Horizontal ? (m_StartCorner == StartCorner.LeftOrUpper ? -1 : 1) : (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1);
+
+            //翻页正方向
+            int turnDirection = m_MovementAxis == MovementAxis.Horizontal ? (m_StartCorner == StartCorner.LeftOrUpper ? -1 : 1) : (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1);
 
             // 计算计划移动距离 和 速度倍率
             float planMoveDistance;
@@ -275,19 +304,19 @@ namespace NRatel
                 // 开启循环时，总是向后翻到下一页，但是要注意 conent位置会被重置
                 // 这就意味着，逻辑不能是“移动到1页后的目标位置”，而是“位置增加量为1页”。
                 // 注意这里的正负符号，决定了翻页方向
-                planMoveDistance = pageSize * direction;
+                planMoveDistance = pageSize * turnDirection;
             }
             else
             {
                 if (m_CurPage < m_CellCount - 1)
                 {
                     // 未开启循环时，若当前处于非最后一页，则翻到下一页
-                    planMoveDistance = pageSize * direction;
+                    planMoveDistance = pageSize * turnDirection;
                 }
                 else
                 {
                     // 未开启循环时，若当前处于最后一页，则迅速翻回到第一页
-                    planMoveDistance = pageSize * (m_CellCount - 1) * -direction;
+                    planMoveDistance = pageSize * (m_CellCount - 1) * -turnDirection;
                     speedRate = m_CellCount - 1;
                 }
             }
@@ -315,8 +344,8 @@ namespace NRatel
             //速度标量转向量
             float velocity = speed * Mathf.Sign(planMoveDistance);
 
-            //移动正方向
-            Vector2 moveDirection = m_MovementAxis == MovementAxis.Horizontal ? Vector2.right : Vector2.down;
+            //坐标轴正方向
+            Vector2 axisDirection = m_MovementAxis == MovementAxis.Horizontal ? Vector2.right : Vector2.up;
 
             // 平滑增加位移
             while (Mathf.Abs(m_MovedDistance) < Mathf.Abs(planMoveDistance))
@@ -328,14 +357,14 @@ namespace NRatel
                 {
                     // 直接设置到精确位置，并break
                     float remainingDistance = planMoveDistance - m_MovedDistance;
-                    m_Content.anchoredPosition += (moveDirection * remainingDistance);
+                    m_Content.anchoredPosition += (axisDirection * remainingDistance);
                     m_MovedDistance = planMoveDistance;
                     break;
                 }
                 else
                 {
                     m_MovedDistance += addDistance;
-                    m_Content.anchoredPosition += (moveDirection * addDistance);
+                    m_Content.anchoredPosition += (axisDirection * addDistance);
                 }
 
                 yield return null;
