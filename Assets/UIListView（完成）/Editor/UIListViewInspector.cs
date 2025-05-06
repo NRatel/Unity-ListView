@@ -11,6 +11,7 @@ namespace NRatel
         SerializedProperty m_Spacing;
         SerializedProperty m_StartCorner;
         SerializedProperty m_ChildAlignment;
+        SerializedProperty m_Loop;
 
         protected override void OnEnable()
         {
@@ -20,6 +21,7 @@ namespace NRatel
             m_Spacing = serializedObject.FindProperty("m_Spacing");
             m_StartCorner = serializedObject.FindProperty("m_StartCorner");
             m_ChildAlignment = serializedObject.FindProperty("m_ChildAlignment");
+            m_Loop = serializedObject.FindProperty("m_Loop");
         }
 
         public override void OnInspectorGUI()
@@ -40,6 +42,13 @@ namespace NRatel
                 EndContent();
             }
 
+            if (DrawHeader("Loop", "Loop"))
+            {
+                BeginContent();
+                DrawOthers();
+                EndContent();
+            }
+
             serializedObject.ApplyModifiedProperties();
         }
 
@@ -57,6 +66,11 @@ namespace NRatel
             string[] verticalAlignmentOptions = { "Upper", "Middle", "Lower" };
             string[] alignmentOptions = m_MovementAxis.enumValueIndex == 0 ? verticalAlignmentOptions : horizontalAlignmentOptions;
             m_ChildAlignment.enumValueIndex = EditorGUILayout.Popup("Child Alignment", m_ChildAlignment.enumValueIndex, alignmentOptions);
+        }
+
+        private void DrawOthers()
+        {
+            EditorGUILayout.PropertyField(m_Loop, new GUIContent("Loop", "Enable infinite scrolling"));
         }
 
         private void BeginContent()

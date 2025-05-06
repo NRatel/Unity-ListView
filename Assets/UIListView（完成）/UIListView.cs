@@ -39,6 +39,9 @@ namespace NRatel
         [SerializeField] protected RectOffset m_Padding = new RectOffset();
         public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
 
+        [SerializeField] protected bool m_Loop = true;                      //开启循环？
+        public bool loop { get { return m_Loop; } set { SetProperty(ref m_Loop, value); } }
+
         protected DrivenRectTransformTracker m_Tracker;
 
         protected int m_ActualCellCountX;
@@ -63,7 +66,17 @@ namespace NRatel
 
         protected int m_CellCount;                                                  //显示数量
 
+        //Cell在Content的滑动轴上的起始位置偏移
         protected virtual float m_CellStartOffsetOnMovementAxis { get { return 0f; } }
+
+        //核心内容宽度
+        protected virtual float m_CoreConetontWidth { get { return m_CellRect.width * m_CellCount + spacing.x * (m_CellCount - 1); } }
+
+        //开启loop时，重置宽度
+        protected virtual float m_LoopResetWidth { get { return (m_CoreConetontWidth + spacing.x) * Mathf.CeilToInt(m_Viewport.rect.width / m_CoreConetontWidth); } }
+
+        //开启loop时，扩展后宽度
+        protected virtual float m_ExpandedContentWidth { get { return m_CoreConetontWidth + m_LoopResetWidth * 4; } }
 
         protected override void Awake()
         {
@@ -126,6 +139,8 @@ namespace NRatel
             if (!stayPos) { ResetContentRT(); }
 
             RefreshAll();
+
+            OnStartShow();
         }
 
         /// <summary>
@@ -148,6 +163,9 @@ namespace NRatel
             RefreshStayCells();
             CalcAndSetCellsSblingIndex();
         }
+
+        //开始展示回调，给子类使用
+        protected virtual void OnStartShow() { }
 
         //尝试刷新索引对应CellRT，若未在显示则忽略
         public void TryRefreshCellRT(int index)
@@ -211,6 +229,7 @@ namespace NRatel
         {
             if (m_CellCount <= 0) { return; }
 
+            TryHandleLoopPos();
             CalcIndexes();
             DisAppearCells();
             AppearCells();
@@ -250,7 +269,13 @@ namespace NRatel
         }
 
         //调整边距
-        protected virtual void FixPadding() { }
+        protected virtual void FixPadding() 
+        {
+            if (!m_Loop) { return; }
+
+            if (m_MovementAxis == MovementAxis.Horizontal) { padding.left = padding.right = 0; }
+            else { padding.top = padding.bottom = 0; }
+        }
 
         //调整间距
         protected virtual void FixSpacing() { }
@@ -280,12 +305,12 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 axis = RectTransform.Axis.Horizontal;
-                size = m_RequiredSpace.x + padding.horizontal;
+                size = m_Loop ? m_ExpandedContentWidth : m_RequiredSpace.x + padding.horizontal;
             }
             else
             {
                 axis = RectTransform.Axis.Vertical;
-                size = m_RequiredSpace.y + padding.vertical;
+                size = m_Loop ? m_ExpandedContentWidth : m_RequiredSpace.y + padding.vertical; //todo!!!
             }
 
             m_Content.SetSizeWithCurrentAnchors(axis, size);
@@ -315,6 +340,39 @@ namespace NRatel
         protected virtual void SetContentStartPos()
         {
             m_Content.anchoredPosition = Vector2.zero;
+
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                m_Content.anchoredPosition = new Vector2(-m_CellStartOffsetOnMovementAxis, m_Content.anchoredPosition.y);
+            }
+            else
+            {
+                m_Content.anchoredPosition = new Vector2(m_Content.anchoredPosition.x, -m_CellStartOffsetOnMovementAxis);
+            }
+        }
+
+        private void TryHandleLoopPos()
+        {
+            if (!m_Loop) return;
+
+            //Content初始位置
+            float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
+            //获取当前位置
+            float curContentPosX = m_Content.anchoredPosition.x;
+            //Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
+            float leftResetPosX = contentStartPosX - m_LoopResetWidth;
+            //Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
+            float rightResetPosX = contentStartPosX + m_LoopResetWidth;
+
+            if (curContentPosX < leftResetPosX)
+            {
+                m_Content.anchoredPosition += Vector2.right * m_LoopResetWidth;
+            }
+            //向左滑动时
+            else if (curContentPosX > rightResetPosX)
+            {
+                m_Content.anchoredPosition += Vector2.left * m_LoopResetWidth;
+            }
         }
 
         //计算应出现的索引、应消失的索引 和 未变的索引
@@ -364,7 +422,7 @@ namespace NRatel
             int startIndex = (outCountFromStart); // 省略了先+1再-1。 从滑出的下一个开始，索引从0开始;
             int endIndex = (m_CellCount - 1 - outCountFromEnd);
 
-            Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
+            //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
 
             for (int index = startIndex; index <= endIndex; index++)
             {
@@ -498,15 +556,19 @@ namespace NRatel
         }
 
         //是否有效索引（只将显示索引显示到列表中，默认为 0~cellCount 之间）
+        //loop时，认为任意索引都是有效的，以使非 0~cellCount 的区域能够显示元素，之后再在 ConvertIndexToValid 转换
         protected virtual bool IsValidIndex(int index)
         {
-            return index >= 0 && index < m_CellCount;
+            if (m_Loop) { return true; }
+            else { return index >= 0 && index < m_CellCount; }
         }
 
         //转换索引至有效（默认无需处理）
+        //loop时，将任意索引数转到 [0~cellCount-1] 中
         protected virtual int ConvertIndexToValid(int index)
         {
-            return index;
+            if (m_Loop) { return (index % m_CellCount + m_CellCount) % m_CellCount; }
+            else { return index; }
         }
 
         //计算 开始排布Cell的起始位置（核心为：Cell在 “剩余可用尺寸”中如何对齐）
@@ -565,7 +627,7 @@ namespace NRatel
             // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
             float anchoredPosY = -(m_CellStartOffset.y + (m_CellRect.size.y + spacing.y) * posIndexY) - m_CellRect.size.y * (1f - m_CellPivot.y) * scaleFactor.y;
 
-            Debug.Log($"index: {index}, posIndexX: {posIndexX}, posIndexY: {posIndexY}, anchoredPosX: {anchoredPosX}, anchoredPosY: {anchoredPosY}, m_StartOffset.x: {m_CellStartOffset.x}");
+            //Debug.Log($"index: {index}, posIndexX: {posIndexX}, posIndexY: {posIndexY}, anchoredPosX: {anchoredPosX}, anchoredPosY: {anchoredPosY}, m_StartOffset.x: {m_CellStartOffset.x}");
 
             return new Vector2(anchoredPosX, anchoredPosY);
         }

@@ -7,32 +7,29 @@ namespace NRatel
     [CanEditMultipleObjects]
     public class UIPageViewInspector : UIListViewInspector
     {
-        SerializedProperty m_Loop;
         SerializedProperty m_CellOccupyPage;
 
         SerializedProperty m_Snap;
         SerializedProperty m_SnapSpeed;
-        SerializedProperty m_SnapWaitScrollSpeedX;
+        SerializedProperty m_SnapWaitScrollSpeed;
 
         SerializedProperty m_Carousel;
         SerializedProperty m_CarouselInterval;
         SerializedProperty m_CarouselSpeed;
 
-
         protected override void OnEnable()
         {
             base.OnEnable();
 
-            m_Loop = serializedObject.FindProperty("loop");
-            m_CellOccupyPage = serializedObject.FindProperty("cellOccupyPage");
+            m_CellOccupyPage = serializedObject.FindProperty("m_CellOccupyPage");
 
-            m_Snap = serializedObject.FindProperty("snap");
-            m_SnapSpeed = serializedObject.FindProperty("snapSpeed");
-            m_SnapWaitScrollSpeedX = serializedObject.FindProperty("snapWaitScrollSpeedX");
+            m_Snap = serializedObject.FindProperty("m_Snap");
+            m_SnapSpeed = serializedObject.FindProperty("m_SnapSpeed");
+            m_SnapWaitScrollSpeed = serializedObject.FindProperty("m_SnapWaitScrollSpeed");
 
-            m_Carousel = serializedObject.FindProperty("carousel");
-            m_CarouselInterval = serializedObject.FindProperty("carouselInterval");
-            m_CarouselSpeed = serializedObject.FindProperty("carouselSpeed");
+            m_Carousel = serializedObject.FindProperty("m_Carousel");
+            m_CarouselInterval = serializedObject.FindProperty("m_CarouselInterval");
+            m_CarouselSpeed = serializedObject.FindProperty("m_CarouselSpeed");
         }
 
         public override void OnInspectorGUI()
@@ -57,7 +54,6 @@ namespace NRatel
             EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
 
             // ª˘¥°∑÷“≥ Ù–‘
-            EditorGUILayout.PropertyField(m_Loop, new GUIContent("Loop", "Enable infinite scrolling"));
             EditorGUILayout.PropertyField(m_CellOccupyPage, new GUIContent("Cell Occupy Page", "Each cell occupies a full page"));
 
             EditorGUILayout.Space();
@@ -69,7 +65,7 @@ namespace NRatel
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(m_SnapSpeed, new GUIContent("Snap Speed", "Page switching animation speed"));
-                EditorGUILayout.PropertyField(m_SnapWaitScrollSpeedX, new GUIContent("Wait Scroll Speed", "Minimum drag speed to trigger page turn"));
+                EditorGUILayout.PropertyField(m_SnapWaitScrollSpeed, new GUIContent("Wait Scroll Speed", "Minimum drag speed to trigger page turn"));
                 EditorGUI.indentLevel--;
             }
 

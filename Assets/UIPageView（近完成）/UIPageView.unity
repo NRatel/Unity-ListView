@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -480,6 +479,7 @@ Canvas:
   m_OverrideSorting: 0
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
   m_AdditionalShaderChannelsFlag: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -740,7 +740,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Viewport: {fileID: 1914716811}
   m_Content: {fileID: 1057025578}
-  m_MovementAxis: 0
+  m_MovementAxis: 1
   m_MovementType: 1
   m_Elasticity: 0.1
   m_Inertia: 1
@@ -757,14 +757,14 @@ MonoBehaviour:
     m_Right: 10
     m_Top: 10
     m_Bottom: 10
-  loop: 1
-  cellOccupyPage: 0
-  snap: 0
-  snapSpeed: 500
-  snapWaitScrollSpeedX: 50
-  carousel: 0
-  carouselInterval: 3
-  carouselSpeed: 500
+  m_Loop: 0
+  m_CellOccupyPage: 0
+  m_Snap: 1
+  m_SnapSpeed: 500
+  m_SnapWaitScrollSpeed: 50
+  m_Carousel: 1
+  m_CarouselInterval: 3
+  m_CarouselSpeed: 500
 --- !u!1 &1914716810
 GameObject:
   m_ObjectHideFlags: 0
