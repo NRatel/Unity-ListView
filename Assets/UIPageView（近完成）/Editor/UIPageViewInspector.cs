@@ -16,6 +16,7 @@ namespace NRatel
         SerializedProperty m_Carousel;
         SerializedProperty m_CarouselInterval;
         SerializedProperty m_CarouselSpeed;
+        SerializedProperty m_Reverse;
 
         protected override void OnEnable()
         {
@@ -30,6 +31,7 @@ namespace NRatel
             m_Carousel = serializedObject.FindProperty("m_Carousel");
             m_CarouselInterval = serializedObject.FindProperty("m_CarouselInterval");
             m_CarouselSpeed = serializedObject.FindProperty("m_CarouselSpeed");
+            m_Reverse = serializedObject.FindProperty("m_Reverse");
         }
 
         public override void OnInspectorGUI()
@@ -79,6 +81,8 @@ namespace NRatel
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(m_CarouselInterval, new GUIContent("Interval", "Time between page switches (seconds)"));
                 EditorGUILayout.PropertyField(m_CarouselSpeed, new GUIContent("Switch Speed", "Carousel animation speed"));
+                EditorGUILayout.PropertyField(m_Carousel, new GUIContent("Reverse", "Reverse carouse direction"));
+                
                 EditorGUI.indentLevel--;
             }
 
