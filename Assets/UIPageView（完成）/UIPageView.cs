@@ -109,78 +109,10 @@ namespace NRatel
             //Debug.Log($"【SnapRoutine】Snap 进入");
             //如果开启回弹，则需先等待回弹结束
             //loop模式下，回弹理论上不会生效
-            if (movementType == MovementType.Elastic)
-            {
-                if (m_MovementAxis == MovementAxis.Horizontal)
-                {
-                    float leftPos;
-                    float rightPos;
-                    float offsetThreshold = 0.1f;
-
-                    if (m_StartCorner == StartCorner.LeftOrUpper) 
-                    {
-                        leftPos = 0;
-                        rightPos = -(m_Content.rect.width - m_Viewport.rect.width);
-                    }
-                    else 
-                    {
-                        leftPos = m_Content.rect.width - m_Viewport.rect.width;
-                        rightPos = 0;
-                    }
-
-                    //当前，Content正从右往左边界回弹
-                    if (m_Content.anchoredPosition.x > leftPos)
-                    {
-                        yield return new WaitUntil(() => { return m_Content.anchoredPosition.x <= leftPos + offsetThreshold; });
-                    }
-                    //当前，Content正从左往右边界回弹
-                    else if (m_Content.anchoredPosition.x < rightPos)
-                    {
-                        yield return new WaitUntil(() => { return m_Content.anchoredPosition.x >= rightPos - offsetThreshold; });
-                    }
-                }
-                else 
-                {
-                    float upPos = 0;
-                    float downPos = m_Content.rect.height - m_Viewport.rect.height;
-                    float offsetThreshold = 0.1f;
-
-                    if (m_StartCorner == StartCorner.LeftOrUpper)
-                    {
-                        upPos = 0;
-                        downPos = m_Content.rect.height - m_Viewport.rect.height;
-                    }
-                    else
-                    {
-                        upPos = -(m_Content.rect.height - m_Viewport.rect.height);
-                        downPos = 0;
-                    }
-
-                    //当前，Content正从下往上边界回弹
-                    if (m_Content.anchoredPosition.y < upPos)
-                    {
-                        yield return new WaitUntil(() => { return m_Content.anchoredPosition.y <= upPos + offsetThreshold; });
-                    }
-                    //当前，Content正从上往下边界回弹
-                    else if (m_Content.anchoredPosition.y > downPos)
-                    {
-                        yield return new WaitUntil(() => { return m_Content.anchoredPosition.y >= downPos - offsetThreshold; });
-                    }
-                }
-                //Debug.Log($"【SnapRoutine】等待回弹结束");
-            }
+            yield return WaitUtilElasticEnd();
 
             //如果开启惯性，则需先等待其基本停稳
-            if (inertia)
-            {
-                yield return new WaitUntil(() =>
-                {
-                    //Debug.Log("scrollRect.velocity: " + scrollRect.velocity);
-                    if (m_MovementAxis == MovementAxis.Horizontal) { return Mathf.Abs(velocity.x) < m_SnapWaitScrollSpeed; }
-                    else { return Mathf.Abs(velocity.y) < m_SnapWaitScrollSpeed; }
-                });
-                //Debug.Log($"【SnapRoutine】等待惯性移动结束");
-            }
+            yield return WaitUtilInertiaEnd();
 
             #region 找离Viewport中心最近的那个Cell。
             //注意这里的相对位置计算要求 Content和Viewport没有缩放
@@ -267,6 +199,56 @@ namespace NRatel
             onSnapCompleted?.Invoke();
             TryStartCarousel();
         }
+
+        private IEnumerator WaitUtilElasticEnd()
+        {
+            if (movementType != MovementType.Elastic) yield break;
+
+            var threshold = 0.1f;
+            var pos = m_Content.anchoredPosition;
+
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                var bounds = GetHorizontalElasticBounds();
+                if (pos.x > bounds.left) yield return WaitUntil(() => pos.x <= bounds.left + threshold);
+                if (pos.x < bounds.right) yield return WaitUntil(() => pos.x >= bounds.right - threshold);
+            }
+            else
+            {
+                var bounds = GetVerticalElasticBounds();
+                if (pos.y < bounds.up) yield return WaitUntil(() => pos.y <= bounds.up + threshold);
+                if (pos.y > bounds.down) yield return WaitUntil(() => pos.y >= bounds.down - threshold);
+            }
+        }
+
+        private IEnumerator WaitUtilInertiaEnd()
+        {
+            if (!inertia) yield break;
+
+            yield return WaitUntil(() =>
+            {
+                //Debug.Log("scrollRect.velocity: " + scrollRect.velocity);
+                float velocityOnMoveAxis = m_MovementAxis == MovementAxis.Horizontal ? velocity.x : velocity.y;
+                return Mathf.Abs(velocityOnMoveAxis) < m_SnapWaitScrollSpeed;
+            });
+        }
+
+        //获取水平回弹边界
+        private (float left, float right) GetHorizontalElasticBounds()
+        {
+            return m_StartCorner == StartCorner.LeftOrUpper
+                ? (0, -(m_Content.rect.width - m_Viewport.rect.width))
+                : (m_Content.rect.width - m_Viewport.rect.width, 0);
+        }
+
+        //获取竖直回弹边界
+        private (float up, float down) GetVerticalElasticBounds()
+        {
+            return m_StartCorner == StartCorner.LeftOrUpper
+                ? (0, m_Content.rect.height - m_Viewport.rect.height)
+                : (-(m_Content.rect.height - m_Viewport.rect.height), 0);
+        }
+
         #endregion
 
         #region Carousel
@@ -375,6 +357,11 @@ namespace NRatel
 
                 yield return null;
             }
+        }
+
+        private IEnumerator WaitUntil(Func<bool> condition)
+        {
+            while (!condition()) yield return null;
         }
     }
 }
