@@ -81,7 +81,7 @@ namespace NRatel
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(m_CarouselInterval, new GUIContent("Interval", "Time between page switches (seconds)"));
                 EditorGUILayout.PropertyField(m_CarouselSpeed, new GUIContent("Switch Speed", "Carousel animation speed"));
-                EditorGUILayout.PropertyField(m_Carousel, new GUIContent("Reverse", "Reverse carouse direction"));
+                EditorGUILayout.PropertyField(m_Reverse, new GUIContent("Reverse", "Reverse carouse direction"));
                 
                 EditorGUI.indentLevel--;
             }

@@ -167,7 +167,7 @@ namespace NRatel
                         yield return new WaitUntil(() => { return m_Content.anchoredPosition.y >= downPos - offsetThreshold; });
                     }
                 }
-                Debug.Log($"【SnapRoutine】等待回弹结束");
+                //Debug.Log($"【SnapRoutine】等待回弹结束");
             }
 
             //如果开启惯性，则需先等待其基本停稳
@@ -179,7 +179,7 @@ namespace NRatel
                     if (m_MovementAxis == MovementAxis.Horizontal) { return Mathf.Abs(velocity.x) < m_SnapWaitScrollSpeed; }
                     else { return Mathf.Abs(velocity.y) < m_SnapWaitScrollSpeed; }
                 });
-                Debug.Log($"【SnapRoutine】等待惯性移动结束");
+                //Debug.Log($"【SnapRoutine】等待惯性移动结束");
             }
 
             #region 找离Viewport中心最近的那个Cell。
@@ -242,7 +242,7 @@ namespace NRatel
                     }  
                 }
 
-                Debug.Log($"【SnapRoutine】, index: {t.Key}, distanceToViewportCenter: {distanceToViewportCenter}");
+                //Debug.Log($"【SnapRoutine】, index: {t.Key}, distanceToViewportCenter: {distanceToViewportCenter}");
 
                 if (Mathf.Abs(distanceToViewportCenter) < Mathf.Abs(minDistance))
                 {
@@ -304,23 +304,26 @@ namespace NRatel
             float speedRate = 1f;
             if (m_Loop)
             {
-                // 开启循环时，总是向后翻到下一页，但是要注意 conent位置会被重置
+                // 开启循环时
+                // 总是向后翻到下一页，但是要注意 conent位置会被重置
                 // 这就意味着，逻辑不能是“移动到1页后的目标位置”，而是“位置增加量为1页”。
                 // 注意这里的正负符号，决定了翻页方向
                 planMoveDistance = pageSize * turnDirection;
             }
             else
             {
-                if (m_CurPage < m_CellCount - 1)
+                // 未开启循环时
+                // 若当前处于最后一页，则迅速翻回到第一页
+                // 若当前处于非最后一页，则翻到下一页
+                bool isTheLastPage = !m_Reverse ? m_CurPage == m_CellCount - 1 : m_CurPage == 0;    //是否已处于翻页方向的最后一页
+                if (isTheLastPage)
                 {
-                    // 未开启循环时，若当前处于非最后一页，则翻到下一页
-                    planMoveDistance = pageSize * turnDirection;
-                }
-                else
-                {
-                    // 未开启循环时，若当前处于最后一页，则迅速翻回到第一页
                     planMoveDistance = pageSize * (m_CellCount - 1) * -turnDirection;
                     speedRate = m_CellCount - 1;
+                }
+                else 
+                {
+                    planMoveDistance = pageSize * turnDirection;
                 }
             }
 

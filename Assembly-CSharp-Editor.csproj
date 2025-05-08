@@ -61,7 +61,7 @@
     <Compile Include="Assets\Basics\Editor\UIScrollRectInspector.cs" />
     <Compile Include="Assets\UIGridView（完成）\Editor\UIGridViewInspector.cs" />
     <Compile Include="Assets\UIListView（完成）\Editor\UIListViewInspector.cs" />
-    <Compile Include="Assets\UIPageView（近完成）\Editor\UIPageViewInspector.cs" />
+    <Compile Include="Assets\UIPageView（完成）\Editor\UIPageViewInspector.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

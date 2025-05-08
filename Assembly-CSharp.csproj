@@ -62,10 +62,10 @@
     <Compile Include="Assets\UIListView（完成）\UIListView.cs" />
     <Compile Include="Assets\基本排布原理（完成）\ListViewV2\ListViewV2.cs" />
     <Compile Include="Assets\UIListView（完成）\UIPanel_TestListView.cs" />
-    <Compile Include="Assets\UIPageView（近完成）\PageView.cs" />
-    <Compile Include="Assets\UIPageView（近完成）\UIPanel_TestPageView.cs" />
+    <Compile Include="Assets\基本排布原理（完成）\PageView\PageView.cs" />
+    <Compile Include="Assets\UIPageView（完成）\UIPanel_TestPageView.cs" />
     <Compile Include="Assets\多种不规则Cell的列表（如聊天窗口）\ListViewForChat.cs" />
-    <Compile Include="Assets\UIPageView（近完成）\UIPageView.cs" />
+    <Compile Include="Assets\UIPageView（完成）\UIPageView.cs" />
     <Compile Include="Assets\Basics\UIScrollRect.cs" />
     <Compile Include="Assets\CellRes\DisplayableCell.cs" />
     <Compile Include="Assets\特殊需求\右侧堆叠的ListView\ListViewS1.cs" />
