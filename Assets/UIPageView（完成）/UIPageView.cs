@@ -114,80 +114,16 @@ namespace NRatel
             //如果开启惯性，则需先等待其基本停稳
             yield return WaitUtilInertiaEnd();
 
-            #region 找离Viewport中心最近的那个Cell。
+            //找离Viewport中心最近的那个Cell。
             //注意这里的相对位置计算要求 Content和Viewport没有缩放
             Debug.Assert(m_Content.localScale == Vector3.one);
             Debug.Assert(m_Viewport.localScale == Vector3.one);
-
-            float minDistance = Mathf.Infinity;
-            int minDistanceIndex = -1;
-            foreach (var t in m_CellRTDict)
-            {
-                float distanceToViewportCenter;
-                if (m_MovementAxis == MovementAxis.Horizontal)
-                {
-                    if (m_StartCorner == StartCorner.LeftOrUpper)
-                    {
-                        //Cell距离Content左边界的位移（向右为正方向）
-                        //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
-                        //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
-                        float distanceFromContentLeft = t.Value.anchoredPosition.x;
-                        //Cell距离Viewport左边界的位移（向右为正方向）
-                        float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x;
-                        //Cell距离Viewport中心的位移（向右为正方向）（结果>0时，在中心的右边）
-                        distanceToViewportCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
-                    }
-                    else
-                    {
-                        //Cell距离Content右边界的位移（向右为正方向）
-                        //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
-                        //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
-                        float distanceFromContentLeft = t.Value.anchoredPosition.x;
-                        //Cell距离Viewport左边界的位移（向右为正方向）
-                        float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x - (m_Content.rect.width - m_Viewport.rect.width);
-                        //Cell距离Viewport中心的位移（向右为正方向）（结果>0时，在中心的右边）
-                        distanceToViewportCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
-                    }
-                }
-                else
-                {
-                    if (m_StartCorner == StartCorner.LeftOrUpper)
-                    {
-                        //Cell距离Content上边界的距离（向上为正方向）
-                        //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，
-                        //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
-                        float distanceFromContentUp = t.Value.anchoredPosition.y;
-                        //Cell距离Viewport上边界的距离（向上为正方向）
-                        float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y;
-                        //Cell距离Viewport中心的距离（向上为正方向）（结果0时，在中心的上边）
-                        distanceToViewportCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
-                    }
-                    else 
-                    {
-                        //Cell距离Content下边界的距离（向上为正方向）
-                        //注意，这里 Cell的 pivot 影响"Cell所处Viewport中心"的概念
-                        float distanceFromContentUp = t.Value.anchoredPosition.y;
-                        //Cell距离Viewport下边界的距离（向上为正方向）
-                        float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height);
-                        //Cell距离Viewport中心的距离（向上为正方向）（结果0时，在中心的上边）
-                        distanceToViewportCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
-                    }  
-                }
-
-                //Debug.Log($"【SnapRoutine】, index: {t.Key}, distanceToViewportCenter: {distanceToViewportCenter}");
-
-                if (Mathf.Abs(distanceToViewportCenter) < Mathf.Abs(minDistance))
-                {
-                    minDistance = distanceToViewportCenter;
-                    minDistanceIndex = t.Key;
-                }
-            }
-            #endregion
+            var closestCell = FindClosestCellToViewCenterOnMovementAxis();
 
             // 计算计划移动距离
-            // 只需将 content 反向移动 minDistance。
+            // 只需将 content 反向移动 closestCell.distance。
             // （注意 loop 会重置位置，因此不能“直接计算出目标位置，然后插值” 而是要“每帧持续增加偏移，直到加够量”）
-            float planMoveDistance = -minDistance;
+            float planMoveDistance = -closestCell.distance;
 
             //Debug.Log($"【SnapRoutine】Snap 开始，目标索引:{minDistanceIndex}, 移动距离: {planMoveDistanceX}");
 
@@ -195,7 +131,7 @@ namespace NRatel
 
             //Debug.Log($"【SnapRoutine】Snap 结束");
 
-            m_CurPage = minDistanceIndex;
+            m_CurPage = closestCell.index;
             onSnapCompleted?.Invoke();
             TryStartCarousel();
         }
@@ -249,6 +185,78 @@ namespace NRatel
                 : (-(m_Content.rect.height - m_Viewport.rect.height), 0);
         }
 
+        //查找离View中心最近的那个Cell（滑动方向上）
+        private (int index, float distance) FindClosestCellToViewCenterOnMovementAxis()
+        {
+            var closestIndex = -1;
+            var minDistance = float.MaxValue;
+
+            foreach (var cell in m_CellRTDict)
+            {
+                var distance = CalcCellDistanceToViewCenterMovementAxis(cell.Value);
+                if (Mathf.Abs(distance) >= Mathf.Abs(minDistance)) continue;
+
+                minDistance = distance;
+                closestIndex = cell.Key;
+            }
+            return (closestIndex, minDistance);
+        }
+
+        //计算Cell离View中心的距离（滑动方向上）
+        private float CalcCellDistanceToViewCenterMovementAxis(RectTransform cell)
+        {
+            float distanceToViewCenter;
+            if (m_MovementAxis == MovementAxis.Horizontal)
+            {
+                if (m_StartCorner == StartCorner.LeftOrUpper)
+                {
+                    //Cell距离Content左边界的位移（向右为正方向）
+                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
+                    //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                    float distanceFromContentLeft = cell.anchoredPosition.x;
+                    //Cell距离Viewport左边界的位移（向右为正方向）
+                    float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x;
+                    //Cell距离Viewport中心的位移（向右为正方向）（结果>0时，在中心的右边）
+                    distanceToViewCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
+                }
+                else
+                {
+                    //Cell距离Content右边界的位移（向右为正方向）
+                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
+                    //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                    float distanceFromContentLeft = cell.anchoredPosition.x;
+                    //Cell距离Viewport左边界的位移（向右为正方向）
+                    float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x - (m_Content.rect.width - m_Viewport.rect.width);
+                    //Cell距离Viewport中心的位移（向右为正方向）（结果>0时，在中心的右边）
+                    distanceToViewCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
+                }
+            }
+            else
+            {
+                if (m_StartCorner == StartCorner.LeftOrUpper)
+                {
+                    //Cell距离Content上边界的距离（向上为正方向）
+                    //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，
+                    //若不想影响，可以考虑加个bool选项补偿掉（暂无此需求）。
+                    float distanceFromContentUp = cell.anchoredPosition.y;
+                    //Cell距离Viewport上边界的距离（向上为正方向）
+                    float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y;
+                    //Cell距离Viewport中心的距离（向上为正方向）（结果0时，在中心的上边）
+                    distanceToViewCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
+                }
+                else
+                {
+                    //Cell距离Content下边界的距离（向上为正方向）
+                    //注意，这里 Cell的 pivot 影响"Cell所处Viewport中心"的概念
+                    float distanceFromContentUp = cell.anchoredPosition.y;
+                    //Cell距离Viewport下边界的距离（向上为正方向）
+                    float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height);
+                    //Cell距离Viewport中心的距离（向上为正方向）（结果0时，在中心的上边）
+                    distanceToViewCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
+                }
+            }
+            return distanceToViewCenter;
+        }
         #endregion
 
         #region Carousel
