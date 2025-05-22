@@ -32,7 +32,7 @@ public class UIPanel_TestPageView : MonoBehaviour
 
     void Start()
     {
-        //创建数据列表
+        //鍒涘缓鏁版嵁鍒楄〃
         m_DataList = new List<TestData>();
         for (int i = 0; i < 10; i++) 
         {
@@ -58,7 +58,7 @@ public class UIPanel_TestPageView : MonoBehaviour
         cellRT.GetComponent<ClickableCell>().Init((_clickedIndex) =>
         {
             TestData testData = m_DataList[_clickedIndex];
-            Debug.Log(string.Format("当前点击，索引：{0}, 测试Id：{1}, 测试字符串：{2}", _clickedIndex, testData.id, testData.str));
+            Debug.Log(string.Format("褰撳墠鐐瑰嚮锛岀储寮曪細{0}, 娴嬭瘯Id锛歿1}, 娴嬭瘯瀛楃涓诧細{2}", _clickedIndex, testData.id, testData.str));
         });
         return cellRT;
     }

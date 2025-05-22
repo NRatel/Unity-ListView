@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,20 +6,21 @@ using UnityEngine.UI;
 
 public class DisplayableCell : MonoBehaviour
 {
-    public Text text;
+    [SerializeField] private Image m_Image;
+    [SerializeField] private Text m_Text;
 
-    private Image m_Image;
-    static private Dictionary<int, Color> sm_ColorCache;
+    static protected Dictionary<int, Color> sm_ColorCache;
 
-    private void Awake()
+    protected int m_Index;
+
+    static DisplayableCell()
     {
-        m_Image = GetComponent<Image>();
         sm_ColorCache = new Dictionary<int, Color>();
     }
 
-    public void Refresh(int index)
+    public virtual void Refresh(int index)
     {
-        text.text = index.ToString();
+        m_Text.text = index.ToString();
 
         bool exist = sm_ColorCache.TryGetValue(index, out Color color);
         if (!exist) 

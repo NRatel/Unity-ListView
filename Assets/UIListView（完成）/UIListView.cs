@@ -236,7 +236,7 @@ namespace NRatel
         {
             if (m_CellCount <= 0) { return; }
 
-            //TryHandleLoopPos();
+            TryHandleLoopPos();
             CalcIndexes();
             DisAppearCells();
             AppearCells();
@@ -351,8 +351,6 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 m_Content.anchoredPosition = new Vector2(-m_CellStartOffsetOnMovementAxis, m_Content.anchoredPosition.y);
-
-                Debug.Log($"1111111 m_CellStartOffsetOnMovementAxis: {m_CellStartOffsetOnMovementAxis}");
             }
             else
             {
@@ -639,7 +637,7 @@ namespace NRatel
             // y轴：-初始位置-宽度*(1-中心点偏移)*缩放系数 (y轴是向负方向)(从左上到右下)
             float anchoredPosY = -(m_CellStartOffset.y + (m_CellRect.size.y + spacing.y) * posIndexY) - m_CellRect.size.y * (1f - m_CellPivot.y) * scaleFactor.y;
 
-            Debug.Log($"index: {index}, posIndexX: {posIndexX}, posIndexY: {posIndexY}, anchoredPosX: {anchoredPosX}, anchoredPosY: {anchoredPosY}, m_StartOffset.x: {m_CellStartOffset.x}");
+            //Debug.Log($"index: {index}, posIndexX: {posIndexX}, posIndexY: {posIndexY}, anchoredPosX: {anchoredPosX}, anchoredPosY: {anchoredPosY}, m_StartOffset.x: {m_CellStartOffset.x}");
 
             return new Vector2(anchoredPosX, anchoredPosY);
         }

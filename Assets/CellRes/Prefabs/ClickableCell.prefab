@@ -373,5 +373,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49f9d1127af146d48a9c7cb4d9d2be52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  text: {fileID: 45243005274248302}
-  btnClick: {fileID: 3041997968577909537}
+  m_Text: {fileID: 45243005274248302}
+  m_Image: {fileID: 7913374827684128914}
+  m_BtnClick: {fileID: 3041997968577909537}
