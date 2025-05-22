@@ -379,7 +379,7 @@ namespace NRatel
                 //更新，以使本帧 LateUpdate中 计算的 m_Velocity 不会因位置剧变而剧变
                 m_PrevPosition += Vector2.right * m_LoopResetWidth;
 
-                //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发位置此“位置超过一页”的重置逻辑，否则下一帧m_PrevPosition又将执行一次偏移（上一行代码），还是会导致速度剧变
+                //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发此“位置超过一页的重置逻辑”，否则下一帧m_PrevPosition又将执行一次偏移（上一行代码），还是会导致速度剧变
                 m_ContentStartPosition += Vector2.right * m_LoopResetWidth;
             }
             else if (curContentPosX > rightResetPosX)
@@ -389,7 +389,7 @@ namespace NRatel
                 //更新，以使本帧 LateUpdate中 计算的 m_Velocity 不会因位置剧变而剧变
                 m_PrevPosition += Vector2.left * m_LoopResetWidth;
 
-                //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发位置此“位置超过一页”的重置逻辑，否则下一帧m_PrevPosition又将执行一次偏移（上一行代码），还是会导致速度剧变
+                //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发此“位置超过一页的重置逻辑”，否则下一帧m_PrevPosition又将执行一次偏移（上一行代码），还是会导致速度剧变
                 m_ContentStartPosition += Vector2.left * m_LoopResetWidth;
 
                 //Debug.Log($"1111111111111 Time.frameCount: {Time.frameCount}, m_Draging: {m_Dragging}, m_Content.anchoredPosition.x: {m_Content.anchoredPosition.x}, m_PrevPosition.x: {m_PrevPosition.x}");
