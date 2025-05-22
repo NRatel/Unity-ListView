@@ -9,15 +9,15 @@ using UnityEngine.UI;
 
 namespace NRatel
 {
-    // Öá·½Ïò£¨2ÖÖ£¬Ë®Æ½/ÊúÖ±£©ºÍ ¿ªÊ¼ÅÅ²¼µÄ½ÇÂä£¨4ÖÖ£¬ÉÏ×ó/ÉÏÓÒ/ÏÂ×ó/ÏÂÓÒ£©£¬¿ÉÒÔÈ·¶¨³öÒÔÏÂGrid½á¹û£º
-    // 1¡¢ÔªËØÑÓÉì·½Ïò£¨4ÖÖ£¬´Ó×óÍùÓÒ/´ÓÓÒÍù×ó/´ÓÉÏÍùÏÂ/´ÓÏÂÍùÉÏ£©£¨½«ÔÚÔËĞĞÊ±Ç¿ÖÆĞŞ¸ÄContetntµÄÆğÊ¼ÖĞĞÄµãºÍÃªµã£©
-    // 2¡¢ÔªËØÅÅ²¼¹ì¼££¨4*2ÖÖ£¬4¸öÑÓÉì·½Ïò*2²à£©
+    // è½´æ–¹å‘ï¼ˆ2ç§ï¼Œæ°´å¹³/ç«–ç›´ï¼‰å’Œ å¼€å§‹æ’å¸ƒçš„è§’è½ï¼ˆ4ç§ï¼Œä¸Šå·¦/ä¸Šå³/ä¸‹å·¦/ä¸‹å³ï¼‰ï¼Œå¯ä»¥ç¡®å®šå‡ºä»¥ä¸‹Gridç»“æœï¼š
+    // 1ã€å…ƒç´ å»¶ä¼¸æ–¹å‘ï¼ˆ4ç§ï¼Œä»å·¦å¾€å³/ä»å³å¾€å·¦/ä»ä¸Šå¾€ä¸‹/ä»ä¸‹å¾€ä¸Šï¼‰ï¼ˆå°†åœ¨è¿è¡Œæ—¶å¼ºåˆ¶ä¿®æ”¹Contetntçš„èµ·å§‹ä¸­å¿ƒç‚¹å’Œé”šç‚¹ï¼‰
+    // 2ã€å…ƒç´ æ’å¸ƒè½¨è¿¹ï¼ˆ4*2ç§ï¼Œ4ä¸ªå»¶ä¼¸æ–¹å‘*2ä¾§ï¼‰
     public class UIListView : UIScrollRect
     {
         public enum StartCorner
         {
-            LeftOrUpper = 0,          //×ó»òÉÏ
-            RightOrLower = 1,         //ÓÒ»òÏÂ
+            LeftOrUpper = 0,          //å·¦æˆ–ä¸Š
+            RightOrLower = 1,         //å³æˆ–ä¸‹
         }
 
         public enum Alignment
@@ -39,7 +39,7 @@ namespace NRatel
         [SerializeField] protected RectOffset m_Padding = new RectOffset();
         public RectOffset padding { get { return m_Padding; } set { SetProperty(ref m_Padding, value); } }
 
-        [SerializeField] protected bool m_Loop = true;                      //¿ªÆôÑ­»·£¿
+        [SerializeField] protected bool m_Loop = true;                      //å¼€å¯å¾ªç¯ï¼Ÿ
         public bool loop { get { return m_Loop; } set { SetProperty(ref m_Loop, value); } }
 
         protected DrivenRectTransformTracker m_Tracker;
@@ -49,34 +49,41 @@ namespace NRatel
         protected Vector2 m_RequiredSpace;
         protected Vector2 m_CellStartOffset;
 
-        protected Dictionary<int, RectTransform> m_CellRTDict;                      //index-Cell×Öµä    
-        protected Stack<RectTransform> m_UnUseCellRTStack;                          //¿ÕÏĞCell¶ÑÕ»
-        protected List<KeyValuePair<int, RectTransform>> m_CellRTListForSort;       //CellÁĞ±íÓÃÓÚ¸¨ÖúSblingÅÅĞò
+        protected Dictionary<int, RectTransform> m_CellRTDict;                      //index-Cellå­—å…¸    
+        protected Stack<RectTransform> m_UnUseCellRTStack;                          //ç©ºé—²Cellå †æ ˆ
+        protected List<KeyValuePair<int, RectTransform>> m_CellRTListForSort;       //Cellåˆ—è¡¨ç”¨äºè¾…åŠ©Sblingæ’åº
 
-        protected List<int> m_OldIndexes;                                           //¾ÉµÄË÷Òı¼¯ºÏ
-        protected List<int> m_NewIndexes;                                           //ĞÂµÄË÷Òı¼¯ºÏ
-        protected List<int> m_AppearIndexes;                                        //½«Òª³öÏÖµÄË÷Òı¼¯ºÏ   //Ê¹ÓÃList¶ø·Çµ¥¸ö£¬¿ÉÒÔÖ§³ÖContentÎ»ÖÃÌø±ä
-        protected List<int> m_DisAppearIndexes;                                     //½«ÒªÏûÊ§µÄË÷Òı¼¯ºÏ   //Ê¹ÓÃList¶ø·Çµ¥¸ö£¬¿ÉÒÔÖ§³ÖContentÎ»ÖÃÌø±ä
-        protected List<int> m_StayIndexes;                                          //±£³ÖµÄË÷Òı¼¯ºÏ       //Ê¹ÓÃList¶ø·Çµ¥¸ö£¬¿ÉÒÔÖ§³ÖContentÎ»ÖÃÌø±ä
+        protected List<int> m_OldIndexes;                                           //æ—§çš„ç´¢å¼•é›†åˆ
+        protected List<int> m_NewIndexes;                                           //æ–°çš„ç´¢å¼•é›†åˆ
+        protected List<int> m_AppearIndexes;                                        //å°†è¦å‡ºç°çš„ç´¢å¼•é›†åˆ   //ä½¿ç”¨Listè€Œéå•ä¸ªï¼Œå¯ä»¥æ”¯æŒContentä½ç½®è·³å˜
+        protected List<int> m_DisAppearIndexes;                                     //å°†è¦æ¶ˆå¤±çš„ç´¢å¼•é›†åˆ   //ä½¿ç”¨Listè€Œéå•ä¸ªï¼Œå¯ä»¥æ”¯æŒContentä½ç½®è·³å˜
+        protected List<int> m_StayIndexes;                                          //ä¿æŒçš„ç´¢å¼•é›†åˆ       //ä½¿ç”¨Listè€Œéå•ä¸ªï¼Œå¯ä»¥æ”¯æŒContentä½ç½®è·³å˜
 
-        protected Rect m_CellRect;                                                  //Cell Rect£¨±ØĞè£©
-        protected Vector2 m_CellPivot;                                              //CellÖĞĞÄµã£¨±ØĞè£©
-        protected Func<int, RectTransform> m_OnCreateCell;                          //´´½¨CellµÄ·½·¨£¨±ØĞè£©
-        protected Action<int> m_OnShowCell;                                         //Õ¹Ê¾CellµÄ·½·¨£¨³öÏÖ/Ë¢ĞÂÊ±»Øµ÷£©£¨±ØĞè£©
+        protected Rect m_CellRect;                                                  //Cell Rectï¼ˆå¿…éœ€ï¼‰
+        protected Vector2 m_CellPivot;                                              //Cellä¸­å¿ƒç‚¹ï¼ˆå¿…éœ€ï¼‰
+        protected Func<int, RectTransform> m_OnCreateCell;                          //åˆ›å»ºCellçš„æ–¹æ³•ï¼ˆå¿…éœ€ï¼‰
+        protected Action<int> m_OnShowCell;                                         //å±•ç¤ºCellçš„æ–¹æ³•ï¼ˆå‡ºç°/åˆ·æ–°æ—¶å›è°ƒï¼‰ï¼ˆå¿…éœ€ï¼‰
 
-        protected int m_CellCount;                                                  //ÏÔÊ¾ÊıÁ¿
+        protected int m_CellCount;                                                  //æ˜¾ç¤ºæ•°é‡
 
-        //CellÔÚContentµÄ»¬¶¯ÖáÉÏµÄÆğÊ¼Î»ÖÃÆ«ÒÆ
-        protected virtual float m_CellStartOffsetOnMovementAxis { get { return 0f; } }
+        //æ ¸å¿ƒå†…å®¹å®½åº¦
+        protected float m_CoreConetontWidth { get { return m_CellRect.width * m_CellCount + spacing.x * (m_CellCount - 1); } }
 
-        //ºËĞÄÄÚÈİ¿í¶È
-        protected virtual float m_CoreConetontWidth { get { return m_CellRect.width * m_CellCount + spacing.x * (m_CellCount - 1); } }
+        //å¼€å¯loopæ—¶ï¼Œé‡ç½®å®½åº¦
+        protected float m_LoopResetWidth { get { return (m_CoreConetontWidth + spacing.x) * Mathf.CeilToInt(m_Viewport.rect.width / m_CoreConetontWidth); } }
 
-        //¿ªÆôloopÊ±£¬ÖØÖÃ¿í¶È
-        protected virtual float m_LoopResetWidth { get { return (m_CoreConetontWidth + spacing.x) * Mathf.CeilToInt(m_Viewport.rect.width / m_CoreConetontWidth); } }
+        //å¼€å¯loopæ—¶ï¼Œæ‰©å±•åå®½åº¦
+        protected float m_ExpandedContentWidth { get { return m_CoreConetontWidth + m_LoopResetWidth * 4; } }
 
-        //¿ªÆôloopÊ±£¬À©Õ¹ºó¿í¶È
-        protected virtual float m_ExpandedContentWidth { get { return m_CoreConetontWidth + m_LoopResetWidth * 4; } }
+        //å¼€å¯loopæ—¶ï¼ŒCellåœ¨Contentçš„æ»‘åŠ¨è½´ä¸Šçš„èµ·å§‹ä½ç½®åç§»
+        protected float m_CellStartOffsetOnMovementAxis 
+        {
+            get 
+            {
+                if (m_Loop) { return (m_ExpandedContentWidth - m_CoreConetontWidth) / 2f; }
+                else { return 0f; }
+            } 
+        }
 
         protected override void Awake()
         {
@@ -96,7 +103,7 @@ namespace NRatel
             ResetContentRT();
         }
 
-        //´ÓCellÄ£°åÉÏÈ¡rectºÍpivot½øĞĞ³õÊ¼»¯£¬²¢ÒÔGameObject.InstantiateÊµÀı»¯CellÄ£°åµÄ·½Ê½´´½¨Cell
+        //ä»Cellæ¨¡æ¿ä¸Šå–rectå’Œpivotè¿›è¡Œåˆå§‹åŒ–ï¼Œå¹¶ä»¥GameObject.Instantiateå®ä¾‹åŒ–Cellæ¨¡æ¿çš„æ–¹å¼åˆ›å»ºCell
         public void Init(RectTransform templateCellRT, Action<int> onShowCell)
         {
             this.m_CellRect = templateCellRT.rect;
@@ -105,7 +112,7 @@ namespace NRatel
             this.m_OnShowCell = onShowCell;
         }
 
-        //´ÓCellÄ£°åÉÏÈ¡rectºÍpivot½øĞĞ³õÊ¼»¯£¬×ÔĞĞÖ¸¶¨´´½¨CellµÄ·½·¨
+        //ä»Cellæ¨¡æ¿ä¸Šå–rectå’Œpivotè¿›è¡Œåˆå§‹åŒ–ï¼Œè‡ªè¡ŒæŒ‡å®šåˆ›å»ºCellçš„æ–¹æ³•
         public void Init(RectTransform templateCellRT, Func<int, RectTransform> onCreateCell, Action<int> onShowCell)
         {
             this.m_CellRect = templateCellRT.rect;
@@ -114,7 +121,7 @@ namespace NRatel
             this.m_OnShowCell = onShowCell;
         }
 
-        //ÓÃrectºÍpivot³õÊ¼»¯£¬×ÔĞĞÖ¸¶¨´´½¨CellµÄ·½·¨
+        //ç”¨rectå’Œpivotåˆå§‹åŒ–ï¼Œè‡ªè¡ŒæŒ‡å®šåˆ›å»ºCellçš„æ–¹æ³•
         public void Init(Rect cellRect, Vector2 cellPivot, Func<int, RectTransform> onCreateCell, Action<int> onShowCell)
         {
             this.m_CellRect = cellRect;
@@ -124,15 +131,15 @@ namespace NRatel
         }
 
         /// <summary>
-        /// ¿ªÊ¼ÏÔÊ¾Ò»¸öĞÂµÄGridView£¬
-        /// Ò²¿ÉÓÃÓÚÔªËØÊıÁ¿±ä»¯Ê±µÄÈ«²¿Ë¢ĞÂ
-        /// Ò²¿ÉÓÃÓÚ´«0Çå¿Õ
+        /// å¼€å§‹æ˜¾ç¤ºä¸€ä¸ªæ–°çš„GridViewï¼Œ
+        /// ä¹Ÿå¯ç”¨äºå…ƒç´ æ•°é‡å˜åŒ–æ—¶çš„å…¨éƒ¨åˆ·æ–°
+        /// ä¹Ÿå¯ç”¨äºä¼ 0æ¸…ç©º
         /// </summary>
-        /// <param name="count">ÒªÏÔÊ¾µÄÊıÁ¿</param>
-        /// <param name="stayPos">ÊıÁ¿±ä»¯Ê±ÊÇ·ñ¾¡Á¿±£³ÖÎ»ÖÃ²»±ä£¬ÈôÖáÏò·¢Éú±ä»¯£¬Ôò±ØĞë´«false</param>
+        /// <param name="count">è¦æ˜¾ç¤ºçš„æ•°é‡</param>
+        /// <param name="stayPos">æ•°é‡å˜åŒ–æ—¶æ˜¯å¦å°½é‡ä¿æŒä½ç½®ä¸å˜ï¼Œè‹¥è½´å‘å‘ç”Ÿå˜åŒ–ï¼Œåˆ™å¿…é¡»ä¼ false</param>
         public void StartShow(int count, bool stayPos = true)
         {
-            Debug.Assert(m_OnCreateCell != null, "ÇëÏÈ³õÊ¼»¯");
+            Debug.Assert(m_OnCreateCell != null, "è¯·å…ˆåˆå§‹åŒ–");
 
             this.m_CellCount = count;
 
@@ -144,8 +151,8 @@ namespace NRatel
         }
 
         /// <summary>
-        /// ÓÃÓÚÔªËØÊıÁ¿Î´±äÊ±£¨½öÊı¾İ±ä»¯£©µÄÈ«²¿Ë¢ĞÂ
-        /// £¨×¢Òâ£¬ÈôÒÑÖªÄ³¸öË÷Òı±ä»¯£¬ÇÒÊıÁ¿Î´±ä£¬Ó¦Ê¹ÓÃ TryRefreshCellRT Ë¢ĞÂµ¥¸ö£©
+        /// ç”¨äºå…ƒç´ æ•°é‡æœªå˜æ—¶ï¼ˆä»…æ•°æ®å˜åŒ–ï¼‰çš„å…¨éƒ¨åˆ·æ–°
+        /// ï¼ˆæ³¨æ„ï¼Œè‹¥å·²çŸ¥æŸä¸ªç´¢å¼•å˜åŒ–ï¼Œä¸”æ•°é‡æœªå˜ï¼Œåº”ä½¿ç”¨ TryRefreshCellRT åˆ·æ–°å•ä¸ªï¼‰
         /// </summary>
         public void RefreshAll()
         {
@@ -164,54 +171,54 @@ namespace NRatel
             CalcAndSetCellsSblingIndex();
         }
 
-        //¿ªÊ¼Õ¹Ê¾»Øµ÷£¬¸ø×ÓÀàÊ¹ÓÃ
+        //å¼€å§‹å±•ç¤ºå›è°ƒï¼Œç»™å­ç±»ä½¿ç”¨
         protected virtual void OnStartShow() { }
 
-        //³¢ÊÔË¢ĞÂË÷Òı¶ÔÓ¦CellRT£¬ÈôÎ´ÔÚÏÔÊ¾ÔòºöÂÔ
+        //å°è¯•åˆ·æ–°ç´¢å¼•å¯¹åº”CellRTï¼Œè‹¥æœªåœ¨æ˜¾ç¤ºåˆ™å¿½ç•¥
         public void TryRefreshCellRT(int index)
         {
             if (!m_CellRTDict.ContainsKey(index)) { return; }
-            m_OnShowCell?.Invoke(index);                        //Cell³öÏÖ/Ë¢ĞÂ»Øµ÷
+            m_OnShowCell?.Invoke(index);                        //Cellå‡ºç°/åˆ·æ–°å›è°ƒ
         }
 
-        //Ë¢ĞÂË÷Òı¶ÔÓ¦CellRT
+        //åˆ·æ–°ç´¢å¼•å¯¹åº”CellRT
         public void RefreshCellRT(int index)
         {
             Debug.Assert(m_CellRTDict.ContainsKey(index));
-            m_OnShowCell?.Invoke(index);                        //Cell³öÏÖ/Ë¢ĞÂ»Øµ÷
+            m_OnShowCell?.Invoke(index);                        //Cellå‡ºç°/åˆ·æ–°å›è°ƒ
         }
 
-        //³¢ÊÔ»ñÈ¡Ë÷Òı¶ÔÓ¦CellRT£¬ÈôÎ´ÔÚÏÔÊ¾Ôò·µ»Øfalse
+        //å°è¯•è·å–ç´¢å¼•å¯¹åº”CellRTï¼Œè‹¥æœªåœ¨æ˜¾ç¤ºåˆ™è¿”å›false
         public bool TryGetCellRT(int index, out RectTransform cellRT)
         {
             return m_CellRTDict.TryGetValue(index, out cellRT);
         }
 
-        //È¡Ë÷Òı¶ÔÓ¦CellRT
+        //å–ç´¢å¼•å¯¹åº”CellRT
         public RectTransform GetCellRT(int index)
         {
             Debug.Assert(m_CellRTDict.ContainsKey(index));
             return m_CellRTDict[index];
         }
 
-        //Ë÷Òı¶ÔÓ¦Cellµ±Ç°ÊÇ·ñÕıÔÚÏÔÊ¾
+        //ç´¢å¼•å¯¹åº”Cellå½“å‰æ˜¯å¦æ­£åœ¨æ˜¾ç¤º
         public bool IsCellRTShowing(int index)
         {
             return m_CellRTDict.ContainsKey(index);
         }
 
         /// <summary>
-        /// Ë÷Òı¶ÔÓ¦CellÌø×ªµ½0Ë÷ÒıCellµÄÎ»ÖÃ
+        /// ç´¢å¼•å¯¹åº”Cellè·³è½¬åˆ°0ç´¢å¼•Cellçš„ä½ç½®
         /// </summary>
-        /// <param name="index">Ä¿±êË÷Òı</param>
-        /// <param name="immediately">ÊÇ·ñÁ¢¿ÌÌø×ª</param>
+        /// <param name="index">ç›®æ ‡ç´¢å¼•</param>
+        /// <param name="immediately">æ˜¯å¦ç«‹åˆ»è·³è½¬</param>
         public void JumpTo(int index, bool immediately = false)
         {
             Vector2 cellPos0 = GetCellPos(0);
             Vector2 cellPosI = GetCellPos(index);
-            Vector2 deltaXY = new Vector2(Mathf.Abs(cellPosI.x - cellPos0.x), Mathf.Abs(cellPosI.y - cellPos0.y)); //indexÏà¶Ô0Î»ÖÃ£¬x¡¢y ¾àÀë²î
-            Vector2 limitXY = new Vector2(Mathf.Max(m_Content.rect.size.x - m_Viewport.rect.size.x, 0), Mathf.Max(m_Content.rect.size.y - m_Viewport.rect.size.y, 0)); //x¡¢y ÏŞÖÆ´óĞ¡£¬Mathf.MaxÍ¬Ê±¼æÈİ¡°Content±ÈViewportĞ¡¡±ºÍ¡°Content±ÈViewport´ó¡±Á½ÖÖÇé¿ö
-            Vector2 jumpToXY = new Vector2(Mathf.Min(deltaXY.x, limitXY.x), Mathf.Min(deltaXY.y, limitXY.y)); //²»³¬¹ıÏŞÖÆ´óĞ¡
+            Vector2 deltaXY = new Vector2(Mathf.Abs(cellPosI.x - cellPos0.x), Mathf.Abs(cellPosI.y - cellPos0.y)); //indexç›¸å¯¹0ä½ç½®ï¼Œxã€y è·ç¦»å·®
+            Vector2 limitXY = new Vector2(Mathf.Max(m_Content.rect.size.x - m_Viewport.rect.size.x, 0), Mathf.Max(m_Content.rect.size.y - m_Viewport.rect.size.y, 0)); //xã€y é™åˆ¶å¤§å°ï¼ŒMathf.MaxåŒæ—¶å…¼å®¹â€œContentæ¯”Viewportå°â€å’Œâ€œContentæ¯”Viewportå¤§â€ä¸¤ç§æƒ…å†µ
+            Vector2 jumpToXY = new Vector2(Mathf.Min(deltaXY.x, limitXY.x), Mathf.Min(deltaXY.y, limitXY.y)); //ä¸è¶…è¿‡é™åˆ¶å¤§å°
 
             //Debug.Log("deltaXY: " + deltaXY);
             //Debug.Log("limitXY: " + limitXY);
@@ -229,36 +236,36 @@ namespace NRatel
         {
             if (m_CellCount <= 0) { return; }
 
-            TryHandleLoopPos();
+            //TryHandleLoopPos();
             CalcIndexes();
             DisAppearCells();
             AppearCells();
             CalcAndSetCellsSblingIndex();
         }
 
-        //¸ù¾İÖáÏòºÍÆğÊ¼½ÇÂä£¬ÖØÖÃContentµÄÃªµã¡¢ÖĞĞÄµã¡¢Î»ÖÃºÍ´óĞ¡
+        //æ ¹æ®è½´å‘å’Œèµ·å§‹è§’è½ï¼Œé‡ç½®Contentçš„é”šç‚¹ã€ä¸­å¿ƒç‚¹ã€ä½ç½®å’Œå¤§å°
         protected void ResetContentRT()
         {
-            // ¸ù¾İÖáÏòºÍÆğÊ¼½ÇÂäÉèÖÃÃªµã¡¢ÖĞĞÄµã
+            // æ ¹æ®è½´å‘å’Œèµ·å§‹è§’è½è®¾ç½®é”šç‚¹ã€ä¸­å¿ƒç‚¹
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                int cornerX = (int)m_StartCorner % 2;  //0£º×ó£¬ 1ÓÒ
+                int cornerX = (int)m_StartCorner % 2;  //0ï¼šå·¦ï¼Œ 1å³
                 m_Content.anchorMin = new Vector2(cornerX, 0);
                 m_Content.anchorMax = new Vector2(cornerX, 1);
                 m_Content.pivot = new Vector2(cornerX, 0.5f);
             }
             else
             {
-                int cornerY = (int)m_StartCorner % 2;  //0£ºÉÏ£¬ 1ÏÂ£¨×¢ÒâÓëUIGridView²»Í¬£©
+                int cornerY = (int)m_StartCorner % 2;  //0ï¼šä¸Šï¼Œ 1ä¸‹ï¼ˆæ³¨æ„ä¸UIGridViewä¸åŒï¼‰
                 m_Content.anchorMin = new Vector2(0, 1 - cornerY);
                 m_Content.anchorMax = new Vector2(1, 1 - cornerY);
                 m_Content.pivot = new Vector2(0.5f, 1 - cornerY);
             }
 
-            // Î»ÖÃ¹é0
+            // ä½ç½®å½’0
             m_Content.anchoredPosition = Vector2.zero;
 
-            // ´óĞ¡ÖØÖÃÎªÓëViewportÏàÍ¬
+            // å¤§å°é‡ç½®ä¸ºä¸Viewportç›¸åŒ
             m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, m_Viewport.rect.width);
             m_Content.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, m_Viewport.rect.height);
         }
@@ -268,7 +275,7 @@ namespace NRatel
             m_Tracker.Clear();
         }
 
-        //µ÷Õû±ß¾à
+        //è°ƒæ•´è¾¹è·
         protected virtual void FixPadding() 
         {
             if (!m_Loop) { return; }
@@ -277,17 +284,17 @@ namespace NRatel
             else { padding.top = padding.bottom = 0; }
         }
 
-        //µ÷Õû¼ä¾à
+        //è°ƒæ•´é—´è·
         protected virtual void FixSpacing() { }
 
-        //¼ÆËãÖ±¹ÛĞĞÁĞÊı£¨×ÔÈ»×ø±êÖáÉÏ£©
+        //è®¡ç®—ç›´è§‚è¡Œåˆ—æ•°ï¼ˆè‡ªç„¶åæ ‡è½´ä¸Šï¼‰
         protected void CalcCellCountOnNaturalAxis()
         {
             this.m_ActualCellCountX = m_MovementAxis == MovementAxis.Horizontal ? m_CellCount : 1;
             this.m_ActualCellCountY = m_MovementAxis == MovementAxis.Vertical ? m_CellCount : 1;
         }
 
-        //¼ÆËãÊµ¼ÊĞèÒªµÄ¿Õ¼ä´óĞ¡£¨²»º¬padding£© ¼° ÔÚÕâ¸ö¿Õ¼äÉÏµÚÒ»¸öÔªËØËùÔÚµÄÎ»ÖÃ
+        //è®¡ç®—å®é™…éœ€è¦çš„ç©ºé—´å¤§å°ï¼ˆä¸å«paddingï¼‰ åŠ åœ¨è¿™ä¸ªç©ºé—´ä¸Šç¬¬ä¸€ä¸ªå…ƒç´ æ‰€åœ¨çš„ä½ç½®
         protected void CalculateRequiredSpace()
         {
             Vector2 requiredSpace = new Vector2(
@@ -297,7 +304,7 @@ namespace NRatel
             this.m_RequiredSpace = requiredSpace;
         }
 
-        //ÉèÖÃ»¬¶¯Öá·½ÏòµÄContent´óĞ¡
+        //è®¾ç½®æ»‘åŠ¨è½´æ–¹å‘çš„Contentå¤§å°
         protected virtual void SetContentSizeOnMovementAxis()
         {
             RectTransform.Axis axis;
@@ -316,9 +323,9 @@ namespace NRatel
             m_Content.SetSizeWithCurrentAnchors(axis, size);
         }
 
-        //¼ÆËãCellÆğÊ¼Offset
-        //×¢Òâ£ºÊ¹ ÔªËØ¶ÔÆë·½Ê½Ö»Ó°Ïì ·Ç»¬¶¯Öá·½Ïò
-        //ÒòÎª»¬¶¯Öá·½Ïò Content´óĞ¡ÓÉÔªËØÊı¾ö¶¨¡££¨²»Í¬ÓÚUGUIµÄLayout,»¬¶¯·½ÏòÊÇ×ÔÓÉ´óĞ¡£©
+        //è®¡ç®—Cellèµ·å§‹Offset
+        //æ³¨æ„ï¼šä½¿ å…ƒç´ å¯¹é½æ–¹å¼åªå½±å“ éæ»‘åŠ¨è½´æ–¹å‘
+        //å› ä¸ºæ»‘åŠ¨è½´æ–¹å‘ Contentå¤§å°ç”±å…ƒç´ æ•°å†³å®šã€‚ï¼ˆä¸åŒäºUGUIçš„Layout,æ»‘åŠ¨æ–¹å‘æ˜¯è‡ªç”±å¤§å°ï¼‰
         protected void CalculateCellStartOffset()
         {
             if (m_MovementAxis == MovementAxis.Horizontal)
@@ -344,6 +351,8 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 m_Content.anchoredPosition = new Vector2(-m_CellStartOffsetOnMovementAxis, m_Content.anchoredPosition.y);
+
+                Debug.Log($"1111111 m_CellStartOffsetOnMovementAxis: {m_CellStartOffsetOnMovementAxis}");
             }
             else
             {
@@ -355,71 +364,71 @@ namespace NRatel
         {
             if (!m_Loop) return;
 
-            //Content³õÊ¼Î»ÖÃ
+            //Contentåˆå§‹ä½ç½®
             float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
-            //»ñÈ¡µ±Ç°Î»ÖÃ
+            //è·å–å½“å‰ä½ç½®
             float curContentPosX = m_Content.anchoredPosition.x;
-            //ContentÏò×óÊ±£¬ContentÖØÖÃµã×ø±ê£¨³õÊ¼Î»ÖÃ×ó²à1¸öÖØÖÃ¿í¶È£©
+            //Contentå‘å·¦æ—¶ï¼ŒContenté‡ç½®ç‚¹åæ ‡ï¼ˆåˆå§‹ä½ç½®å·¦ä¾§1ä¸ªé‡ç½®å®½åº¦ï¼‰
             float leftResetPosX = contentStartPosX - m_LoopResetWidth;
-            //ContentÏòÓÒÊ±£¬ContentÖØÖÃµã×ø±ê£¨³õÊ¼Î»ÖÃÓÒ²à1¸öÖØÖÃ¿í¶È£©
+            //Contentå‘å³æ—¶ï¼ŒContenté‡ç½®ç‚¹åæ ‡ï¼ˆåˆå§‹ä½ç½®å³ä¾§1ä¸ªé‡ç½®å®½åº¦ï¼‰
             float rightResetPosX = contentStartPosX + m_LoopResetWidth;
 
             if (curContentPosX < leftResetPosX)
             {
                 m_Content.anchoredPosition += Vector2.right * m_LoopResetWidth;
             }
-            //Ïò×ó»¬¶¯Ê±
+            //å‘å·¦æ»‘åŠ¨æ—¶
             else if (curContentPosX > rightResetPosX)
             {
                 m_Content.anchoredPosition += Vector2.left * m_LoopResetWidth;
             }
         }
 
-        //¼ÆËãÓ¦³öÏÖµÄË÷Òı¡¢Ó¦ÏûÊ§µÄË÷Òı ºÍ Î´±äµÄË÷Òı
+        //è®¡ç®—åº”å‡ºç°çš„ç´¢å¼•ã€åº”æ¶ˆå¤±çš„ç´¢å¼• å’Œ æœªå˜çš„ç´¢å¼•
         protected void CalcIndexes()
         {
             float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
             float contentStartPosY = -m_CellStartOffsetOnMovementAxis;    //todo
 
-            int cornerX = (int)m_StartCorner % 2;  //0£º×ó£¬ 1ÓÒ
-            int cornerY = (int)m_StartCorner % 2;  //0£ºÉÏ£¬ 1ÏÂ £¨×¢Òâ£¬²»Í¬ÓÚ UIGridView£©
+            int cornerX = (int)m_StartCorner % 2;  //0ï¼šå·¦ï¼Œ 1å³
+            int cornerY = (int)m_StartCorner % 2;  //0ï¼šä¸Šï¼Œ 1ä¸‹ ï¼ˆæ³¨æ„ï¼Œä¸åŒäº UIGridViewï¼‰
 
-            int outCountFromStart;  //ÍêÈ«»¬³öÆğÊ¼±ß½çµÄÊıÁ¿
-            int outCountFromEnd;    //ÍêÈ«»¬³ö½áÊø±ß½çµÄÊıÁ¿
+            int outCountFromStart;  //å®Œå…¨æ»‘å‡ºèµ·å§‹è¾¹ç•Œçš„æ•°é‡
+            int outCountFromEnd;    //å®Œå…¨æ»‘å‡ºç»“æŸè¾¹ç•Œçš„æ•°é‡
 
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                //contentÆğÊ¼±ß½ç Ïà¶ÔÓÚ viewportÆğÊ¼±ß½çµÄÎ»ÒÆ¿í¶È£º
+                //contentèµ·å§‹è¾¹ç•Œ ç›¸å¯¹äº viewportèµ·å§‹è¾¹ç•Œçš„ä½ç§»å®½åº¦ï¼š
                 float outWidthFromStart = (contentStartPosX - m_Content.anchoredPosition.x) * (cornerX == 0 ? 1 : -1);
-                //content½áÊø±ß½ç Ïà¶ÔÓÚ viewport½áÊø±ß½çµÄÎ»ÒÆ¿í¶È£º
+                //contentç»“æŸè¾¹ç•Œ ç›¸å¯¹äº viewportç»“æŸè¾¹ç•Œçš„ä½ç§»å®½åº¦ï¼š
                 float outWidthFromEnd = (contentStartPosX + m_Content.anchoredPosition.x + (m_Content.rect.width - m_Viewport.rect.width) * (cornerX == 0 ? 1 : -1)) * (cornerX == 0 ? 1 : -1);
 
                 float startPadding = cornerX == 0 ? padding.left : padding.right;
                 float endPadding = cornerX == 0 ? padding.right : padding.left;
 
-                //ÍêÈ«»¬³ö×ó±ß½çµÄÊıÁ¿£¨¿ÉÎª¸º£©£¬ÒªÏòÏÂÈ¡Õû£¬¼´¾¡Á¿ÈÏÎªÆäÃ»»¬³ö£¬ÒÔ±£Ö¤¿ÉÊÓÇøÓòÄÚµÄÕıÈ·ĞÔ¡££¨¿ÉÎª¸º£©
+                //å®Œå…¨æ»‘å‡ºå·¦è¾¹ç•Œçš„æ•°é‡ï¼ˆå¯ä¸ºè´Ÿï¼‰ï¼Œè¦å‘ä¸‹å–æ•´ï¼Œå³å°½é‡è®¤ä¸ºå…¶æ²¡æ»‘å‡ºï¼Œä»¥ä¿è¯å¯è§†åŒºåŸŸå†…çš„æ­£ç¡®æ€§ã€‚ï¼ˆå¯ä¸ºè´Ÿï¼‰
                 outCountFromStart = Mathf.FloorToInt((outWidthFromStart - startPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
-                //ÍêÈ«»¬³öÓÒ±ß½çµÄÊıÁ¿£¨¿ÉÎª¸º£©£¬ÒªÏòÏÂÈ¡Õû£¬¼´¾¡Á¿ÈÏÎªÆäÃ»»¬³ö£¬ÒÔ±£Ö¤¿ÉÊÓÇøÓòÄÚµÄÕıÈ·ĞÔ¡££¨¿ÉÎª¸º£©
+                //å®Œå…¨æ»‘å‡ºå³è¾¹ç•Œçš„æ•°é‡ï¼ˆå¯ä¸ºè´Ÿï¼‰ï¼Œè¦å‘ä¸‹å–æ•´ï¼Œå³å°½é‡è®¤ä¸ºå…¶æ²¡æ»‘å‡ºï¼Œä»¥ä¿è¯å¯è§†åŒºåŸŸå†…çš„æ­£ç¡®æ€§ã€‚ï¼ˆå¯ä¸ºè´Ÿï¼‰
                 outCountFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
             }
             else
             {
-                //contentÆğÊ¼±ß½ç Ïà¶ÔÓÚ viewportÆğÊ¼±ß½çµÄÎ»ÒÆ¿í¶È£º
+                //contentèµ·å§‹è¾¹ç•Œ ç›¸å¯¹äº viewportèµ·å§‹è¾¹ç•Œçš„ä½ç§»å®½åº¦ï¼š
                 float outHeightFromStart = (contentStartPosY - m_Content.anchoredPosition.y) * (cornerY == 0 ? -1 : 1);
-                //content½áÊø±ß½ç Ïà¶ÔÓÚ viewport½áÊø±ß½çµÄÎ»ÒÆ¿í¶È£º
+                //contentç»“æŸè¾¹ç•Œ ç›¸å¯¹äº viewportç»“æŸè¾¹ç•Œçš„ä½ç§»å®½åº¦ï¼š
                 float outHeightFromEnd = (contentStartPosY + m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height) * (cornerY == 0 ? -1 : 1)) * (cornerY == 0 ? -1 : 1);
 
                 float startPadding = cornerY == 0 ? padding.top : padding.bottom;
                 float endPadding = cornerY == 0 ? padding.bottom : padding.top;
 
-                //ÍêÈ«»¬³öÉÏ±ß½çµÄÊıÁ¿£¨¿ÉÎª¸º£©£¬ÒªÏòÏÂÈ¡Õû£¬¼´¾¡Á¿ÈÏÎªÆäÃ»»¬³ö£¬ÒÔ±£Ö¤¿ÉÊÓÇøÓòÄÚµÄÕıÈ·ĞÔ¡£
+                //å®Œå…¨æ»‘å‡ºä¸Šè¾¹ç•Œçš„æ•°é‡ï¼ˆå¯ä¸ºè´Ÿï¼‰ï¼Œè¦å‘ä¸‹å–æ•´ï¼Œå³å°½é‡è®¤ä¸ºå…¶æ²¡æ»‘å‡ºï¼Œä»¥ä¿è¯å¯è§†åŒºåŸŸå†…çš„æ­£ç¡®æ€§ã€‚
                 outCountFromStart = Mathf.FloorToInt((outHeightFromStart - startPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
-                //ÍêÈ«»¬³öÏÂ±ß½çµÄÊıÁ¿£¨¿ÉÎª¸º£©£¬ÒªÏòÏÂÈ¡Õû£¬¼´¾¡Á¿ÈÏÎªÆäÃ»»¬³ö£¬ÒÔ±£Ö¤¿ÉÊÓÇøÓòÄÚµÄÕıÈ·ĞÔ¡££¨¿ÉÎª¸º£©
+                //å®Œå…¨æ»‘å‡ºä¸‹è¾¹ç•Œçš„æ•°é‡ï¼ˆå¯ä¸ºè´Ÿï¼‰ï¼Œè¦å‘ä¸‹å–æ•´ï¼Œå³å°½é‡è®¤ä¸ºå…¶æ²¡æ»‘å‡ºï¼Œä»¥ä¿è¯å¯è§†åŒºåŸŸå†…çš„æ­£ç¡®æ€§ã€‚ï¼ˆå¯ä¸ºè´Ÿï¼‰
                 outCountFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
             }
 
-            //Ó¦¸ÃÏÔÊ¾µÄ¿ªÊ¼Ë÷ÒıºÍ½áÊøË÷Òı
-            int startIndex = (outCountFromStart); // Ê¡ÂÔÁËÏÈ+1ÔÙ-1¡£ ´Ó»¬³öµÄÏÂÒ»¸ö¿ªÊ¼£¬Ë÷Òı´Ó0¿ªÊ¼;
+            //åº”è¯¥æ˜¾ç¤ºçš„å¼€å§‹ç´¢å¼•å’Œç»“æŸç´¢å¼•
+            int startIndex = (outCountFromStart); // çœç•¥äº†å…ˆ+1å†-1ã€‚ ä»æ»‘å‡ºçš„ä¸‹ä¸€ä¸ªå¼€å§‹ï¼Œç´¢å¼•ä»0å¼€å§‹;
             int endIndex = (m_CellCount - 1 - outCountFromEnd);
 
             //Debug.Log("startIndex, endIndex: " + startIndex + ", " + endIndex);
@@ -429,108 +438,111 @@ namespace NRatel
                 m_NewIndexes.Add(index);
             }
 
-            ////ĞÂ¾ÉË÷ÒıÁĞ±íÊä³öµ÷ÊÔ
-            //string Str1 = "";
-            //foreach (int index in newIndexes)
-            //{
-            //    Str1 += index + ",";
-            //}
-            //string Str2 = "";
-            //foreach (int index in oldIndexes)
-            //{
-            //    Str2 += index + ",";
-            //}
-            //Debug.Log("Str1: " + Str1);
-            //Debug.Log("Str2: " + Str2);
+            //æ–°æ—§ç´¢å¼•åˆ—è¡¨è¾“å‡ºè°ƒè¯•
+            string Str1 = "";
+            foreach (int index in m_NewIndexes)
+            {
+                Str1 += index + ",";
+            }
+            string Str2 = "";
+            foreach (int index in m_OldIndexes)
+            {
+                Str2 += index + ",";
+            }
+            //Debug.Log("m_NewIndexes: " + Str1);
+            //Debug.Log("m_OldIndexes: " + Str2);
             //Debug.Log("-------------------------");
 
-            //ÕÒ³ö³öÏÖµÄ¡¢ÏûÊ§µÄºÍÎ´±äµÄ
-            //³öÏÖµÄ£ºÔÚĞÂÁĞ±íÖĞ£¬µ«²»ÔÚÀÏÁĞ±íÖĞ¡£
+            //æ‰¾å‡ºå‡ºç°çš„ã€æ¶ˆå¤±çš„å’Œæœªå˜çš„
+            //å‡ºç°çš„ï¼šåœ¨æ–°åˆ—è¡¨ä¸­ï¼Œä½†ä¸åœ¨è€åˆ—è¡¨ä¸­ã€‚
             m_AppearIndexes.Clear();
             foreach (int index in m_NewIndexes)
             {
                 if (m_OldIndexes.IndexOf(index) < 0)
                 {
-                    //Debug.Log("³öÏÖ£º" + index);
+                    //Debug.Log("å‡ºç°ï¼š" + index);
                     m_AppearIndexes.Add(index);
                 }
             }
 
-            //ÏûÊ§µÄ£ºÔÚÀÏÁĞ±íÖĞ£¬µ«²»ÔÚĞÂÁĞ±íÖĞ¡£
+            //æ¶ˆå¤±çš„ï¼šåœ¨è€åˆ—è¡¨ä¸­ï¼Œä½†ä¸åœ¨æ–°åˆ—è¡¨ä¸­ã€‚
             m_DisAppearIndexes.Clear();
             foreach (int index in m_OldIndexes)
             {
                 if (m_NewIndexes.IndexOf(index) < 0)
                 {
-                    //Debug.Log("ÏûÊ§£º" + index);
+                    //Debug.Log("æ¶ˆå¤±ï¼š" + index);
                     m_DisAppearIndexes.Add(index);
                 }
             }
 
-            //±£³ÖµÄ£º¼ÈÔÚĞÂÁĞ±íÖĞ£¬ÓÖÔÚÀÏÁĞ±íÖĞµÄ
+            //ä¿æŒçš„ï¼šæ—¢åœ¨æ–°åˆ—è¡¨ä¸­ï¼Œåˆåœ¨è€åˆ—è¡¨ä¸­çš„
             m_StayIndexes.Clear();
             foreach (int index in m_NewIndexes)
             {
                 if (m_OldIndexes.IndexOf(index) >= 0)
                 {
-                    //Debug.Log("±£³Ö£º" + index);
+                    //Debug.Log("ä¿æŒï¼š" + index);
                     m_StayIndexes.Add(index);
                 }
             }
 
-            //ÓÃ m_OldIndexes ±£´æµ±Ç°Ö¡Ë÷ÒıÊı¾İ¡£
-            //¸´ÓÃĞÂÀÏÁĞ±í£¬±£Ö¤ĞÔÄÜÁ¼ºÃ
+            //ç”¨ m_OldIndexes ä¿å­˜å½“å‰å¸§ç´¢å¼•æ•°æ®ã€‚
+            //å¤ç”¨æ–°è€åˆ—è¡¨ï¼Œä¿è¯æ€§èƒ½è‰¯å¥½
             List<int> temp = m_OldIndexes;
             m_OldIndexes = m_NewIndexes;
             m_NewIndexes = temp;
             m_NewIndexes.Clear();
         }
 
-        //¸ÃÏûÊ§µÄÏûÊ§
+        //è¯¥æ¶ˆå¤±çš„æ¶ˆå¤±
         protected void DisAppearCells()
         {
             foreach (int index in m_DisAppearIndexes)
             {
                 if (!IsValidIndex(index)) { continue; }
-
-                RectTransform cellRT = m_CellRTDict[index];
-                m_CellRTDict.Remove(index);
+                int validIndex = ConvertIndexToValid(index);
+                //Debug.Log($"DisAppearCells indexï¼š{index}ï¼Œ validIndexï¼š{validIndex}");
+                RectTransform cellRT = m_CellRTDict[validIndex];
+                m_CellRTDict.Remove(validIndex);
                 cellRT.gameObject.SetActive(false);
                 m_UnUseCellRTStack.Push(cellRT);
             }
         }
 
-        //¸Ã³öÏÖµÄ³öÏÖ
+        //è¯¥å‡ºç°çš„å‡ºç°
         protected void AppearCells()
         {
             foreach (int index in m_AppearIndexes)
             {
                 if (!IsValidIndex(index)) { continue; }
-
-                RectTransform cellRT = GetOrCreateCell(index);
-                m_CellRTDict[index] = cellRT;
-                cellRT.anchoredPosition = GetCellPos(index);        //ÉèÖÃCellÎ»ÖÃ
-
                 int validIndex = ConvertIndexToValid(index);
-                m_OnShowCell?.Invoke(validIndex);                   //Cell³öÏÖ/Ë¢ĞÂ»Øµ÷
+                //Debug.Log($"AppearCells indexï¼š{index}ï¼Œ validIndexï¼š{validIndex}");
+                RectTransform cellRT = GetOrCreateCell(validIndex);
+                m_CellRTDict[validIndex] = cellRT;
+                cellRT.anchoredPosition = GetCellPos(index);        //è®¾ç½®Cellä½ç½®
+                m_OnShowCell?.Invoke(validIndex);                   //Cellå‡ºç°/åˆ·æ–°å›è°ƒ
             }
         }
 
-        //Ë¢ĞÂ±£³ÖµÄ
+        //åˆ·æ–°ä¿æŒçš„
         protected void RefreshStayCells()
         {
             foreach (int index in m_StayIndexes)
             {
-                RectTransform cellRT = m_CellRTDict[index];
-                cellRT.anchoredPosition = GetCellPos(index);        //ÉèÖÃCellÎ»ÖÃ
-                m_OnShowCell?.Invoke(index);                        //Cell³öÏÖ/Ë¢ĞÂ»Øµ÷
+                if (!IsValidIndex(index)) { continue; }
+                int validIndex = ConvertIndexToValid(index);
+                //Debug.Log($"RefreshStayCells indexï¼š{index}ï¼Œ validIndexï¼š{validIndex}");
+                RectTransform cellRT = m_CellRTDict[validIndex];
+                cellRT.anchoredPosition = GetCellPos(index);        //è®¾ç½®Cellä½ç½®
+                m_OnShowCell?.Invoke(validIndex);                   //Cellå‡ºç°/åˆ·æ–°å›è°ƒ
             }
         }
 
-        //¼ÆËã²¢ÉèÖÃCellsµÄSblingIndex
-        //µ÷ÓÃÊ±»ú£ºÓĞĞÂµÄCell³öÏÖÊ±
-        //Cell¿ÉÄÜÖØµşÊ±±ØĞë
-        //ÈôÎŞĞèÇó£¬¿ÉÈ¥µôÒÔ½ÚÊ¡ĞÔÄÜ
+        //è®¡ç®—å¹¶è®¾ç½®Cellsçš„SblingIndex
+        //è°ƒç”¨æ—¶æœºï¼šæœ‰æ–°çš„Cellå‡ºç°æ—¶
+        //Cellå¯èƒ½é‡å æ—¶å¿…é¡»
+        //è‹¥æ— éœ€æ±‚ï¼Œå¯å»æ‰ä»¥èŠ‚çœæ€§èƒ½
         protected virtual void CalcAndSetCellsSblingIndex()
         {
             if (m_AppearIndexes.Count <= 0) { return; }
@@ -542,57 +554,57 @@ namespace NRatel
             }
             m_CellRTListForSort.Sort((x, y) =>
             {
-                //°´indexÉıĞò
+                //æŒ‰indexå‡åº
                 return x.Key - y.Key;
             });
 
             foreach (KeyValuePair<int, RectTransform> kvp in m_CellRTListForSort)
             {
-                //Ë÷Òı´óµÄÔÚÉÏ
+                //ç´¢å¼•å¤§çš„åœ¨ä¸Š
                 //kvp.Value.SetAsLastSibling();
-                //Ë÷Òı´óµÄÔÚÏÂ
+                //ç´¢å¼•å¤§çš„åœ¨ä¸‹
                 kvp.Value.SetAsFirstSibling();
             }
         }
 
-        //ÊÇ·ñÓĞĞ§Ë÷Òı£¨Ö»½«ÏÔÊ¾Ë÷ÒıÏÔÊ¾µ½ÁĞ±íÖĞ£¬Ä¬ÈÏÎª 0~cellCount Ö®¼ä£©
-        //loopÊ±£¬ÈÏÎªÈÎÒâË÷Òı¶¼ÊÇÓĞĞ§µÄ£¬ÒÔÊ¹·Ç 0~cellCount µÄÇøÓòÄÜ¹»ÏÔÊ¾ÔªËØ£¬Ö®ºóÔÙÔÚ ConvertIndexToValid ×ª»»
+        //æ˜¯å¦æœ‰æ•ˆç´¢å¼•ï¼ˆåªå°†æ˜¾ç¤ºç´¢å¼•æ˜¾ç¤ºåˆ°åˆ—è¡¨ä¸­ï¼Œé»˜è®¤ä¸º 0~cellCount ä¹‹é—´ï¼‰
+        //loopæ—¶ï¼Œè®¤ä¸ºä»»æ„ç´¢å¼•éƒ½æ˜¯æœ‰æ•ˆçš„ï¼Œä»¥ä½¿é 0~cellCount çš„åŒºåŸŸèƒ½å¤Ÿæ˜¾ç¤ºå…ƒç´ ï¼Œä¹‹åå†åœ¨ ConvertIndexToValid è½¬æ¢
         protected virtual bool IsValidIndex(int index)
         {
             if (m_Loop) { return true; }
             else { return index >= 0 && index < m_CellCount; }
         }
 
-        //×ª»»Ë÷ÒıÖÁÓĞĞ§£¨Ä¬ÈÏÎŞĞè´¦Àí£©
-        //loopÊ±£¬½«ÈÎÒâË÷ÒıÊı×ªµ½ [0~cellCount-1] ÖĞ
+        //è½¬æ¢ç´¢å¼•è‡³æœ‰æ•ˆï¼ˆé»˜è®¤æ— éœ€å¤„ç†ï¼‰
+        //loopæ—¶ï¼Œå°†ä»»æ„ç´¢å¼•æ•°è½¬åˆ° [0~cellCount-1] ä¸­
         protected virtual int ConvertIndexToValid(int index)
         {
             if (m_Loop) { return (index % m_CellCount + m_CellCount) % m_CellCount; }
             else { return index; }
         }
 
-        //¼ÆËã ¿ªÊ¼ÅÅ²¼CellµÄÆğÊ¼Î»ÖÃ£¨ºËĞÄÎª£ºCellÔÚ ¡°Ê£Óà¿ÉÓÃ³ß´ç¡±ÖĞÈçºÎ¶ÔÆë£©
+        //è®¡ç®— å¼€å§‹æ’å¸ƒCellçš„èµ·å§‹ä½ç½®ï¼ˆæ ¸å¿ƒä¸ºï¼šCellåœ¨ â€œå‰©ä½™å¯ç”¨å°ºå¯¸â€ä¸­å¦‚ä½•å¯¹é½ï¼‰
         protected float GetCellStartOffset(int axis, float requiredSpaceWithoutPadding)
         {
-            float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //¸ÃÖáÉÏ×ÓÔªËØĞèÒªµÄ×Ü³ß´ç + ±ß¾à
-            float availableSpace = m_Content.rect.size[axis];       //¸ÃÖáÉÏ Content µÄÊµ¼Ê¿ÉÓÃ³ß´ç
-            float surplusSpace = availableSpace - requiredSpace;    //Ê£Óà¿ÉÓÃ³ß´ç£¨¿ÉÒÔÊÇ¸ºµÄ£©
-            float alignmentOnAxis = GetAlignmentOnAxis(axis);       //»ñÈ¡Ğ¡ÊıĞÎÊ½µÄ×ÓÔªËØ¶ÔÆë·½Ê½
+            float requiredSpace = requiredSpaceWithoutPadding + (axis == 0 ? padding.horizontal : padding.vertical);  //è¯¥è½´ä¸Šå­å…ƒç´ éœ€è¦çš„æ€»å°ºå¯¸ + è¾¹è·
+            float availableSpace = m_Content.rect.size[axis];       //è¯¥è½´ä¸Š Content çš„å®é™…å¯ç”¨å°ºå¯¸
+            float surplusSpace = availableSpace - requiredSpace;    //å‰©ä½™å¯ç”¨å°ºå¯¸ï¼ˆå¯ä»¥æ˜¯è´Ÿçš„ï¼‰
+            float alignmentOnAxis = GetAlignmentOnAxis(axis);       //è·å–å°æ•°å½¢å¼çš„å­å…ƒç´ å¯¹é½æ–¹å¼
 
-            //Ë®Æ½·½Ïò´Ó×ó¿ªÊ¼£¬ÊúÖ±·½Ïò´ÓÉÏ¿ªÊ¼¡£
-            // Òª¼ÆÈëÊ£Óà³ß´ç¡£ÒÔË®Æ½·½ÏòÎªÀı£¬
-            // Èô¶ÔÆë·½Ê½Îª¾Ó×ó£¬Ôò alignmentOnAxis Îª 0£¬ ½á¹ûÎª padding.left + 0£¬¿ÉÒÔ´ïµ½¾Ó×óĞ§¹û£»
-            // Èô¶ÔÆë·½Ê½Îª¾ÓÖĞ£¬Ôò alignmentOnAxis Îª 0.5£¬ ½á¹ûÎª padding.left + 0.5*Ê£Óà¾àÀë£¬¿ÉÒÔ´ïµ½¾ÓÖĞĞ§¹û£»
-            // Èô¶ÔÆë·½Ê½Îª¾ÓÓÒ£¬Ôò alignmentOnAxis Îª 1£¬ ½á¹ûÎª padding.left + 1*Ê£Óà¾àÀë£¬¿ÉÒÔ´ïµ½¾ÓÓÒĞ§¹û¡£
+            //æ°´å¹³æ–¹å‘ä»å·¦å¼€å§‹ï¼Œç«–ç›´æ–¹å‘ä»ä¸Šå¼€å§‹ã€‚
+            // è¦è®¡å…¥å‰©ä½™å°ºå¯¸ã€‚ä»¥æ°´å¹³æ–¹å‘ä¸ºä¾‹ï¼Œ
+            // è‹¥å¯¹é½æ–¹å¼ä¸ºå±…å·¦ï¼Œåˆ™ alignmentOnAxis ä¸º 0ï¼Œ ç»“æœä¸º padding.left + 0ï¼Œå¯ä»¥è¾¾åˆ°å±…å·¦æ•ˆæœï¼›
+            // è‹¥å¯¹é½æ–¹å¼ä¸ºå±…ä¸­ï¼Œåˆ™ alignmentOnAxis ä¸º 0.5ï¼Œ ç»“æœä¸º padding.left + 0.5*å‰©ä½™è·ç¦»ï¼Œå¯ä»¥è¾¾åˆ°å±…ä¸­æ•ˆæœï¼›
+            // è‹¥å¯¹é½æ–¹å¼ä¸ºå±…å³ï¼Œåˆ™ alignmentOnAxis ä¸º 1ï¼Œ ç»“æœä¸º padding.left + 1*å‰©ä½™è·ç¦»ï¼Œå¯ä»¥è¾¾åˆ°å±…å³æ•ˆæœã€‚
             float cellStartOffset = (axis == 0 ? padding.left : padding.top) + surplusSpace * alignmentOnAxis;
 
             return cellStartOffset;
         }
 
         // Returns the alignment on the specified axis as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom.
-        // ÒÔĞ¡ÊıĞÎÊ½·µ»ØÖ¸¶¨ÖáÉÏµÄ¶ÔÆë·½Ê½£¬ÆäÖĞ0Îª×ó/ÉÏ£¬0.5ÎªÖĞ£¬1ÎªÓÒ/ÏÂ¡££¨Ë®Æ½·½Ïò£º0×ó£¬0.5ÖĞ£¬1ÓÒ£©£¨ÊúÖ±·½Ïò£º0ÉÏ£¬0.5ÖĞ£¬1ÏÂ£©
-        // ²ÎÊı "axis"£ºThe axis to get alignment along. 0 is horizontal and 1 is vertical.    //ÖáË÷Òı£¬0ÊÇË®Æ½µÄ£¬1ÊÇ´¹Ö±µÄ¡£
-        // ·µ»ØÖµ£ºThe alignment as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom. //Ğ¡ÊıĞÎÊ½µÄ¶ÔÆë·½Ê½
+        // ä»¥å°æ•°å½¢å¼è¿”å›æŒ‡å®šè½´ä¸Šçš„å¯¹é½æ–¹å¼ï¼Œå…¶ä¸­0ä¸ºå·¦/ä¸Šï¼Œ0.5ä¸ºä¸­ï¼Œ1ä¸ºå³/ä¸‹ã€‚ï¼ˆæ°´å¹³æ–¹å‘ï¼š0å·¦ï¼Œ0.5ä¸­ï¼Œ1å³ï¼‰ï¼ˆç«–ç›´æ–¹å‘ï¼š0ä¸Šï¼Œ0.5ä¸­ï¼Œ1ä¸‹ï¼‰
+        // å‚æ•° "axis"ï¼šThe axis to get alignment along. 0 is horizontal and 1 is vertical.    //è½´ç´¢å¼•ï¼Œ0æ˜¯æ°´å¹³çš„ï¼Œ1æ˜¯å‚ç›´çš„ã€‚
+        // è¿”å›å€¼ï¼šThe alignment as a fraction where 0 is left/top, 0.5 is middle, and 1 is right/bottom. //å°æ•°å½¢å¼çš„å¯¹é½æ–¹å¼
         protected float GetAlignmentOnAxis(int axis)
         {
             return (axis == (int)m_MovementAxis) ? 0.5f : (int)childAlignment * 0.5f;
@@ -600,9 +612,9 @@ namespace NRatel
 
         protected Vector2 GetCellPos(int index)
         {
-            //Ò»¡¢Êı¾İË÷Òı×ªÎ»ÖÃË÷Òı
-            int posIndexX;   //XÎ»ÖÃË÷Òı
-            int posIndexY;   //YÎ»ÖÃË÷Òı
+            //ä¸€ã€æ•°æ®ç´¢å¼•è½¬ä½ç½®ç´¢å¼•
+            int posIndexX;   //Xä½ç½®ç´¢å¼•
+            int posIndexY;   //Yä½ç½®ç´¢å¼•
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 posIndexX = index;
@@ -614,27 +626,27 @@ namespace NRatel
                 posIndexY = index;
             }
 
-            //¶ş¡¢¸ù¾İÆğÊ¼½ÇÂä½øĞĞ×ªÖÃ
-            if (m_MovementAxis == MovementAxis.Horizontal && m_StartCorner == StartCorner.RightOrLower) { posIndexX = m_ActualCellCountX - 1 - posIndexX; }   //Èç¹ûÊÇ´ÓÓÒÍù×ó
-            if (m_MovementAxis == MovementAxis.Vertical && m_StartCorner == StartCorner.RightOrLower) { posIndexY = m_ActualCellCountY - 1 - posIndexY; }   //Èç¹ûÊÇ´ÓÏÂÍùÉÏ
+            //äºŒã€æ ¹æ®èµ·å§‹è§’è½è¿›è¡Œè½¬ç½®
+            if (m_MovementAxis == MovementAxis.Horizontal && m_StartCorner == StartCorner.RightOrLower) { posIndexX = m_ActualCellCountX - 1 - posIndexX; }   //å¦‚æœæ˜¯ä»å³å¾€å·¦
+            if (m_MovementAxis == MovementAxis.Vertical && m_StartCorner == StartCorner.RightOrLower) { posIndexY = m_ActualCellCountY - 1 - posIndexY; }   //å¦‚æœæ˜¯ä»ä¸‹å¾€ä¸Š
 
-            //Èı¡¢¼ÆËã×ø±ê
-            Vector2 scaleFactor = Vector2.one;  //²»¿¼ÂÇÔªËØËõ·Å
+            //ä¸‰ã€è®¡ç®—åæ ‡
+            Vector2 scaleFactor = Vector2.one;  //ä¸è€ƒè™‘å…ƒç´ ç¼©æ”¾
 
-            // xÖá£º³õÊ¼Î»ÖÃ+¿í¶È*ÖĞĞÄµãÆ«ÒÆ*Ëõ·ÅÏµÊı (xÖáÊÇÏòÕı·½Ïò)(´Ó×óÉÏµ½ÓÒÏÂ)
+            // xè½´ï¼šåˆå§‹ä½ç½®+å®½åº¦*ä¸­å¿ƒç‚¹åç§»*ç¼©æ”¾ç³»æ•° (xè½´æ˜¯å‘æ­£æ–¹å‘)(ä»å·¦ä¸Šåˆ°å³ä¸‹)
             float anchoredPosX = (m_CellStartOffset.x + (m_CellRect.size.x + spacing.x) * posIndexX) + m_CellRect.size.x * m_CellPivot.x * scaleFactor.x;
 
-            // yÖá£º-³õÊ¼Î»ÖÃ-¿í¶È*(1-ÖĞĞÄµãÆ«ÒÆ)*Ëõ·ÅÏµÊı (yÖáÊÇÏò¸º·½Ïò)(´Ó×óÉÏµ½ÓÒÏÂ)
+            // yè½´ï¼š-åˆå§‹ä½ç½®-å®½åº¦*(1-ä¸­å¿ƒç‚¹åç§»)*ç¼©æ”¾ç³»æ•° (yè½´æ˜¯å‘è´Ÿæ–¹å‘)(ä»å·¦ä¸Šåˆ°å³ä¸‹)
             float anchoredPosY = -(m_CellStartOffset.y + (m_CellRect.size.y + spacing.y) * posIndexY) - m_CellRect.size.y * (1f - m_CellPivot.y) * scaleFactor.y;
 
-            //Debug.Log($"index: {index}, posIndexX: {posIndexX}, posIndexY: {posIndexY}, anchoredPosX: {anchoredPosX}, anchoredPosY: {anchoredPosY}, m_StartOffset.x: {m_CellStartOffset.x}");
+            Debug.Log($"index: {index}, posIndexX: {posIndexX}, posIndexY: {posIndexY}, anchoredPosX: {anchoredPosX}, anchoredPosY: {anchoredPosY}, m_StartOffset.x: {m_CellStartOffset.x}");
 
             return new Vector2(anchoredPosX, anchoredPosY);
         }
 
         protected void SetProperty<T>(ref T currentValue, T newValue)
         {
-            if ((currentValue == null && newValue == null) || (currentValue != null && currentValue.Equals(newValue)))  //¹ıÂËÎŞĞ§ºÍÎ´±ä
+            if ((currentValue == null && newValue == null) || (currentValue != null && currentValue.Equals(newValue)))  //è¿‡æ»¤æ— æ•ˆå’Œæœªå˜
                 return;
             currentValue = newValue;
             //RefreshAll();
@@ -653,10 +665,10 @@ namespace NRatel
                 cellRT = m_OnCreateCell(index);
                 cellRT.SetParent(m_Content, false);
 
-                //Çı¶¯×ÓÎïÌåµÄÃªµãºÍÎ»ÖÃ
+                //é©±åŠ¨å­ç‰©ä½“çš„é”šç‚¹å’Œä½ç½®
                 m_Tracker.Add(this, cellRT, DrivenTransformProperties.Anchors | DrivenTransformProperties.AnchoredPosition | DrivenTransformProperties.SizeDelta);
 
-                //Ç¿ÖÆÉèÖÃCellµÄanchor
+                //å¼ºåˆ¶è®¾ç½®Cellçš„anchor
                 cellRT.anchorMin = Vector2.up;
                 cellRT.anchorMax = Vector2.up;
 

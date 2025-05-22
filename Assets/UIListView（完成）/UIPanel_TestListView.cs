@@ -34,7 +34,7 @@ public class UIPanel_TestListView : MonoBehaviour
     {
         //创建数据列表
         m_DataList = new List<TestData>();
-        for (int i = 0; i < 100; i++) 
+        for (int i = 0; i < 10; i++) 
         {
             m_DataList.Add(new TestData() 
             { 
