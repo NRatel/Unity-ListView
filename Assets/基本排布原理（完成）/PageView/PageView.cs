@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -80,7 +80,7 @@ namespace NRatel
     public class PageView : ListViewV2, IBeginDragHandler, IEndDragHandler
     {
         [Header("Page Settings")]
-        [SerializeField] public bool loop = true;                       //开启循环？
+        [SerializeField] public bool loop = true;                       //开启循环？（不改源码无法支持，不要开启！！！）
         [SerializeField] public bool cellOccupyPage = false;            //使Cell占用一页（强设将spacingX）
 
         [Header("Snap Settings")]

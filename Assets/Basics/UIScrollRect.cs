@@ -89,10 +89,10 @@ namespace NRatel
         private Vector2 m_Velocity;
         public Vector2 velocity { get { return m_Velocity; } set { m_Velocity = value; } }
 
-        private bool m_Dragging;
+        protected bool m_Dragging;
         private bool m_Scrolling;
 
-        private Vector2 m_PrevPosition = Vector2.zero;
+        protected Vector2 m_PrevPosition = Vector2.zero;
         private Bounds m_PrevContentBounds;
         private Bounds m_PrevViewBounds;
         [NonSerialized]
@@ -252,6 +252,7 @@ namespace NRatel
             if (eventData.button != PointerEventData.InputButton.Left)
                 return;
 
+            Debug.Log($"OnEndDrag Time.frameCount: {Time.frameCount}");
             m_Dragging = false;
         }
 
@@ -305,6 +306,7 @@ namespace NRatel
             if (position != m_Content.anchoredPosition)
             {
                 m_Content.anchoredPosition = position;
+                TryAdjustContentAnchoredPosition();
                 UpdateBounds();
             }
         }
@@ -363,6 +365,8 @@ namespace NRatel
             {
                 Vector3 newVelocity = (m_Content.anchoredPosition - m_PrevPosition) / deltaTime;
                 m_Velocity = Vector3.Lerp(m_Velocity, newVelocity, deltaTime * 10);
+
+                //Debug.Log($"22222222222 Time.frameCount: {Time.frameCount}, m_Content.anchoredPosition.x: {m_Content.anchoredPosition.x}, m_PrevPosition.x: {m_PrevPosition.x} m_Velocity.x: {m_Velocity.x}");
             }
 
             if (m_ViewBounds != m_PrevViewBounds || m_ContentBounds != m_PrevContentBounds || m_Content.anchoredPosition != m_PrevPosition)
@@ -373,6 +377,8 @@ namespace NRatel
             }
             m_Scrolling = false;
         }
+
+        protected virtual void TryAdjustContentAnchoredPosition() { }
 
         /// <summary>
         /// Helper function to update the previous data fields on a ScrollRect. Call this before you change data in the ScrollRect.
@@ -385,6 +391,8 @@ namespace NRatel
                 m_PrevPosition = m_Content.anchoredPosition;
             m_PrevViewBounds = m_ViewBounds;
             m_PrevContentBounds = m_ContentBounds;
+
+            //Debug.Log($"UpdatePrevData Time.frameCount: {Time.frameCount}");
         }
 
         /// <summary>

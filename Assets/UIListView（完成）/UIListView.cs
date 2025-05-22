@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace NRatel
@@ -236,7 +237,6 @@ namespace NRatel
         {
             if (m_CellCount <= 0) { return; }
 
-            TryHandleLoopPos();
             CalcIndexes();
             DisAppearCells();
             AppearCells();
@@ -358,7 +358,8 @@ namespace NRatel
             }
         }
 
-        private void TryHandleLoopPos()
+        #region Loop
+        protected override void TryAdjustContentAnchoredPosition()
         {
             if (!m_Loop) return;
 
@@ -374,13 +375,24 @@ namespace NRatel
             if (curContentPosX < leftResetPosX)
             {
                 m_Content.anchoredPosition += Vector2.right * m_LoopResetWidth;
+
+                //if (m_PrevPosition != Vector2.zero)
+                    //m_PrevPosition -= Vector2.right * m_LoopResetWidth;
             }
-            //向左滑动时
             else if (curContentPosX > rightResetPosX)
             {
                 m_Content.anchoredPosition += Vector2.left * m_LoopResetWidth;
+
+                //更新，以使本帧 LateUpdate中 计算的 m_Velocity 不会因位置剧变而剧变
+                m_PrevPosition += Vector2.left * m_LoopResetWidth;
+
+                //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发位置此“位置超过一页”的重置逻辑
+                m_ContentStartPosition += Vector2.left * m_LoopResetWidth;
+
+                //Debug.Log($"1111111111111 Time.frameCount: {Time.frameCount}, m_Draging: {m_Dragging}, m_Content.anchoredPosition.x: {m_Content.anchoredPosition.x}, m_PrevPosition.x: {m_PrevPosition.x}");
             }
         }
+        #endregion
 
         //计算应出现的索引、应消失的索引 和 未变的索引
         protected void CalcIndexes()
