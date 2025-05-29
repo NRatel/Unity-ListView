@@ -81,7 +81,7 @@ namespace NRatel
         {
             get 
             {
-                if (m_Loop) { return (m_ExpandedContentWidth - m_CoreConetontWidth) / 2f; }
+                if (m_Loop) { return (m_ExpandedContentWidth - m_CoreConetontWidth) / 2f * (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1); }
                 else { return 0f; }
             } 
         }
@@ -331,7 +331,7 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 m_CellStartOffset = new Vector2(
-                    padding.left + m_CellStartOffsetOnMovementAxis, 
+                    padding.left + Mathf.Abs(m_CellStartOffsetOnMovementAxis), 
                     GetCellStartOffset((int)MovementAxis.Vertical, m_RequiredSpace.y)
                 );
             }
@@ -339,7 +339,7 @@ namespace NRatel
             {
                 m_CellStartOffset = new Vector2(
                     GetCellStartOffset((int)MovementAxis.Horizontal, m_RequiredSpace.x), 
-                    padding.top + m_CellStartOffsetOnMovementAxis
+                    padding.top + Mathf.Abs(m_CellStartOffsetOnMovementAxis)
                 );
             }
         }
