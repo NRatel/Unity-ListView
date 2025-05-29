@@ -67,24 +67,73 @@ namespace NRatel
 
         protected int m_CellCount;                                                  //显示数量
 
-        //核心内容宽度
-        protected float m_CoreConetontWidth { get { return m_CellRect.width * m_CellCount + spacing.x * (m_CellCount - 1); } }
+        #region ForLoop
+        //核心内容大小（滑动轴方向）
+        protected float m_CoreConetontSizeOnMovementAxis 
+        {
+            get
+            {
+                if (m_MovementAxis == MovementAxis.Horizontal)
+                {
+                    return m_CellRect.width * m_CellCount + spacing.x * (m_CellCount - 1);
+                }
+                else
+                {
+                    return m_CellRect.height * m_CellCount + spacing.y * (m_CellCount - 1);
+                }
+            } 
+        }
 
-        //开启loop时，重置宽度
-        protected float m_LoopResetWidth { get { return (m_CoreConetontWidth + spacing.x) * Mathf.CeilToInt(m_Viewport.rect.width / m_CoreConetontWidth); } }
+        //开启loop时，重置大小（滑动轴方向）
+        protected float m_LoopResetSizeOnMovementAxis 
+        {
+            get
+            {
+                if (m_MovementAxis == MovementAxis.Horizontal)
+                {
+                    return (m_CoreConetontSizeOnMovementAxis + spacing.x) * Mathf.CeilToInt(m_Viewport.rect.width / m_CoreConetontSizeOnMovementAxis);
+                }
+                else 
+                {
+                    return (m_CoreConetontSizeOnMovementAxis + spacing.y) * Mathf.CeilToInt(m_Viewport.rect.height / m_CoreConetontSizeOnMovementAxis);
+                }
+            } 
+        }
 
         //开启loop时，扩展后宽度
-        protected float m_ExpandedContentWidth { get { return m_CoreConetontWidth + m_LoopResetWidth * 4; } }
+        protected float m_ExpandedContentSizeOnMovementAxis 
+        {
+            get 
+            {
+                return m_CoreConetontSizeOnMovementAxis + m_LoopResetSizeOnMovementAxis * 4;
+            } 
+        }
 
         //开启loop时，Cell在Content的滑动轴上的起始位置偏移
         protected float m_CellStartOffsetOnMovementAxis 
         {
             get 
             {
-                if (m_Loop) { return (m_ExpandedContentWidth - m_CoreConetontWidth) / 2f * (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1); }
-                else { return 0f; }
+                if (m_Loop) 
+                {
+                    int sign;
+                    if (m_MovementAxis == MovementAxis.Horizontal) 
+                    {
+                        sign = (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1); 
+                    }
+                    else 
+                    {
+                        sign = (m_StartCorner == StartCorner.LeftOrUpper ? -1 : 1); 
+                    }
+                    return (m_ExpandedContentSizeOnMovementAxis - m_CoreConetontSizeOnMovementAxis) / 2f * sign; 
+                }
+                else 
+                {
+                    return 0f; 
+                }
             } 
         }
+        #endregion
 
         protected override void Awake()
         {
@@ -312,12 +361,12 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 axis = RectTransform.Axis.Horizontal;
-                size = m_Loop ? m_ExpandedContentWidth : m_RequiredSpace.x + padding.horizontal;
+                size = m_Loop ? m_ExpandedContentSizeOnMovementAxis : m_RequiredSpace.x + padding.horizontal;
             }
             else
             {
                 axis = RectTransform.Axis.Vertical;
-                size = m_Loop ? m_ExpandedContentWidth : m_RequiredSpace.y + padding.vertical; //todo!!!
+                size = m_Loop ? m_ExpandedContentSizeOnMovementAxis : m_RequiredSpace.y + padding.vertical; //todo!!!
             }
 
             m_Content.SetSizeWithCurrentAnchors(axis, size);
@@ -363,36 +412,60 @@ namespace NRatel
         {
             if (!m_Loop) return;
 
-            //Content初始位置
-            float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
-            //获取当前位置
-            float curContentPosX = m_Content.anchoredPosition.x;
-            //Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
-            float leftResetPosX = contentStartPosX - m_LoopResetWidth;
-            //Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
-            float rightResetPosX = contentStartPosX + m_LoopResetWidth;
-
-            if (curContentPosX < leftResetPosX)
+            if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                m_Content.anchoredPosition += Vector2.right * m_LoopResetWidth;
+                //Content初始位置
+                float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
+                //获取当前位置
+                float curContentPosX = m_Content.anchoredPosition.x;
+                //Content向左时，Content重置点坐标（初始位置左侧1个重置宽度）
+                float leftResetPosX = contentStartPosX - m_LoopResetSizeOnMovementAxis;
+                //Content向右时，Content重置点坐标（初始位置右侧1个重置宽度）
+                float rightResetPosX = contentStartPosX + m_LoopResetSizeOnMovementAxis;
 
-                //更新，以使本帧 LateUpdate中 计算的 m_Velocity 不会因位置剧变而剧变
-                m_PrevPosition += Vector2.right * m_LoopResetWidth;
+                if (curContentPosX < leftResetPosX)
+                {
+                    m_Content.anchoredPosition += Vector2.right * m_LoopResetSizeOnMovementAxis;
 
-                //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发此“位置超过一页的重置逻辑”，否则下一帧m_PrevPosition又将执行一次偏移（上一行代码），还是会导致速度剧变
-                m_ContentStartPosition += Vector2.right * m_LoopResetWidth;
+                    //更新，以使本帧 LateUpdate中 计算的 m_Velocity 不会因位置剧变而剧变
+                    m_PrevPosition += Vector2.right * m_LoopResetSizeOnMovementAxis;
+
+                    //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发此“位置超过一页的重置逻辑”，否则下一帧m_PrevPosition又将执行一次偏移（上一行代码），还是会导致速度剧变
+                    m_ContentStartPosition += Vector2.right * m_LoopResetSizeOnMovementAxis;
+                }
+                else if (curContentPosX > rightResetPosX)
+                {
+                    m_Content.anchoredPosition += Vector2.left * m_LoopResetSizeOnMovementAxis;
+
+                    //更新，以使本帧 LateUpdate中 计算的 m_Velocity 不会因位置剧变而剧变
+                    m_PrevPosition += Vector2.left * m_LoopResetSizeOnMovementAxis;
+
+                    //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发此“位置超过一页的重置逻辑”，否则下一帧m_PrevPosition又将执行一次偏移（上一行代码），还是会导致速度剧变
+                    m_ContentStartPosition += Vector2.left * m_LoopResetSizeOnMovementAxis;
+
+                    //Debug.Log($"1111111111111 Time.frameCount: {Time.frameCount}, m_Draging: {m_Dragging}, m_Content.anchoredPosition.x: {m_Content.anchoredPosition.x}, m_PrevPosition.x: {m_PrevPosition.x}");
+                }
             }
-            else if (curContentPosX > rightResetPosX)
+            else 
             {
-                m_Content.anchoredPosition += Vector2.left * m_LoopResetWidth;
+                float contentStartPosY = -m_CellStartOffsetOnMovementAxis;
+                float curContentPosY = m_Content.anchoredPosition.y;
 
-                //更新，以使本帧 LateUpdate中 计算的 m_Velocity 不会因位置剧变而剧变
-                m_PrevPosition += Vector2.left * m_LoopResetWidth;
+                float topResetPosY = contentStartPosY + m_LoopResetSizeOnMovementAxis;
+                float bottomResetPosY = contentStartPosY - m_LoopResetSizeOnMovementAxis;
 
-                //更新，以使 OnDrag 中，Content位置跟随鼠标移动时，不反复触发此“位置超过一页的重置逻辑”，否则下一帧m_PrevPosition又将执行一次偏移（上一行代码），还是会导致速度剧变
-                m_ContentStartPosition += Vector2.left * m_LoopResetWidth;
-
-                //Debug.Log($"1111111111111 Time.frameCount: {Time.frameCount}, m_Draging: {m_Dragging}, m_Content.anchoredPosition.x: {m_Content.anchoredPosition.x}, m_PrevPosition.x: {m_PrevPosition.x}");
+                if (curContentPosY > topResetPosY)
+                {
+                    m_Content.anchoredPosition += Vector2.down * m_LoopResetSizeOnMovementAxis;
+                    m_PrevPosition += Vector2.down * m_LoopResetSizeOnMovementAxis;
+                    m_ContentStartPosition += Vector2.down * m_LoopResetSizeOnMovementAxis;
+                }
+                else if (curContentPosY < bottomResetPosY)
+                {
+                    m_Content.anchoredPosition += Vector2.up * m_LoopResetSizeOnMovementAxis;
+                    m_PrevPosition += Vector2.up * m_LoopResetSizeOnMovementAxis;
+                    m_ContentStartPosition += Vector2.up * m_LoopResetSizeOnMovementAxis;
+                }
             }
         }
         #endregion
