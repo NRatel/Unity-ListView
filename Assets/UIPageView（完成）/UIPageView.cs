@@ -8,16 +8,16 @@ namespace NRatel
 {
     public class UIPageView : UIListView
     {
-        [SerializeField] private bool m_CellOccupyPage = false;           //Ê¹CellÕ¼ÓÃÒ»Ò³£¨Ç¿Éè½«spacing.x£©
+        [SerializeField] private bool m_CellOccupyPage = false;           //ä½¿Cellå ç”¨ä¸€é¡µï¼ˆå¼ºè®¾å°†spacing.xï¼‰
 
-        [SerializeField] private bool m_Snap = false;                     //¿ªÆôSnap£¿
-        [SerializeField] private float m_SnapSpeed = 500f;                //SnapËÙ¶È
-        [SerializeField] private float m_SnapWaitScrollSpeed = 50f;       //¿ªÆô¹ßĞÔÊ±£¬µÈ´ı»ù±¾Í£ÎÈ²Å¿ªÊ¼Snap
+        [SerializeField] private bool m_Snap = false;                     //å¼€å¯Snapï¼Ÿ
+        [SerializeField] private float m_SnapSpeed = 500f;                //Snapé€Ÿåº¦
+        [SerializeField] private float m_SnapWaitScrollSpeed = 50f;       //å¼€å¯æƒ¯æ€§æ—¶ï¼Œç­‰å¾…åŸºæœ¬åœç¨³æ‰å¼€å§‹Snap
 
-        [SerializeField] private bool m_Carousel = false;                 //¿ªÆôÂÖ²¥£¿
-        [SerializeField] private float m_CarouselInterval = 3f;           //ÂÖ²¥Æô¶¯¼ä¸ô
-        [SerializeField] private float m_CarouselSpeed = 500f;            //ÂÖ²¥Ê±ÒÆ¶¯µÄËÙ¶È
-        [SerializeField] private bool m_Reverse = false;                  //·´ÏòÂÖ²¥£¨Ä¬ÈÏÊÇ°´CellË÷ÒıË³Ğò£©
+        [SerializeField] private bool m_Carousel = false;                 //å¼€å¯è½®æ’­ï¼Ÿ
+        [SerializeField] private float m_CarouselInterval = 3f;           //è½®æ’­å¯åŠ¨é—´éš”
+        [SerializeField] private float m_CarouselSpeed = 500f;            //è½®æ’­æ—¶ç§»åŠ¨çš„é€Ÿåº¦
+        [SerializeField] private bool m_Reverse = false;                  //åå‘è½®æ’­ï¼ˆé»˜è®¤æ˜¯æŒ‰Cellç´¢å¼•é¡ºåºï¼‰
 
         private int m_CurPage = 0;
         private Coroutine m_SnapCoroutine;
@@ -26,7 +26,7 @@ namespace NRatel
         public event Action onSnapCompleted;
 
         #region Override
-        //µ÷Õû±ß¾à£¨×¢ÒâÖ»µ÷Õû»¬¶¯·½Ïò£©
+        //è°ƒæ•´è¾¹è·ï¼ˆæ³¨æ„åªè°ƒæ•´æ»‘åŠ¨æ–¹å‘ï¼‰
         protected override void FixPadding()
         {
             if (m_Loop) 
@@ -48,7 +48,7 @@ namespace NRatel
             }
         }
 
-        //µ÷Õû¼ä¾à£¨×¢ÒâÖ»µ÷Õû»¬¶¯·½Ïò£©
+        //è°ƒæ•´é—´è·ï¼ˆæ³¨æ„åªè°ƒæ•´æ»‘åŠ¨æ–¹å‘ï¼‰
         protected override void FixSpacing()
         {
             if (!m_CellOccupyPage) { return; }
@@ -106,30 +106,30 @@ namespace NRatel
 
         private IEnumerator SnapRoutine()
         {
-            //Debug.Log($"¡¾SnapRoutine¡¿Snap ½øÈë");
-            //Èç¹û¿ªÆô»Øµ¯£¬ÔòĞèÏÈµÈ´ı»Øµ¯½áÊø
-            //loopÄ£Ê½ÏÂ£¬»Øµ¯ÀíÂÛÉÏ²»»áÉúĞ§
+            //Debug.Log($"ã€SnapRoutineã€‘Snap è¿›å…¥");
+            //å¦‚æœå¼€å¯å›å¼¹ï¼Œåˆ™éœ€å…ˆç­‰å¾…å›å¼¹ç»“æŸ
+            //loopæ¨¡å¼ä¸‹ï¼Œå›å¼¹ç†è®ºä¸Šä¸ä¼šç”Ÿæ•ˆ
             yield return WaitUtilElasticEnd();
 
-            //Èç¹û¿ªÆô¹ßĞÔ£¬ÔòĞèÏÈµÈ´ıÆä»ù±¾Í£ÎÈ
+            //å¦‚æœå¼€å¯æƒ¯æ€§ï¼Œåˆ™éœ€å…ˆç­‰å¾…å…¶åŸºæœ¬åœç¨³
             yield return WaitUtilInertiaEnd();
 
-            //ÕÒÀëViewportÖĞĞÄ×î½üµÄÄÇ¸öCell¡£
-            //×¢ÒâÕâÀïµÄÏà¶ÔÎ»ÖÃ¼ÆËãÒªÇó ContentºÍViewportÃ»ÓĞËõ·Å
+            //æ‰¾ç¦»Viewportä¸­å¿ƒæœ€è¿‘çš„é‚£ä¸ªCellã€‚
+            //æ³¨æ„è¿™é‡Œçš„ç›¸å¯¹ä½ç½®è®¡ç®—è¦æ±‚ Contentå’ŒViewportæ²¡æœ‰ç¼©æ”¾
             Debug.Assert(m_Content.localScale == Vector3.one);
             Debug.Assert(m_Viewport.localScale == Vector3.one);
             var closestCell = FindClosestCellToViewCenterOnMovementAxis();
 
-            // ¼ÆËã¼Æ»®ÒÆ¶¯¾àÀë
-            // Ö»Ğè½« content ·´ÏòÒÆ¶¯ closestCell.distance¡£
-            // £¨×¢Òâ loop »áÖØÖÃÎ»ÖÃ£¬Òò´Ë²»ÄÜ¡°Ö±½Ó¼ÆËã³öÄ¿±êÎ»ÖÃ£¬È»ºó²åÖµ¡± ¶øÊÇÒª¡°Ã¿Ö¡³ÖĞøÔö¼ÓÆ«ÒÆ£¬Ö±µ½¼Ó¹»Á¿¡±£©
+            // è®¡ç®—è®¡åˆ’ç§»åŠ¨è·ç¦»
+            // åªéœ€å°† content åå‘ç§»åŠ¨ closestCell.distanceã€‚
+            // ï¼ˆæ³¨æ„ loop ä¼šé‡ç½®ä½ç½®ï¼Œå› æ­¤ä¸èƒ½â€œç›´æ¥è®¡ç®—å‡ºç›®æ ‡ä½ç½®ï¼Œç„¶åæ’å€¼â€ è€Œæ˜¯è¦â€œæ¯å¸§æŒç»­å¢åŠ åç§»ï¼Œç›´åˆ°åŠ å¤Ÿé‡â€ï¼‰
             float planMoveDistance = -closestCell.distance;
 
-            //Debug.Log($"¡¾SnapRoutine¡¿Snap ¿ªÊ¼£¬Ä¿±êË÷Òı:{minDistanceIndex}, ÒÆ¶¯¾àÀë: {planMoveDistanceX}");
+            //Debug.Log($"ã€SnapRoutineã€‘Snap å¼€å§‹ï¼Œç›®æ ‡ç´¢å¼•:{minDistanceIndex}, ç§»åŠ¨è·ç¦»: {planMoveDistanceX}");
 
             yield return DoMoveContentPosOnMovementAxis(planMoveDistance, m_SnapSpeed);
 
-            //Debug.Log($"¡¾SnapRoutine¡¿Snap ½áÊø");
+            //Debug.Log($"ã€SnapRoutineã€‘Snap ç»“æŸ");
 
             m_CurPage = closestCell.index;
             onSnapCompleted?.Invoke();
@@ -169,7 +169,7 @@ namespace NRatel
             });
         }
 
-        //»ñÈ¡Ë®Æ½»Øµ¯±ß½ç
+        //è·å–æ°´å¹³å›å¼¹è¾¹ç•Œ
         private (float left, float right) GetHorizontalElasticBounds()
         {
             return m_StartCorner == StartCorner.LeftOrUpper
@@ -177,7 +177,7 @@ namespace NRatel
                 : (m_Content.rect.width - m_Viewport.rect.width, 0);
         }
 
-        //»ñÈ¡ÊúÖ±»Øµ¯±ß½ç
+        //è·å–ç«–ç›´å›å¼¹è¾¹ç•Œ
         private (float up, float down) GetVerticalElasticBounds()
         {
             return m_StartCorner == StartCorner.LeftOrUpper
@@ -185,7 +185,7 @@ namespace NRatel
                 : (-(m_Content.rect.height - m_Viewport.rect.height), 0);
         }
 
-        //²éÕÒÀëViewÖĞĞÄ×î½üµÄÄÇ¸öCell£¨»¬¶¯·½ÏòÉÏ£©
+        //æŸ¥æ‰¾ç¦»Viewä¸­å¿ƒæœ€è¿‘çš„é‚£ä¸ªCellï¼ˆæ»‘åŠ¨æ–¹å‘ä¸Šï¼‰
         private (int index, float distance) FindClosestCellToViewCenterOnMovementAxis()
         {
             var closestIndex = -1;
@@ -202,7 +202,7 @@ namespace NRatel
             return (closestIndex, minDistance);
         }
 
-        //¼ÆËãCellÀëViewÖĞĞÄµÄ¾àÀë£¨»¬¶¯·½ÏòÉÏ£©
+        //è®¡ç®—Cellç¦»Viewä¸­å¿ƒçš„è·ç¦»ï¼ˆæ»‘åŠ¨æ–¹å‘ä¸Šï¼‰
         private float CalcCellDistanceToViewCenterMovementAxis(RectTransform cell)
         {
             float distanceToViewCenter;
@@ -210,24 +210,24 @@ namespace NRatel
             {
                 if (m_StartCorner == StartCorner.LeftOrUpper)
                 {
-                    //Cell¾àÀëContent×ó±ß½çµÄÎ»ÒÆ£¨ÏòÓÒÎªÕı·½Ïò£©
-                    //×¢Òâ£¬ÕâÀï CellµÄ pivot Ó°Ïì¡°CellËù´¦ViewportÖĞĞÄ¡±µÄ¸ÅÄî
-                    //Èô²»ÏëÓ°Ïì£¬¿ÉÒÔ¿¼ÂÇ¼Ó¸öboolÑ¡Ïî²¹³¥µô£¨ÔİÎŞ´ËĞèÇó£©¡£
+                    //Cellè·ç¦»Contentå·¦è¾¹ç•Œçš„ä½ç§»ï¼ˆå‘å³ä¸ºæ­£æ–¹å‘ï¼‰
+                    //æ³¨æ„ï¼Œè¿™é‡Œ Cellçš„ pivot å½±å“â€œCellæ‰€å¤„Viewportä¸­å¿ƒâ€çš„æ¦‚å¿µ
+                    //è‹¥ä¸æƒ³å½±å“ï¼Œå¯ä»¥è€ƒè™‘åŠ ä¸ªboolé€‰é¡¹è¡¥å¿æ‰ï¼ˆæš‚æ— æ­¤éœ€æ±‚ï¼‰ã€‚
                     float distanceFromContentLeft = cell.anchoredPosition.x;
-                    //Cell¾àÀëViewport×ó±ß½çµÄÎ»ÒÆ£¨ÏòÓÒÎªÕı·½Ïò£©
+                    //Cellè·ç¦»Viewportå·¦è¾¹ç•Œçš„ä½ç§»ï¼ˆå‘å³ä¸ºæ­£æ–¹å‘ï¼‰
                     float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x;
-                    //Cell¾àÀëViewportÖĞĞÄµÄÎ»ÒÆ£¨ÏòÓÒÎªÕı·½Ïò£©£¨½á¹û>0Ê±£¬ÔÚÖĞĞÄµÄÓÒ±ß£©
+                    //Cellè·ç¦»Viewportä¸­å¿ƒçš„ä½ç§»ï¼ˆå‘å³ä¸ºæ­£æ–¹å‘ï¼‰ï¼ˆç»“æœ>0æ—¶ï¼Œåœ¨ä¸­å¿ƒçš„å³è¾¹ï¼‰
                     distanceToViewCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
                 }
                 else
                 {
-                    //Cell¾àÀëContentÓÒ±ß½çµÄÎ»ÒÆ£¨ÏòÓÒÎªÕı·½Ïò£©
-                    //×¢Òâ£¬ÕâÀï CellµÄ pivot Ó°Ïì¡°CellËù´¦ViewportÖĞĞÄ¡±µÄ¸ÅÄî
-                    //Èô²»ÏëÓ°Ïì£¬¿ÉÒÔ¿¼ÂÇ¼Ó¸öboolÑ¡Ïî²¹³¥µô£¨ÔİÎŞ´ËĞèÇó£©¡£
+                    //Cellè·ç¦»Contentå³è¾¹ç•Œçš„ä½ç§»ï¼ˆå‘å³ä¸ºæ­£æ–¹å‘ï¼‰
+                    //æ³¨æ„ï¼Œè¿™é‡Œ Cellçš„ pivot å½±å“â€œCellæ‰€å¤„Viewportä¸­å¿ƒâ€çš„æ¦‚å¿µ
+                    //è‹¥ä¸æƒ³å½±å“ï¼Œå¯ä»¥è€ƒè™‘åŠ ä¸ªboolé€‰é¡¹è¡¥å¿æ‰ï¼ˆæš‚æ— æ­¤éœ€æ±‚ï¼‰ã€‚
                     float distanceFromContentLeft = cell.anchoredPosition.x;
-                    //Cell¾àÀëViewport×ó±ß½çµÄÎ»ÒÆ£¨ÏòÓÒÎªÕı·½Ïò£©
+                    //Cellè·ç¦»Viewportå·¦è¾¹ç•Œçš„ä½ç§»ï¼ˆå‘å³ä¸ºæ­£æ–¹å‘ï¼‰
                     float distanceFromViewportLeft = distanceFromContentLeft + m_Content.anchoredPosition.x - (m_Content.rect.width - m_Viewport.rect.width);
-                    //Cell¾àÀëViewportÖĞĞÄµÄÎ»ÒÆ£¨ÏòÓÒÎªÕı·½Ïò£©£¨½á¹û>0Ê±£¬ÔÚÖĞĞÄµÄÓÒ±ß£©
+                    //Cellè·ç¦»Viewportä¸­å¿ƒçš„ä½ç§»ï¼ˆå‘å³ä¸ºæ­£æ–¹å‘ï¼‰ï¼ˆç»“æœ>0æ—¶ï¼Œåœ¨ä¸­å¿ƒçš„å³è¾¹ï¼‰
                     distanceToViewCenter = distanceFromViewportLeft - m_Viewport.rect.width / 2f;
                 }
             }
@@ -235,23 +235,23 @@ namespace NRatel
             {
                 if (m_StartCorner == StartCorner.LeftOrUpper)
                 {
-                    //Cell¾àÀëContentÉÏ±ß½çµÄ¾àÀë£¨ÏòÉÏÎªÕı·½Ïò£©
-                    //×¢Òâ£¬ÕâÀï CellµÄ pivot Ó°Ïì¡°CellËù´¦ViewportÖĞĞÄ¡±µÄ¸ÅÄî£¬
-                    //Èô²»ÏëÓ°Ïì£¬¿ÉÒÔ¿¼ÂÇ¼Ó¸öboolÑ¡Ïî²¹³¥µô£¨ÔİÎŞ´ËĞèÇó£©¡£
+                    //Cellè·ç¦»Contentä¸Šè¾¹ç•Œçš„è·ç¦»ï¼ˆå‘ä¸Šä¸ºæ­£æ–¹å‘ï¼‰
+                    //æ³¨æ„ï¼Œè¿™é‡Œ Cellçš„ pivot å½±å“â€œCellæ‰€å¤„Viewportä¸­å¿ƒâ€çš„æ¦‚å¿µï¼Œ
+                    //è‹¥ä¸æƒ³å½±å“ï¼Œå¯ä»¥è€ƒè™‘åŠ ä¸ªboolé€‰é¡¹è¡¥å¿æ‰ï¼ˆæš‚æ— æ­¤éœ€æ±‚ï¼‰ã€‚
                     float distanceFromContentUp = cell.anchoredPosition.y;
-                    //Cell¾àÀëViewportÉÏ±ß½çµÄ¾àÀë£¨ÏòÉÏÎªÕı·½Ïò£©
+                    //Cellè·ç¦»Viewportä¸Šè¾¹ç•Œçš„è·ç¦»ï¼ˆå‘ä¸Šä¸ºæ­£æ–¹å‘ï¼‰
                     float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y;
-                    //Cell¾àÀëViewportÖĞĞÄµÄ¾àÀë£¨ÏòÉÏÎªÕı·½Ïò£©£¨½á¹û0Ê±£¬ÔÚÖĞĞÄµÄÉÏ±ß£©
+                    //Cellè·ç¦»Viewportä¸­å¿ƒçš„è·ç¦»ï¼ˆå‘ä¸Šä¸ºæ­£æ–¹å‘ï¼‰ï¼ˆç»“æœ0æ—¶ï¼Œåœ¨ä¸­å¿ƒçš„ä¸Šè¾¹ï¼‰
                     distanceToViewCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
                 }
                 else
                 {
-                    //Cell¾àÀëContentÏÂ±ß½çµÄ¾àÀë£¨ÏòÉÏÎªÕı·½Ïò£©
-                    //×¢Òâ£¬ÕâÀï CellµÄ pivot Ó°Ïì"CellËù´¦ViewportÖĞĞÄ"µÄ¸ÅÄî
+                    //Cellè·ç¦»Contentä¸‹è¾¹ç•Œçš„è·ç¦»ï¼ˆå‘ä¸Šä¸ºæ­£æ–¹å‘ï¼‰
+                    //æ³¨æ„ï¼Œè¿™é‡Œ Cellçš„ pivot å½±å“"Cellæ‰€å¤„Viewportä¸­å¿ƒ"çš„æ¦‚å¿µ
                     float distanceFromContentUp = cell.anchoredPosition.y;
-                    //Cell¾àÀëViewportÏÂ±ß½çµÄ¾àÀë£¨ÏòÉÏÎªÕı·½Ïò£©
+                    //Cellè·ç¦»Viewportä¸‹è¾¹ç•Œçš„è·ç¦»ï¼ˆå‘ä¸Šä¸ºæ­£æ–¹å‘ï¼‰
                     float distanceFromViewportUp = distanceFromContentUp + m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height);
-                    //Cell¾àÀëViewportÖĞĞÄµÄ¾àÀë£¨ÏòÉÏÎªÕı·½Ïò£©£¨½á¹û0Ê±£¬ÔÚÖĞĞÄµÄÉÏ±ß£©
+                    //Cellè·ç¦»Viewportä¸­å¿ƒçš„è·ç¦»ï¼ˆå‘ä¸Šä¸ºæ­£æ–¹å‘ï¼‰ï¼ˆç»“æœ0æ—¶ï¼Œåœ¨ä¸­å¿ƒçš„ä¸Šè¾¹ï¼‰
                     distanceToViewCenter = distanceFromViewportUp + m_Viewport.rect.height / 2f;
                 }
             }
@@ -277,35 +277,35 @@ namespace NRatel
 
         private IEnumerator CarouselRoutine()
         {
-            // µÈ´ıÂÖ²¥¼ä¸ô
+            // ç­‰å¾…è½®æ’­é—´éš”
             yield return new WaitForSeconds(m_CarouselInterval);
 
-            //Ò³¿í/¸ß
+            //é¡µå®½/é«˜
             float pageSize = m_MovementAxis == MovementAxis.Horizontal ? m_CellRect.width + spacing.x : m_CellRect.height + spacing.y;
 
-            //·­Ò³·½Ïò
+            //ç¿»é¡µæ–¹å‘
             int rawTurnDirection = m_MovementAxis == MovementAxis.Horizontal ? (m_StartCorner == StartCorner.LeftOrUpper ? -1 : 1) : (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1);
 
-            //ÊÜ·­×ª²ÎÊıÓ°ÏìºóµÄ·­Ò³·½Ïò
+            //å—ç¿»è½¬å‚æ•°å½±å“åçš„ç¿»é¡µæ–¹å‘
             int turnDirection = rawTurnDirection * (m_Reverse ? -1 : 1);
 
-            // ¼ÆËã¼Æ»®ÒÆ¶¯¾àÀë ºÍ ËÙ¶È±¶ÂÊ
+            // è®¡ç®—è®¡åˆ’ç§»åŠ¨è·ç¦» å’Œ é€Ÿåº¦å€ç‡
             float planMoveDistance;
             float speedRate = 1f;
             if (m_Loop)
             {
-                // ¿ªÆôÑ­»·Ê±
-                // ×ÜÊÇÏòºó·­µ½ÏÂÒ»Ò³£¬µ«ÊÇÒª×¢Òâ conentÎ»ÖÃ»á±»ÖØÖÃ
-                // Õâ¾ÍÒâÎ¶×Å£¬Âß¼­²»ÄÜÊÇ¡°ÒÆ¶¯µ½1Ò³ºóµÄÄ¿±êÎ»ÖÃ¡±£¬¶øÊÇ¡°Î»ÖÃÔö¼ÓÁ¿Îª1Ò³¡±¡£
-                // ×¢ÒâÕâÀïµÄÕı¸º·ûºÅ£¬¾ö¶¨ÁË·­Ò³·½Ïò
+                // å¼€å¯å¾ªç¯æ—¶
+                // æ€»æ˜¯å‘åç¿»åˆ°ä¸‹ä¸€é¡µï¼Œä½†æ˜¯è¦æ³¨æ„ conentä½ç½®ä¼šè¢«é‡ç½®
+                // è¿™å°±æ„å‘³ç€ï¼Œé€»è¾‘ä¸èƒ½æ˜¯â€œç§»åŠ¨åˆ°1é¡µåçš„ç›®æ ‡ä½ç½®â€ï¼Œè€Œæ˜¯â€œä½ç½®å¢åŠ é‡ä¸º1é¡µâ€ã€‚
+                // æ³¨æ„è¿™é‡Œçš„æ­£è´Ÿç¬¦å·ï¼Œå†³å®šäº†ç¿»é¡µæ–¹å‘
                 planMoveDistance = pageSize * turnDirection;
             }
             else
             {
-                // Î´¿ªÆôÑ­»·Ê±
-                // Èôµ±Ç°´¦ÓÚ×îºóÒ»Ò³£¬ÔòÑ¸ËÙ·­»Øµ½µÚÒ»Ò³
-                // Èôµ±Ç°´¦ÓÚ·Ç×îºóÒ»Ò³£¬Ôò·­µ½ÏÂÒ»Ò³
-                bool isTheLastPage = !m_Reverse ? m_CurPage == m_CellCount - 1 : m_CurPage == 0;    //ÊÇ·ñÒÑ´¦ÓÚ·­Ò³·½ÏòµÄ×îºóÒ»Ò³
+                // æœªå¼€å¯å¾ªç¯æ—¶
+                // è‹¥å½“å‰å¤„äºæœ€åä¸€é¡µï¼Œåˆ™è¿…é€Ÿç¿»å›åˆ°ç¬¬ä¸€é¡µ
+                // è‹¥å½“å‰å¤„äºéæœ€åä¸€é¡µï¼Œåˆ™ç¿»åˆ°ä¸‹ä¸€é¡µ
+                bool isTheLastPage = !m_Reverse ? m_CurPage == m_CellCount - 1 : m_CurPage == 0;    //æ˜¯å¦å·²å¤„äºç¿»é¡µæ–¹å‘çš„æœ€åä¸€é¡µ
                 if (isTheLastPage)
                 {
                     planMoveDistance = pageSize * (m_CellCount - 1) * -turnDirection;
@@ -317,13 +317,13 @@ namespace NRatel
                 }
             }
 
-            //Debug.Log($"¡¾CarouselRoutine¡¿Carousel¿ªÊ¼, ÒÆ¶¯¾àÀë: {planMoveDistanceX}");
+            //Debug.Log($"ã€CarouselRoutineã€‘Carouselå¼€å§‹, ç§»åŠ¨è·ç¦»: {planMoveDistanceX}");
 
             yield return DoMoveContentPosOnMovementAxis(planMoveDistance, m_CarouselSpeed * speedRate);
 
-            //Debug.Log($"¡¾CarouselRoutine¡¿Carousel ½áÊø");
+            //Debug.Log($"ã€CarouselRoutineã€‘Carousel ç»“æŸ");
 
-            //Ö´ĞĞ¶ÔÆë£¬¶ÔÆë½áÊøºó½«¼ÌĞøÆô¶¯ÂÖ²¥
+            //æ‰§è¡Œå¯¹é½ï¼Œå¯¹é½ç»“æŸåå°†ç»§ç»­å¯åŠ¨è½®æ’­
             TryStartSnap();
         }
         #endregion
@@ -331,27 +331,27 @@ namespace NRatel
         private float m_MovedDistance = 0f;
         private IEnumerator DoMoveContentPosOnMovementAxis(float planMoveDistance, float speed)
         {
-            //ÖØÖÃÀÛ¼Æ×Ö¶Î
+            //é‡ç½®ç´¯è®¡å­—æ®µ
             m_MovedDistance = 0f;
 
-            //ÏÈÍ£Ö¹ÈÎºÎ¹ßĞÔËÙ¶È
+            //å…ˆåœæ­¢ä»»ä½•æƒ¯æ€§é€Ÿåº¦
             StopMovement();
 
-            //ËÙ¶È±êÁ¿×ªÏòÁ¿
+            //é€Ÿåº¦æ ‡é‡è½¬å‘é‡
             float velocity = speed * Mathf.Sign(planMoveDistance);
 
-            //×ø±êÖáÕı·½Ïò
+            //åæ ‡è½´æ­£æ–¹å‘
             Vector2 axisDirection = m_MovementAxis == MovementAxis.Horizontal ? Vector2.right : Vector2.up;
 
-            // Æ½»¬Ôö¼ÓÎ»ÒÆ
+            // å¹³æ»‘å¢åŠ ä½ç§»
             while (Mathf.Abs(m_MovedDistance) < Mathf.Abs(planMoveDistance))
             {
-                float addDistance = velocity * Time.deltaTime;  //ÈôÒªºöÂÔÊ±¼äËõ·Å£¬¸ÄÓÃ Time.unscaledDeltaTime;
+                float addDistance = velocity * Time.deltaTime;  //è‹¥è¦å¿½ç•¥æ—¶é—´ç¼©æ”¾ï¼Œæ”¹ç”¨ Time.unscaledDeltaTime;
 
-                // ¼ì²éÊÇ·ñ»á³¬¹ıÄ¿±ê¾àÀë
+                // æ£€æŸ¥æ˜¯å¦ä¼šè¶…è¿‡ç›®æ ‡è·ç¦»
                 if (Mathf.Abs(m_MovedDistance + addDistance) >= Mathf.Abs(planMoveDistance))
                 {
-                    // Ö±½ÓÉèÖÃµ½¾«È·Î»ÖÃ£¬²¢break
+                    // ç›´æ¥è®¾ç½®åˆ°ç²¾ç¡®ä½ç½®ï¼Œå¹¶break
                     float remainingDistance = planMoveDistance - m_MovedDistance;
                     m_Content.anchoredPosition += (axisDirection * remainingDistance);
                     m_MovedDistance = planMoveDistance;

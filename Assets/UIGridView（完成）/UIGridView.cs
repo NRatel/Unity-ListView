@@ -1,4 +1,4 @@
-﻿//https://github.com/NRatel/Unity-ListView
+//https://github.com/NRatel/Unity-ListView
 
 using System;
 using System.Collections;
