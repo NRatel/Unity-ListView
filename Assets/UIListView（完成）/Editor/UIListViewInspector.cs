@@ -9,7 +9,7 @@ namespace NRatel
     {
         SerializedProperty m_Padding;
         SerializedProperty m_Spacing;
-        SerializedProperty m_StartCorner;
+        SerializedProperty m_StartSide;
         SerializedProperty m_ChildAlignment;
         SerializedProperty m_Loop;
 
@@ -19,7 +19,7 @@ namespace NRatel
             
             m_Padding = serializedObject.FindProperty("m_Padding");
             m_Spacing = serializedObject.FindProperty("m_Spacing");
-            m_StartCorner = serializedObject.FindProperty("m_StartCorner");
+            m_StartSide = serializedObject.FindProperty("m_StartSide");
             m_ChildAlignment = serializedObject.FindProperty("m_ChildAlignment");
             m_Loop = serializedObject.FindProperty("m_Loop");
         }
@@ -60,7 +60,7 @@ namespace NRatel
             string[] horizontalStartCornerOptions = { "Left", "Right" };
             string[] verticalStartCornerOptions = { "Upper", "Lower" };
             string[] startCornerOptions = m_MovementAxis.enumValueIndex == 0 ? horizontalStartCornerOptions : verticalStartCornerOptions;
-            m_StartCorner.enumValueIndex = EditorGUILayout.Popup("Start Corner", m_StartCorner.enumValueIndex, startCornerOptions);
+            m_StartSide.enumValueIndex = EditorGUILayout.Popup("Start Side", m_StartSide.enumValueIndex, startCornerOptions);
             
             string[] horizontalAlignmentOptions = { "Left", "Center", "Right" };
             string[] verticalAlignmentOptions = { "Upper", "Middle", "Lower" };

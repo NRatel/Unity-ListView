@@ -172,7 +172,7 @@ namespace NRatel
         //获取水平回弹边界
         private (float left, float right) GetHorizontalElasticBounds()
         {
-            return m_StartCorner == StartCorner.LeftOrUpper
+            return m_StartSide == Side.LeftOrUpper
                 ? (0, -(m_Content.rect.width - m_Viewport.rect.width))
                 : (m_Content.rect.width - m_Viewport.rect.width, 0);
         }
@@ -180,7 +180,7 @@ namespace NRatel
         //获取竖直回弹边界
         private (float up, float down) GetVerticalElasticBounds()
         {
-            return m_StartCorner == StartCorner.LeftOrUpper
+            return m_StartSide == Side.LeftOrUpper
                 ? (0, m_Content.rect.height - m_Viewport.rect.height)
                 : (-(m_Content.rect.height - m_Viewport.rect.height), 0);
         }
@@ -208,7 +208,7 @@ namespace NRatel
             float distanceToViewCenter;
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                if (m_StartCorner == StartCorner.LeftOrUpper)
+                if (m_StartSide == Side.LeftOrUpper)
                 {
                     //Cell距离Content左边界的位移（向右为正方向）
                     //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念
@@ -233,7 +233,7 @@ namespace NRatel
             }
             else
             {
-                if (m_StartCorner == StartCorner.LeftOrUpper)
+                if (m_StartSide == Side.LeftOrUpper)
                 {
                     //Cell距离Content上边界的距离（向上为正方向）
                     //注意，这里 Cell的 pivot 影响“Cell所处Viewport中心”的概念，
@@ -284,7 +284,7 @@ namespace NRatel
             float pageSize = m_MovementAxis == MovementAxis.Horizontal ? m_CellRect.width + spacing.x : m_CellRect.height + spacing.y;
 
             //翻页方向
-            int rawTurnDirection = m_MovementAxis == MovementAxis.Horizontal ? (m_StartCorner == StartCorner.LeftOrUpper ? -1 : 1) : (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1);
+            int rawTurnDirection = m_MovementAxis == MovementAxis.Horizontal ? (m_StartSide == Side.LeftOrUpper ? -1 : 1) : (m_StartSide == Side.LeftOrUpper ? 1 : -1);
 
             //受翻转参数影响后的翻页方向
             int turnDirection = rawTurnDirection * (m_Reverse ? -1 : 1);

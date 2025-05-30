@@ -15,7 +15,7 @@ namespace NRatel
     // 2、元素排布轨迹（4*2种，4个延伸方向*2侧）
     public class UIListView : UIScrollRect
     {
-        public enum StartCorner
+        public enum Side
         {
             LeftOrUpper = 0,          //左或上
             RightOrLower = 1,         //右或下
@@ -28,8 +28,8 @@ namespace NRatel
             RightOrLower = 2,
         }
 
-        [SerializeField] protected StartCorner m_StartCorner = StartCorner.LeftOrUpper;
-        public StartCorner startCorner { get { return m_StartCorner; } set { SetProperty(ref m_StartCorner, value); } }
+        [SerializeField] protected Side m_StartSide = Side.LeftOrUpper;
+        public Side startSide { get { return m_StartSide; } set { SetProperty(ref m_StartSide, value); } }
 
         [SerializeField] protected Vector2 m_Spacing = Vector2.zero;
         public Vector2 spacing { get { return m_Spacing; } set { SetProperty(ref m_Spacing, value); } }
@@ -119,11 +119,11 @@ namespace NRatel
                     int sign;
                     if (m_MovementAxis == MovementAxis.Horizontal) 
                     {
-                        sign = (m_StartCorner == StartCorner.LeftOrUpper ? 1 : -1); 
+                        sign = (m_StartSide == Side.LeftOrUpper ? 1 : -1); 
                     }
                     else 
                     {
-                        sign = (m_StartCorner == StartCorner.LeftOrUpper ? -1 : 1); 
+                        sign = (m_StartSide == Side.LeftOrUpper ? -1 : 1); 
                     }
                     return (m_ExpandedContentSizeOnMovementAxis - m_CoreConetontSizeOnMovementAxis) / 2f * sign; 
                 }
@@ -298,17 +298,17 @@ namespace NRatel
             // 根据轴向和起始角落设置锚点、中心点
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
-                m_Content.anchorMin = new Vector2(cornerX, 0);
-                m_Content.anchorMax = new Vector2(cornerX, 1);
-                m_Content.pivot = new Vector2(cornerX, 0.5f);
+                int sideX = (int)m_StartSide % 2;  //0：左， 1右
+                m_Content.anchorMin = new Vector2(sideX, 0);
+                m_Content.anchorMax = new Vector2(sideX, 1);
+                m_Content.pivot = new Vector2(sideX, 0.5f);
             }
             else
             {
-                int cornerY = (int)m_StartCorner % 2;  //0：上， 1下（注意与UIGridView不同）
-                m_Content.anchorMin = new Vector2(0, 1 - cornerY);
-                m_Content.anchorMax = new Vector2(1, 1 - cornerY);
-                m_Content.pivot = new Vector2(0.5f, 1 - cornerY);
+                int sideY = (int)m_StartSide % 2;  //0：上， 1下（注意与UIGridView的Corner计算不同）
+                m_Content.anchorMin = new Vector2(0, 1 - sideY);
+                m_Content.anchorMax = new Vector2(1, 1 - sideY);
+                m_Content.pivot = new Vector2(0.5f, 1 - sideY);
             }
 
             // 位置归0
@@ -476,8 +476,8 @@ namespace NRatel
             float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
             float contentStartPosY = -m_CellStartOffsetOnMovementAxis;    //todo
 
-            int cornerX = (int)m_StartCorner % 2;  //0：左， 1右
-            int cornerY = (int)m_StartCorner % 2;  //0：上， 1下 （注意，不同于 UIGridView）
+            int sideX = (int)m_StartSide % 2;  //0：左， 1右
+            int sideY = (int)m_StartSide % 2;  //0：上， 1下（注意与UIGridView的Corner计算不同）
 
             int outCountFromStart;  //完全滑出起始边界的数量
             int outCountFromEnd;    //完全滑出结束边界的数量
@@ -485,12 +485,12 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 //content起始边界 相对于 viewport起始边界的位移宽度：
-                float outWidthFromStart = (contentStartPosX - m_Content.anchoredPosition.x) * (cornerX == 0 ? 1 : -1);
+                float outWidthFromStart = (contentStartPosX - m_Content.anchoredPosition.x) * (sideX == 0 ? 1 : -1);
                 //content结束边界 相对于 viewport结束边界的位移宽度：
-                float outWidthFromEnd = (contentStartPosX + m_Content.anchoredPosition.x + (m_Content.rect.width - m_Viewport.rect.width) * (cornerX == 0 ? 1 : -1)) * (cornerX == 0 ? 1 : -1);
+                float outWidthFromEnd = (contentStartPosX + m_Content.anchoredPosition.x + (m_Content.rect.width - m_Viewport.rect.width) * (sideX == 0 ? 1 : -1)) * (sideX == 0 ? 1 : -1);
 
-                float startPadding = cornerX == 0 ? padding.left : padding.right;
-                float endPadding = cornerX == 0 ? padding.right : padding.left;
+                float startPadding = sideX == 0 ? padding.left : padding.right;
+                float endPadding = sideX == 0 ? padding.right : padding.left;
 
                 //完全滑出左边界的数量（可为负），要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。（可为负）
                 outCountFromStart = Mathf.FloorToInt((outWidthFromStart - startPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
@@ -500,12 +500,12 @@ namespace NRatel
             else
             {
                 //content起始边界 相对于 viewport起始边界的位移宽度：
-                float outHeightFromStart = (contentStartPosY - m_Content.anchoredPosition.y) * (cornerY == 0 ? -1 : 1);
+                float outHeightFromStart = (contentStartPosY - m_Content.anchoredPosition.y) * (sideY == 0 ? -1 : 1);
                 //content结束边界 相对于 viewport结束边界的位移宽度：
-                float outHeightFromEnd = (contentStartPosY + m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height) * (cornerY == 0 ? -1 : 1)) * (cornerY == 0 ? -1 : 1);
+                float outHeightFromEnd = (contentStartPosY + m_Content.anchoredPosition.y + (m_Content.rect.height - m_Viewport.rect.height) * (sideY == 0 ? -1 : 1)) * (sideY == 0 ? -1 : 1);
 
-                float startPadding = cornerY == 0 ? padding.top : padding.bottom;
-                float endPadding = cornerY == 0 ? padding.bottom : padding.top;
+                float startPadding = sideY == 0 ? padding.top : padding.bottom;
+                float endPadding = sideY == 0 ? padding.bottom : padding.top;
 
                 //完全滑出上边界的数量（可为负），要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
                 outCountFromStart = Mathf.FloorToInt((outHeightFromStart - startPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
@@ -713,8 +713,8 @@ namespace NRatel
             }
 
             //二、根据起始角落进行转置
-            if (m_MovementAxis == MovementAxis.Horizontal && m_StartCorner == StartCorner.RightOrLower) { posIndexX = m_ActualCellCountX - 1 - posIndexX; }   //如果是从右往左
-            if (m_MovementAxis == MovementAxis.Vertical && m_StartCorner == StartCorner.RightOrLower) { posIndexY = m_ActualCellCountY - 1 - posIndexY; }   //如果是从下往上
+            if (m_MovementAxis == MovementAxis.Horizontal && m_StartSide == Side.RightOrLower) { posIndexX = m_ActualCellCountX - 1 - posIndexX; }   //如果是从右往左
+            if (m_MovementAxis == MovementAxis.Vertical && m_StartSide == Side.RightOrLower) { posIndexY = m_ActualCellCountY - 1 - posIndexY; }   //如果是从下往上
 
             //三、计算坐标
             Vector2 scaleFactor = Vector2.one;  //不考虑元素缩放
