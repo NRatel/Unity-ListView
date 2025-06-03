@@ -473,9 +473,6 @@ namespace NRatel
         //计算应出现的索引、应消失的索引 和 未变的索引
         protected void CalcIndexes()
         {
-            float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
-            float contentStartPosY = -m_CellStartOffsetOnMovementAxis;    //todo
-
             int sideX = (int)m_StartSide % 2;  //0：左， 1右
             int sideY = (int)m_StartSide % 2;  //0：上， 1下（注意与UIGridView的Corner计算不同）
 
@@ -484,6 +481,8 @@ namespace NRatel
 
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
+                float contentStartPosX = -m_CellStartOffsetOnMovementAxis;
+
                 //content起始边界 相对于 viewport起始边界的位移宽度：
                 float outWidthFromStart = (contentStartPosX - m_Content.anchoredPosition.x) * (sideX == 0 ? 1 : -1);
                 //content结束边界 相对于 viewport结束边界的位移宽度：
@@ -499,6 +498,8 @@ namespace NRatel
             }
             else
             {
+                float contentStartPosY = -m_CellStartOffsetOnMovementAxis;
+
                 //content起始边界 相对于 viewport起始边界的位移宽度：
                 float outHeightFromStart = (contentStartPosY - m_Content.anchoredPosition.y) * (sideY == 0 ? -1 : 1);
                 //content结束边界 相对于 viewport结束边界的位移宽度：
