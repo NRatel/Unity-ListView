@@ -261,7 +261,7 @@ namespace NRatel
         /// 索引对应Cell跳转到0索引Cell的位置
         /// </summary>
         /// <param name="index">目标索引</param>
-        /// <param name="immediately">是否立刻跳转</param>
+        /// <param name="immediately">是否立刻生效，否则要等到LateUpdate中计算</param>
         public void JumpTo(int index, bool immediately = false)
         {
             Vector2 cellPos0 = GetCellPos(0);
