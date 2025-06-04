@@ -21,3 +21,12 @@ ListView效果预览：
 GridView：  
 ![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/grid1.gif)
 
+首尾无限循环：  
+![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/loop.gif)
+
+PageView1：  
+![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/page1.gif)
+
+PageView2：  
+![alt text](https://github.com/NRatel/Unity-ListView/blob/master/demonstration/page2.gif)
+
