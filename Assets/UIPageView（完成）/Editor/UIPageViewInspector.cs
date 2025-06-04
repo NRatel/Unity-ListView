@@ -11,7 +11,7 @@ namespace NRatel
 
         SerializedProperty m_Snap;
         SerializedProperty m_SnapSpeed;
-        SerializedProperty m_SnapWaitScrollSpeed;
+        SerializedProperty m_SnapWaitInertiaSpeed;
 
         SerializedProperty m_Carousel;
         SerializedProperty m_CarouselInterval;
@@ -26,7 +26,7 @@ namespace NRatel
 
             m_Snap = serializedObject.FindProperty("m_Snap");
             m_SnapSpeed = serializedObject.FindProperty("m_SnapSpeed");
-            m_SnapWaitScrollSpeed = serializedObject.FindProperty("m_SnapWaitScrollSpeed");
+            m_SnapWaitInertiaSpeed = serializedObject.FindProperty("m_SnapWaitInertiaSpeed");
 
             m_Carousel = serializedObject.FindProperty("m_Carousel");
             m_CarouselInterval = serializedObject.FindProperty("m_CarouselInterval");
@@ -55,33 +55,35 @@ namespace NRatel
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
 
-            // ������ҳ����
-            EditorGUILayout.PropertyField(m_CellOccupyPage, new GUIContent("Cell Occupy Page", "Each cell occupies a full page"));
+            // 基础分页属性
+            EditorGUILayout.PropertyField(m_CellOccupyPage, new GUIContent("Cell Occupy Page", "使每个Cell占用一整页（viewport在滑动方向的大小）"));
 
             EditorGUILayout.Space();
 
-            // ��ҳ����Ч��
+            // 分页吸附效果
             EditorGUILayout.LabelField("Snap", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(m_Snap, new GUIContent("Auto Snap", "Enable automatic page snap"));
+            EditorGUI.BeginDisabledGroup(true); //禁止交互
+            EditorGUILayout.PropertyField(m_Snap, new GUIContent("Auto Snap", "启用自动吸附/对齐，暂固定为勾选，否则将退化为 UIListView"));
+            EditorGUI.EndDisabledGroup();
             if (m_Snap.boolValue)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(m_SnapSpeed, new GUIContent("Snap Speed", "Page switching animation speed"));
-                EditorGUILayout.PropertyField(m_SnapWaitScrollSpeed, new GUIContent("Wait Scroll Speed", "Minimum drag speed to trigger page turn"));
+                EditorGUILayout.PropertyField(m_SnapSpeed, new GUIContent("Snap Speed", "吸附/对齐速度"));
+                EditorGUILayout.PropertyField(m_SnapWaitInertiaSpeed, new GUIContent("Wait Inertia Speed", "开启惯性时，等待基本停稳才开始Snap"));
                 EditorGUI.indentLevel--;
             }
 
             EditorGUILayout.Space();
 
-            // �ֲ�����
+            // 轮播功能
             EditorGUILayout.LabelField("Carousel", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(m_Carousel, new GUIContent("Auto Carousel", "Enable automatic page rotation"));
+            EditorGUILayout.PropertyField(m_Carousel, new GUIContent("Auto Carousel", "启用自动轮播"));
             if (m_Carousel.boolValue)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.PropertyField(m_CarouselInterval, new GUIContent("Interval", "Time between page switches (seconds)"));
-                EditorGUILayout.PropertyField(m_CarouselSpeed, new GUIContent("Switch Speed", "Carousel animation speed"));
-                EditorGUILayout.PropertyField(m_Reverse, new GUIContent("Reverse", "Reverse carouse direction"));
+                EditorGUILayout.PropertyField(m_CarouselInterval, new GUIContent("Interval", "轮播间隔 (秒)"));
+                EditorGUILayout.PropertyField(m_CarouselSpeed, new GUIContent("Switch Speed", "轮播翻页速度"));
+                EditorGUILayout.PropertyField(m_Reverse, new GUIContent("Reverse", "反向轮播"));
                 
                 EditorGUI.indentLevel--;
             }

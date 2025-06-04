@@ -12,7 +12,7 @@ namespace NRatel
 
         [SerializeField] private bool m_Snap = false;                     //开启Snap？
         [SerializeField] private float m_SnapSpeed = 500f;                //Snap速度
-        [SerializeField] private float m_SnapWaitScrollSpeed = 50f;       //开启惯性时，等待基本停稳才开始Snap
+        [SerializeField] private float m_SnapWaitInertiaSpeed = 50f;      //开启惯性时，等待基本停稳才开始Snap
 
         [SerializeField] private bool m_Carousel = false;                 //开启轮播？
         [SerializeField] private float m_CarouselInterval = 3f;           //轮播启动间隔
@@ -181,7 +181,7 @@ namespace NRatel
             {
                 //Debug.Log("scrollRect.velocity: " + scrollRect.velocity);
                 float velocityOnMoveAxis = m_MovementAxis == MovementAxis.Horizontal ? velocity.x : velocity.y;
-                return Mathf.Abs(velocityOnMoveAxis) < m_SnapWaitScrollSpeed;
+                return Mathf.Abs(velocityOnMoveAxis) < m_SnapWaitInertiaSpeed;
             });
         }
 
