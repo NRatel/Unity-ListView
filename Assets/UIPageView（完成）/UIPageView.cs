@@ -29,7 +29,7 @@ namespace NRatel
         //调整边距（注意只调整滑动方向）
         protected override void FixPadding()
         {
-            if (m_Loop) 
+            if (m_Loop)
             {
                 base.FixPadding();
             }
@@ -38,13 +38,13 @@ namespace NRatel
                 if (m_MovementAxis == MovementAxis.Horizontal)
                 {
                     int fixedPaddingX = Mathf.FloorToInt((m_Viewport.rect.width - m_CellRect.width) / 2);
-                    padding.left = padding.right = fixedPaddingX; 
+                    padding.left = padding.right = fixedPaddingX;
                 }
-                else 
+                else
                 {
                     int fixedPaddingY = Mathf.FloorToInt((m_Viewport.rect.height - m_CellRect.height) / 2);
-                    padding.top = padding.bottom = fixedPaddingY; 
-                }  
+                    padding.top = padding.bottom = fixedPaddingY;
+                }
             }
         }
 
@@ -56,12 +56,12 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 float fixedSpacingX = m_Viewport.rect.width - m_CellRect.width;
-                spacing = new Vector2(fixedSpacingX, spacing.y); 
+                spacing = new Vector2(fixedSpacingX, spacing.y);
             }
             else
             {
                 float fixedSpacingY = m_Viewport.rect.height - m_CellRect.height;
-                spacing = new Vector2(spacing.x, fixedSpacingY); 
+                spacing = new Vector2(spacing.x, fixedSpacingY);
             }
         }
 
@@ -125,11 +125,11 @@ namespace NRatel
             // （注意 loop 会重置位置，因此不能“直接计算出目标位置，然后插值” 而是要“每帧持续增加偏移，直到加够量”）
             float planMoveDistance = -closestCell.distance;
 
-            //Debug.Log($"【SnapRoutine】Snap 开始，目标索引:{minDistanceIndex}, 移动距离: {planMoveDistanceX}");
+            Debug.Log($"【SnapRoutine】Snap 开始，目标索引:{closestCell.index}, 计划移动距离: {planMoveDistance}");
 
             yield return DoMoveContentPosOnMovementAxis(planMoveDistance, m_SnapSpeed);
 
-            //Debug.Log($"【SnapRoutine】Snap 结束");
+            Debug.Log($"【SnapRoutine】Snap 结束");
 
             m_CurPage = closestCell.index;
             onSnapCompleted?.Invoke();
@@ -146,14 +146,30 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 var bounds = GetHorizontalElasticBounds();
-                if (pos.x > bounds.left) yield return WaitUntil(() => pos.x <= bounds.left + threshold);
-                if (pos.x < bounds.right) yield return WaitUntil(() => pos.x >= bounds.right - threshold);
+                if (pos.x > bounds.left) 
+                {
+                    yield return WaitUntil(() => { return m_Content.anchoredPosition.x <= bounds.left + threshold; });
+                    m_Content.anchoredPosition = new Vector2(bounds.left, pos.y);
+                }
+                if (pos.x < bounds.right) 
+                {
+                    yield return WaitUntil(() => { return m_Content.anchoredPosition.x >= bounds.right - threshold; });
+                    m_Content.anchoredPosition = new Vector2(bounds.right, pos.y);
+                }
             }
             else
             {
                 var bounds = GetVerticalElasticBounds();
-                if (pos.y < bounds.up) yield return WaitUntil(() => pos.y <= bounds.up + threshold);
-                if (pos.y > bounds.down) yield return WaitUntil(() => pos.y >= bounds.down - threshold);
+                if (pos.y < bounds.up)
+                {
+                    yield return WaitUntil(() => { return m_Content.anchoredPosition.y >= bounds.up - threshold; });
+                    m_Content.anchoredPosition = new Vector2(pos.x, bounds.up);
+                }
+                if (pos.y > bounds.down)
+                {
+                    yield return WaitUntil(() => { return m_Content.anchoredPosition.y <= bounds.down + threshold; });
+                    m_Content.anchoredPosition = new Vector2(pos.x, bounds.down);
+                }
             }
         }
 
@@ -311,7 +327,7 @@ namespace NRatel
                     planMoveDistance = pageSize * (m_CellCount - 1) * -turnDirection;
                     speedRate = m_CellCount - 1;
                 }
-                else 
+                else
                 {
                     planMoveDistance = pageSize * turnDirection;
                 }
