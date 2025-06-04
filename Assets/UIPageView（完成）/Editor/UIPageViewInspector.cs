@@ -53,7 +53,7 @@ namespace NRatel
         private void DrawPage()
         {
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Basic", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Type", EditorStyles.boldLabel);
 
             // 基础分页属性
             EditorGUILayout.PropertyField(m_CellOccupyPage, new GUIContent("Cell Occupy Page", "使每个Cell占用一整页（viewport在滑动方向的大小）"));
@@ -63,13 +63,13 @@ namespace NRatel
             // 分页吸附效果
             EditorGUILayout.LabelField("Snap", EditorStyles.boldLabel);
             EditorGUI.BeginDisabledGroup(true); //禁止交互
-            EditorGUILayout.PropertyField(m_Snap, new GUIContent("Auto Snap", "启用自动吸附/对齐，暂固定为勾选，否则将退化为 UIListView"));
+            EditorGUILayout.PropertyField(m_Snap, new GUIContent("Auto Snap", "启用自动吸附/对齐，暂固定为勾选，否则将退化为 ListView"));
             EditorGUI.EndDisabledGroup();
             if (m_Snap.boolValue)
             {
                 EditorGUI.indentLevel++;
                 EditorGUILayout.PropertyField(m_SnapSpeed, new GUIContent("Snap Speed", "吸附/对齐速度"));
-                EditorGUILayout.PropertyField(m_SnapWaitInertiaSpeed, new GUIContent("Wait Inertia Speed", "开启惯性时，等待基本停稳才开始Snap"));
+                EditorGUILayout.PropertyField(m_SnapWaitInertiaSpeed, new GUIContent("Wait Inertia Speed", "开启惯性时，等待基本停稳才开始Snap，停稳阈值"));
                 EditorGUI.indentLevel--;
             }
 

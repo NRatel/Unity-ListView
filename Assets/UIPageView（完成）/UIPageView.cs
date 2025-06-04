@@ -67,7 +67,7 @@ namespace NRatel
 
         protected override void OnStartShow()
         {
-            if (m_CellCount > 0) { TryStartCarousel(); }
+            if (m_CellCount > 0) { TryStartSnap(); }
         }
         #endregion
 
