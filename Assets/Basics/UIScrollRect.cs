@@ -252,7 +252,7 @@ namespace NRatel
             if (eventData.button != PointerEventData.InputButton.Left)
                 return;
 
-            Debug.Log($"OnEndDrag Time.frameCount: {Time.frameCount}");
+            //Debug.Log($"OnEndDrag Time.frameCount: {Time.frameCount}");
             m_Dragging = false;
         }
 
