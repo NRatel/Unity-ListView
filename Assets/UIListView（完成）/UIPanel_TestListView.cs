@@ -48,8 +48,13 @@ public class UIPanel_TestListView : MonoBehaviour
 
     void StartShow()
     {
+        //m_UIListView.Init(m_CellRTTemplate, OnCreateCell, OnShowCell);
+        //m_UIListView.StartShow(m_DataList.Count, false);
+
         m_UIListView.Init(m_CellRTTemplate, OnCreateCell, OnShowCell);
-        m_UIListView.StartShow(m_DataList.Count, false);
+        var count = Random.Range(1, m_DataList.Count);
+        Debug.LogWarning(count);
+        m_UIListView.StartShow(count, false);
     }
 
     private RectTransform OnCreateCell(int index)

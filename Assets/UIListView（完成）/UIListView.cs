@@ -69,7 +69,7 @@ namespace NRatel
 
         #region ForLoop
         //核心内容大小（滑动轴方向）
-        protected float m_CoreConetontSizeOnMovementAxis 
+        protected float m_CoreConetontSizeOnMovementAxis
         {
             get
             {
@@ -81,11 +81,11 @@ namespace NRatel
                 {
                     return m_CellRect.height * m_CellCount + spacing.y * (m_CellCount - 1);
                 }
-            } 
+            }
         }
 
         //开启loop时，重置大小（滑动轴方向）
-        protected float m_LoopResetSizeOnMovementAxis 
+        protected float m_LoopResetSizeOnMovementAxis
         {
             get
             {
@@ -93,45 +93,45 @@ namespace NRatel
                 {
                     return (m_CoreConetontSizeOnMovementAxis + spacing.x) * Mathf.CeilToInt(m_Viewport.rect.width / m_CoreConetontSizeOnMovementAxis);
                 }
-                else 
+                else
                 {
                     return (m_CoreConetontSizeOnMovementAxis + spacing.y) * Mathf.CeilToInt(m_Viewport.rect.height / m_CoreConetontSizeOnMovementAxis);
                 }
-            } 
+            }
         }
 
         //开启loop时，扩展后宽度
-        protected float m_ExpandedContentSizeOnMovementAxis 
+        protected float m_ExpandedContentSizeOnMovementAxis
         {
-            get 
+            get
             {
                 return m_CoreConetontSizeOnMovementAxis + m_LoopResetSizeOnMovementAxis * 4;
-            } 
+            }
         }
 
         //开启loop时，Cell在Content的滑动轴上的起始位置偏移
-        protected float m_CellStartOffsetOnMovementAxis 
+        protected float m_CellStartOffsetOnMovementAxis
         {
-            get 
+            get
             {
-                if (m_Loop) 
+                if (m_Loop)
                 {
                     int sign;
-                    if (m_MovementAxis == MovementAxis.Horizontal) 
+                    if (m_MovementAxis == MovementAxis.Horizontal)
                     {
-                        sign = (m_StartSide == Side.LeftOrUpper ? 1 : -1); 
+                        sign = (m_StartSide == Side.LeftOrUpper ? 1 : -1);
                     }
-                    else 
+                    else
                     {
-                        sign = (m_StartSide == Side.LeftOrUpper ? -1 : 1); 
+                        sign = (m_StartSide == Side.LeftOrUpper ? -1 : 1);
                     }
-                    return (m_ExpandedContentSizeOnMovementAxis - m_CoreConetontSizeOnMovementAxis) / 2f * sign; 
+                    return (m_ExpandedContentSizeOnMovementAxis - m_CoreConetontSizeOnMovementAxis) / 2f * sign;
                 }
-                else 
+                else
                 {
-                    return 0f; 
+                    return 0f;
                 }
-            } 
+            }
         }
         #endregion
 
@@ -325,7 +325,7 @@ namespace NRatel
         }
 
         //调整边距
-        protected virtual void FixPadding() 
+        protected virtual void FixPadding()
         {
             if (!m_Loop) { return; }
 
@@ -380,14 +380,14 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 m_CellStartOffset = new Vector2(
-                    padding.left + Mathf.Abs(m_CellStartOffsetOnMovementAxis), 
+                    padding.left + Mathf.Abs(m_CellStartOffsetOnMovementAxis),
                     GetCellStartOffset((int)MovementAxis.Vertical, m_RequiredSpace.y)
                 );
             }
             else
             {
                 m_CellStartOffset = new Vector2(
-                    GetCellStartOffset((int)MovementAxis.Horizontal, m_RequiredSpace.x), 
+                    GetCellStartOffset((int)MovementAxis.Horizontal, m_RequiredSpace.x),
                     padding.top + Mathf.Abs(m_CellStartOffsetOnMovementAxis)
                 );
             }
@@ -446,7 +446,7 @@ namespace NRatel
                     //Debug.Log($"1111111111111 Time.frameCount: {Time.frameCount}, m_Draging: {m_Dragging}, m_Content.anchoredPosition.x: {m_Content.anchoredPosition.x}, m_PrevPosition.x: {m_PrevPosition.x}");
                 }
             }
-            else 
+            else
             {
                 float contentStartPosY = -m_CellStartOffsetOnMovementAxis;
                 float curContentPosY = m_Content.anchoredPosition.y;
@@ -522,23 +522,9 @@ namespace NRatel
 
             for (int index = startIndex; index <= endIndex; index++)
             {
+                if (!IsValidIndex(index)) { continue; }
                 m_NewIndexes.Add(index);
             }
-
-            //新旧索引列表输出调试
-            string Str1 = "";
-            foreach (int index in m_NewIndexes)
-            {
-                Str1 += index + ",";
-            }
-            string Str2 = "";
-            foreach (int index in m_OldIndexes)
-            {
-                Str2 += index + ",";
-            }
-            //Debug.Log("m_NewIndexes: " + Str1);
-            //Debug.Log("m_OldIndexes: " + Str2);
-            //Debug.Log("-------------------------");
 
             //找出出现的、消失的和未变的
             //出现的：在新列表中，但不在老列表中。
@@ -547,7 +533,6 @@ namespace NRatel
             {
                 if (m_OldIndexes.IndexOf(index) < 0)
                 {
-                    //Debug.Log("出现：" + index);
                     m_AppearIndexes.Add(index);
                 }
             }
@@ -558,7 +543,6 @@ namespace NRatel
             {
                 if (m_NewIndexes.IndexOf(index) < 0)
                 {
-                    //Debug.Log("消失：" + index);
                     m_DisAppearIndexes.Add(index);
                 }
             }
@@ -569,10 +553,23 @@ namespace NRatel
             {
                 if (m_OldIndexes.IndexOf(index) >= 0)
                 {
-                    //Debug.Log("保持：" + index);
                     m_StayIndexes.Add(index);
                 }
             }
+
+            ////输出调试
+            //string str1 = "", str2 = "", str3 = "", str4 = "", str5 = "";
+            //foreach (int index in m_NewIndexes) { str1 += index + ","; }
+            //foreach (int index in m_OldIndexes) { str2 += index + ","; }
+            //foreach (int index in m_AppearIndexes) { str3 += index + ","; }
+            //foreach (int index in m_DisAppearIndexes) { str4 += index + ","; }
+            //foreach (int index in m_StayIndexes) { str5 += index + ","; }
+            //Debug.Log("m_NewIndexes: " + str1);
+            //Debug.Log("m_OldIndexes: " + str2);
+            //Debug.Log("m_AppearIndexes: " + str3);
+            //Debug.Log("m_DisAppearIndexes: " + str4);
+            //Debug.Log("m_StayIndexes: " + str5);
+            //Debug.Log("-------------------------");
 
             //用 m_OldIndexes 保存当前帧索引数据。
             //复用新老列表，保证性能良好
@@ -587,10 +584,11 @@ namespace NRatel
         {
             foreach (int index in m_DisAppearIndexes)
             {
-                if (!IsValidIndex(index)) { continue; }
+                //if (!IsValidIndex(index)) { continue; }   //不要限制，列表可能由长变短
                 int validIndex = ConvertIndexToValid(index);
                 //Debug.Log($"DisAppearCells index：{index}， validIndex：{validIndex}");
-                RectTransform cellRT = m_CellRTDict[validIndex];
+                bool exist = m_CellRTDict.TryGetValue(validIndex, out RectTransform cellRT);
+                if (!exist) { continue; }
                 m_CellRTDict.Remove(validIndex);
                 cellRT.gameObject.SetActive(false);
                 m_UnUseCellRTStack.Push(cellRT);
