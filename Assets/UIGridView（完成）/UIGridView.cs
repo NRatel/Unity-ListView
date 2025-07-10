@@ -440,23 +440,9 @@ namespace NRatel
 
             for (int index = startIndex; index <= endIndex; index++)
             {
+                if (!IsValidIndex(index)) { continue; }
                 m_NewIndexes.Add(index);
             }
-
-            ////新旧索引列表输出调试
-            //string Str1 = "";
-            //foreach (int index in newIndexes)
-            //{
-            //    Str1 += index + ",";
-            //}
-            //string Str2 = "";
-            //foreach (int index in oldIndexes)
-            //{
-            //    Str2 += index + ",";
-            //}
-            //Debug.Log("Str1: " + Str1);
-            //Debug.Log("Str2: " + Str2);
-            //Debug.Log("-------------------------");
 
             //找出出现的、消失的和未变的
             //出现的：在新列表中，但不在老列表中。
@@ -465,7 +451,6 @@ namespace NRatel
             {
                 if (m_OldIndexes.IndexOf(index) < 0)
                 {
-                    //Debug.Log("出现：" + index);
                     m_AppearIndexes.Add(index);
                 }
             }
@@ -476,7 +461,6 @@ namespace NRatel
             {
                 if (m_NewIndexes.IndexOf(index) < 0)
                 {
-                    //Debug.Log("消失：" + index);
                     m_DisAppearIndexes.Add(index);
                 }
             }
@@ -487,10 +471,23 @@ namespace NRatel
             {
                 if (m_OldIndexes.IndexOf(index) >= 0)
                 {
-                    //Debug.Log("保持：" + index);
                     m_StayIndexes.Add(index);
                 }
             }
+
+            ////输出调试
+            //string str1 = "", str2 = "", str3 = "", str4 = "", str5 = "";
+            //foreach (int index in m_NewIndexes) { str1 += index + ","; }
+            //foreach (int index in m_OldIndexes) { str2 += index + ","; }
+            //foreach (int index in m_AppearIndexes) { str3 += index + ","; }
+            //foreach (int index in m_DisAppearIndexes) { str4 += index + ","; }
+            //foreach (int index in m_StayIndexes) { str5 += index + ","; }
+            //Debug.Log("m_NewIndexes: " + str1);
+            //Debug.Log("m_OldIndexes: " + str2);
+            //Debug.Log("m_AppearIndexes: " + str3);
+            //Debug.Log("m_DisAppearIndexes: " + str4);
+            //Debug.Log("m_StayIndexes: " + str5);
+            //Debug.Log("-------------------------");
 
             //用 m_OldIndexes 保存当前帧索引数据。
             //复用新老列表，保证性能良好
@@ -501,43 +498,47 @@ namespace NRatel
         }
 
         //该消失的消失
-        private void DisAppearCells()
+        protected void DisAppearCells()
         {
             foreach (int index in m_DisAppearIndexes)
             {
-                if (!IsValidIndex(index)) { continue; }
-
-                RectTransform cellRT = m_CellRTDict[index];
-                m_CellRTDict.Remove(index);
+                //if (!IsValidIndex(index)) { continue; }   //不要限制，列表可能由长变短
+                int validIndex = ConvertIndexToValid(index);
+                //Debug.Log($"DisAppearCells index：{index}， validIndex：{validIndex}");
+                bool exist = m_CellRTDict.TryGetValue(validIndex, out RectTransform cellRT);
+                if (!exist) { continue; }
+                m_CellRTDict.Remove(validIndex);
                 cellRT.gameObject.SetActive(false);
                 m_UnUseCellRTStack.Push(cellRT);
             }
         }
 
         //该出现的出现
-        private void AppearCells()
+        protected void AppearCells()
         {
             foreach (int index in m_AppearIndexes)
             {
                 if (!IsValidIndex(index)) { continue; }
-
-                RectTransform cellRT = GetOrCreateCell(index);
-                m_CellRTDict[index] = cellRT;
-                cellRT.anchoredPosition = GetCellPos(index);        //设置Cell位置
-
                 int validIndex = ConvertIndexToValid(index);
+                //Debug.Log($"AppearCells index：{index}， validIndex：{validIndex}");
+                RectTransform cellRT = GetOrCreateCell(validIndex);
+                m_CellRTDict[validIndex] = cellRT;
+                cellRT.anchoredPosition = GetCellPos(index);        //设置Cell位置
                 m_OnShowCell?.Invoke(validIndex);                   //Cell出现/刷新回调
             }
         }
 
         //刷新保持的
-        private void RefreshStayCells()
+        protected void RefreshStayCells()
         {
             foreach (int index in m_StayIndexes)
             {
-                RectTransform cellRT = m_CellRTDict[index];
+                if (!IsValidIndex(index)) { continue; }
+                int validIndex = ConvertIndexToValid(index);
+                //Debug.Log($"RefreshStayCells index：{index}， validIndex：{validIndex}");
+                RectTransform cellRT = m_CellRTDict[validIndex];
                 cellRT.anchoredPosition = GetCellPos(index);        //设置Cell位置
-                m_OnShowCell?.Invoke(index);                        //Cell出现/刷新回调
+                m_OnShowCell?.Invoke(validIndex);                   //Cell出现/刷新回调
             }
         }
 

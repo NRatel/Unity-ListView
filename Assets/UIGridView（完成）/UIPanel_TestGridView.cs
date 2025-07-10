@@ -49,7 +49,9 @@ public class UIPanel_TestGridView : MonoBehaviour
     void StartShow()
     {
         m_UIGridView.Init(m_CellRTTemplate, OnCreateCell, OnShowCell);
-        m_UIGridView.StartShow(m_DataList.Count, false);
+        var count = Random.Range(1, m_DataList.Count);
+        Debug.LogWarning(count);
+        m_UIGridView.StartShow(count, false);
     }
 
     private RectTransform OnCreateCell(int index)
