@@ -49,7 +49,7 @@ public class UIPanel_TestGridView : MonoBehaviour
     void StartShow()
     {
         m_UIGridView.Init(m_CellRTTemplate, OnCreateCell, OnShowCell);
-        var count = Random.Range(0, 1);
+        var count = Random.Range(0, m_DataList.Count);
         Debug.LogWarning(count);
         m_UIGridView.StartShow(count, false);
     }
