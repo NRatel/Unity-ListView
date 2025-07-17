@@ -409,7 +409,7 @@ namespace NRatel
                 //滑出的列数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
                 int outColFromEnd = Mathf.FloorToInt((outWidthFromEnd - endPadding + spacing.x) / (m_CellRect.size.x + spacing.x));
                 //若最后一列未满，则从总数中减去。
-                int theLastColOffsetCount = m_CellCount % m_ActualCellCountY != 0 ? (m_ActualCellCountY - m_CellCount % m_ActualCellCountY) : 0;
+                int theLastColOffsetCount = (m_CellCount > 0 && m_CellCount % m_ActualCellCountY != 0) ? (m_ActualCellCountY - m_CellCount % m_ActualCellCountY) : 0;
                 outCountFromEnd = outColFromEnd * m_ActualCellCountY - theLastColOffsetCount;
             }
             else
@@ -428,7 +428,7 @@ namespace NRatel
                 //滑出的行数，要向下取整，即尽量认为其没滑出，以保证可视区域内的正确性。
                 int outRowFromEnd = Mathf.FloorToInt((outHeightFromEnd - endPadding + spacing.y) / (m_CellRect.size.y + spacing.y));
                 //若最后一行未满，则从总数中减去。
-                int theLastRowOffsetCount = m_CellCount % m_ActualCellCountX != 0 ? (m_ActualCellCountX - m_CellCount % m_ActualCellCountX) : 0;
+                int theLastRowOffsetCount = (m_CellCount > 0 && m_CellCount % m_ActualCellCountX != 0) ? (m_ActualCellCountX - m_CellCount % m_ActualCellCountX) : 0;
                 outCountFromEnd = outRowFromEnd * m_ActualCellCountX - theLastRowOffsetCount;
             }
 
