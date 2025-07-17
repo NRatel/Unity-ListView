@@ -757,7 +757,7 @@ MonoBehaviour:
     m_Right: 10
     m_Top: 10
     m_Bottom: 10
-  m_Loop: 0
+  m_Loop: 1
 --- !u!1 &1914716810
 GameObject:
   m_ObjectHideFlags: 0

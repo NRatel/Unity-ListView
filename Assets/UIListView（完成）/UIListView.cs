@@ -62,8 +62,8 @@ namespace NRatel
 
         protected Rect m_CellRect;                                                  //Cell Rect（必需）
         protected Vector2 m_CellPivot;                                              //Cell中心点（必需）
-        protected Func<int, RectTransform> m_OnCreateCell;                          //创建Cell的方法（必需）
-        protected Action<int> m_OnShowCell;                                         //展示Cell的方法（出现/刷新时回调）（必需）
+        protected Func<int, int, RectTransform> m_OnCreateCell;                     //创建Cell的方法（必需） （index 和 validIndex 在 开启循环后，可能不同）
+        protected Action<int, int> m_OnShowCell;                                    //展示Cell的方法（出现/刷新时回调）（必需） （index 和 validIndex 在 开启循环后，可能不同）
 
         protected int m_CellCount;                                                  //显示数量
 
@@ -154,16 +154,16 @@ namespace NRatel
         }
 
         //从Cell模板上取rect和pivot进行初始化，并以GameObject.Instantiate实例化Cell模板的方式创建Cell
-        public void Init(RectTransform templateCellRT, Action<int> onShowCell)
+        public void Init(RectTransform templateCellRT, Action<int, int> onShowCell)
         {
             this.m_CellRect = templateCellRT.rect;
             this.m_CellPivot = templateCellRT.pivot;
-            this.m_OnCreateCell = (_) => { return GameObject.Instantiate<GameObject>(templateCellRT.gameObject).GetComponent<RectTransform>(); };
+            this.m_OnCreateCell = (_, _) => { return GameObject.Instantiate<GameObject>(templateCellRT.gameObject).GetComponent<RectTransform>(); };
             this.m_OnShowCell = onShowCell;
         }
 
         //从Cell模板上取rect和pivot进行初始化，自行指定创建Cell的方法
-        public void Init(RectTransform templateCellRT, Func<int, RectTransform> onCreateCell, Action<int> onShowCell)
+        public void Init(RectTransform templateCellRT, Func<int, int, RectTransform> onCreateCell, Action<int, int> onShowCell)
         {
             this.m_CellRect = templateCellRT.rect;
             this.m_CellPivot = templateCellRT.pivot;
@@ -172,7 +172,7 @@ namespace NRatel
         }
 
         //用rect和pivot初始化，自行指定创建Cell的方法
-        public void Init(Rect cellRect, Vector2 cellPivot, Func<int, RectTransform> onCreateCell, Action<int> onShowCell)
+        public void Init(Rect cellRect, Vector2 cellPivot, Func<int, int, RectTransform> onCreateCell, Action<int, int> onShowCell)
         {
             this.m_CellRect = cellRect;
             this.m_CellPivot = cellPivot;
@@ -224,48 +224,99 @@ namespace NRatel
         //开始展示回调，给子类使用
         protected virtual void OnStartShow() { }
 
-        //尝试刷新索引对应CellRT，若未在显示则忽略
-        public void TryRefreshCellRT(int index)
+        //根据数据索引，获取当前正在显示的位置索引
+        // 若未在显示则返回 -1
+        // 若存在多个，则返回第1个（开启loop时）
+        public int GetTheFirstPosIndex(int dataIndex)
         {
-            if (!m_CellRTDict.ContainsKey(index)) { return; }
-            m_OnShowCell?.Invoke(index);                        //Cell出现/刷新回调
-        }
-
-        //刷新索引对应CellRT
-        public void RefreshCellRT(int index)
-        {
-            Debug.Assert(m_CellRTDict.ContainsKey(index));
-            m_OnShowCell?.Invoke(index);                        //Cell出现/刷新回调
-        }
-
-        //尝试获取索引对应CellRT，若未在显示则返回false
-        public bool TryGetCellRT(int index, out RectTransform cellRT)
-        {
-            return m_CellRTDict.TryGetValue(index, out cellRT);
-        }
-
-        //取索引对应CellRT
-        public RectTransform GetCellRT(int index)
-        {
-            Debug.Assert(m_CellRTDict.ContainsKey(index));
-            return m_CellRTDict[index];
-        }
-
-        //索引对应Cell当前是否正在显示
-        public bool IsCellRTShowing(int index)
-        {
-            return m_CellRTDict.ContainsKey(index);
+            if (m_Loop)
+            {
+                foreach (var t in m_CellRTDict)
+                {
+                    int posIndex = t.Key;
+                    if (ConvertIndexToValid(posIndex) != dataIndex) { continue; }
+                    if (m_CellRTDict.ContainsKey(posIndex)) { return posIndex; }
+                }
+                return -1;
+            }
+            else
+            {
+                return dataIndex;
+            }
         }
 
         /// <summary>
-        /// 索引对应Cell跳转到0索引Cell的位置
+        /// 尝试刷新数据索引对应CellRT
+        /// 若未在显示则忽略；
+        /// 若存在多个，则全部刷新（开启loop时）
         /// </summary>
-        /// <param name="index">目标索引</param>
-        /// <param name="immediately">是否立刻生效，否则要等到LateUpdate中计算</param>
-        public void JumpTo(int index, bool immediately = false)
+        /// <param name="dataIndex"></param>
+        public void TryRefreshCellRT(int dataIndex)
         {
-            Vector2 cellPos0 = GetCellPos(0);
-            Vector2 cellPosI = GetCellPos(index);
+            if (m_Loop)
+            {
+                foreach (var t in m_CellRTDict)
+                {
+                    int posIndex = t.Key;
+                    if (ConvertIndexToValid(posIndex) != dataIndex) { continue; }
+                    m_OnShowCell?.Invoke(posIndex, dataIndex);
+                }
+            } else 
+            {
+                int posIndex = dataIndex;
+                m_OnShowCell?.Invoke(posIndex, dataIndex);
+            }
+        }
+
+        /// <summary>
+        /// 尝试获取数据索引对应CellRT
+        /// 若未在显示则返回false；
+        /// 若存在多个，则返回第1个（开启loop时）
+        /// </summary>
+        /// <param name="dataIndex"></param>
+        /// <param name="cellRT"></param>
+        /// <returns></returns>
+        public bool TryGetCellRT(int dataIndex, out RectTransform cellRT)
+        {
+            int posIndex = GetTheFirstPosIndex(dataIndex);
+            if (posIndex > 0)
+            {
+                cellRT = m_CellRTDict[posIndex];
+                return true;
+            }
+            else 
+            {
+                cellRT = null;
+                return false;
+            }
+        }
+
+        //获取位置索引对应CellRT
+        public RectTransform GetCellRTByPosIndex(int posIndex)
+        {
+            Debug.Assert(m_CellRTDict.ContainsKey(posIndex));
+            return m_CellRTDict[posIndex];
+        }
+
+        //数据索引对应的CellRT当前是否正在显示
+        public bool IsCellRTShowing(int dataIndex)
+        {
+            return GetTheFirstPosIndex(dataIndex) > 0;
+        }
+
+        /// <summary>
+        /// 滑动列表，使指定数据索引处的Cell，显示到0索引的初始位置去
+        /// 尽量 优先从正在显示的Cell处跳转，若存在多个则从第1个处开始（开启loop时）
+        /// </summary>
+        /// <param name="dataIndex">目标索引</param>
+        /// <param name="immediately">是否立刻生效，否则要等到LateUpdate中计算</param>
+        public void JumpTo(int dataIndex, bool immediately = false)
+        {
+            int posIndex = GetTheFirstPosIndex(dataIndex);  //优先从正在显示的Cell处
+            if (posIndex < 0) { posIndex = dataIndex; }
+
+            Vector2 cellPos0 = GetCellPos(0);  
+            Vector2 cellPosI = GetCellPos(posIndex);
             Vector2 deltaXY = new Vector2(Mathf.Abs(cellPosI.x - cellPos0.x), Mathf.Abs(cellPosI.y - cellPos0.y)); //index相对0位置，x、y 距离差
             Vector2 limitXY = new Vector2(Mathf.Max(m_Content.rect.size.x - m_Viewport.rect.size.x, 0), Mathf.Max(m_Content.rect.size.y - m_Viewport.rect.size.y, 0)); //x、y 限制大小，Mathf.Max同时兼容“Content比Viewport小”和“Content比Viewport大”两种情况
             Vector2 jumpToXY = new Vector2(Mathf.Min(deltaXY.x, limitXY.x), Mathf.Min(deltaXY.y, limitXY.y)); //不超过限制大小
@@ -585,11 +636,9 @@ namespace NRatel
             foreach (int index in m_DisAppearIndexes)
             {
                 //if (!IsValidIndex(index)) { continue; }   //不要限制，列表可能由长变短
-                int validIndex = ConvertIndexToValid(index);
-                //Debug.Log($"DisAppearCells index：{index}， validIndex：{validIndex}");
-                bool exist = m_CellRTDict.TryGetValue(validIndex, out RectTransform cellRT);
+                bool exist = m_CellRTDict.TryGetValue(index, out RectTransform cellRT);
                 if (!exist) { continue; }
-                m_CellRTDict.Remove(validIndex);
+                m_CellRTDict.Remove(index);
                 cellRT.gameObject.SetActive(false);
                 m_UnUseCellRTStack.Push(cellRT);
             }
@@ -603,10 +652,10 @@ namespace NRatel
                 if (!IsValidIndex(index)) { continue; }
                 int validIndex = ConvertIndexToValid(index);
                 //Debug.Log($"AppearCells index：{index}， validIndex：{validIndex}");
-                RectTransform cellRT = GetOrCreateCell(validIndex);
-                m_CellRTDict[validIndex] = cellRT;
+                RectTransform cellRT = GetOrCreateCell(index, validIndex);
+                m_CellRTDict[index] = cellRT;
                 cellRT.anchoredPosition = GetCellPos(index);        //设置Cell位置
-                m_OnShowCell?.Invoke(validIndex);                   //Cell出现/刷新回调
+                m_OnShowCell?.Invoke(index, validIndex);                   //Cell出现/刷新回调
             }
         }
 
@@ -618,9 +667,9 @@ namespace NRatel
                 if (!IsValidIndex(index)) { continue; }
                 int validIndex = ConvertIndexToValid(index);
                 //Debug.Log($"RefreshStayCells index：{index}， validIndex：{validIndex}");
-                RectTransform cellRT = m_CellRTDict[validIndex];
+                RectTransform cellRT = m_CellRTDict[index];
                 cellRT.anchoredPosition = GetCellPos(index);        //设置Cell位置
-                m_OnShowCell?.Invoke(validIndex);                   //Cell出现/刷新回调
+                m_OnShowCell?.Invoke(index, validIndex);                   //Cell出现/刷新回调
             }
         }
 
@@ -695,20 +744,20 @@ namespace NRatel
             return (axis == (int)m_MovementAxis) ? 0.5f : (int)childAlignment * 0.5f;
         }
 
-        protected Vector2 GetCellPos(int index)
+        protected Vector2 GetCellPos(int posIndex)
         {
             //一、数据索引转位置索引
             int posIndexX;   //X位置索引
             int posIndexY;   //Y位置索引
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
-                posIndexX = index;
+                posIndexX = posIndex;
                 posIndexY = 0;
             }
             else
             {
                 posIndexX = 0;
-                posIndexY = index;
+                posIndexY = posIndex;
             }
 
             //二、根据起始角落进行转置
@@ -737,7 +786,7 @@ namespace NRatel
             //RefreshAll();
         }
 
-        protected RectTransform GetOrCreateCell(int index)
+        protected RectTransform GetOrCreateCell(int posIndex, int dataIndex)
         {
             RectTransform cellRT;
             if (m_UnUseCellRTStack.Count > 0)
@@ -747,7 +796,7 @@ namespace NRatel
             }
             else
             {
-                cellRT = m_OnCreateCell(index);
+                cellRT = m_OnCreateCell(posIndex, dataIndex);
                 cellRT.SetParent(m_Content, false);
 
                 //驱动子物体的锚点和位置

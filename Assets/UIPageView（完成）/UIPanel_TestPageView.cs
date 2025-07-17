@@ -52,7 +52,8 @@ public class UIPanel_TestPageView : MonoBehaviour
         m_UIPageView.StartShow(m_DataList.Count, false);
     }
 
-    private RectTransform OnCreateCell(int index)
+    //posIndex 和 dataIndex 在 开启循环后，可能不同
+    private RectTransform OnCreateCell(int posIndex, int dataIndex)
     {
         RectTransform cellRT = GameObject.Instantiate<GameObject>(m_CellRTTemplate.gameObject).GetComponent<RectTransform>();
         cellRT.GetComponent<ClickableCell>().Init((_clickedIndex) =>
@@ -63,9 +64,10 @@ public class UIPanel_TestPageView : MonoBehaviour
         return cellRT;
     }
 
-    private void OnShowCell(int index)
+    //posIndex 和 dataIndex 在 开启循环后，可能不同
+    private void OnShowCell(int posIndex, int dataIndex)
     {
-        RectTransform cellRT = m_UIPageView.GetCellRT(index);
-        cellRT.GetComponent<ClickableCell>().Refresh(index);
+        RectTransform cellRT = m_UIPageView.GetCellRTByPosIndex(posIndex);
+        cellRT.GetComponent<ClickableCell>().Refresh(dataIndex);
     }
 }

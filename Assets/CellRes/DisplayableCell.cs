@@ -20,6 +20,7 @@ public class DisplayableCell : MonoBehaviour
 
     public virtual void Refresh(int index)
     {
+        m_Index = index;
         m_Text.text = index.ToString();
 
         bool exist = sm_ColorCache.TryGetValue(index, out Color color);
