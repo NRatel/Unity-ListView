@@ -264,8 +264,8 @@ namespace NRatel
         //计算直观行列数（自然坐标轴上）
         public void CalcCellCountOnNaturalAxis()
         {
-            int cellCountX = 1;  //默认最小1
-            int cellCountY = 1;  //默认最小1
+            int cellCountX = 0;  //默认最小0
+            int cellCountY = 0;  //默认最小0
 
             if (startAxis == MovementAxis.Horizontal)
             {
@@ -317,7 +317,7 @@ namespace NRatel
 
             }
 
-            //行列数约束至合法范围
+            //行列数约束至合法范围（兼容 数量为0、非法时将行列数设为了Int最大值 两种情况。）
             int cellsPerMainAxis;  //沿startAxis轴的格子数
             int actualCellCountX;  //实际列数
             int actualCellCountY;  //实际行数
@@ -325,45 +325,53 @@ namespace NRatel
             if (startAxis == MovementAxis.Horizontal)
             {
                 cellsPerMainAxis = cellCountX;
-                actualCellCountX = Mathf.Clamp(cellCountX, 1, m_CellCount);  //注意，这里Mathf.Clamp是因为上面自适应中非法时，将行列数设为了Int最大值。
-                actualCellCountY = Mathf.Clamp(cellCountY, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
+                actualCellCountX = Mathf.Clamp(cellCountX, 0, m_CellCount); 
+                actualCellCountY = Mathf.Clamp(cellCountY, 0, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
             }
             else
             {
                 cellsPerMainAxis = cellCountY;
-                actualCellCountY = Mathf.Clamp(cellCountY, 1, m_CellCount);
-                actualCellCountX = Mathf.Clamp(cellCountX, 1, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
+                actualCellCountY = Mathf.Clamp(cellCountY, 0, m_CellCount);
+                actualCellCountX = Mathf.Clamp(cellCountX, 0, Mathf.CeilToInt(m_CellCount / (float)cellsPerMainAxis));
             }
 
             this.m_CellsPerMainAxis = cellsPerMainAxis;
             this.m_ActualCellCountX = actualCellCountX;
-            this.m_ActualCellCountY = actualCellCountY;
+            this.m_ActualCellCountY = actualCellCountY; 
         }
 
         //计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
-        private void CalculateRequiredSpace()
+        //总数为0的特殊情况下，不要计入间隙
+        protected void CalculateRequiredSpace()
         {
-            Vector2 requiredSpace = new Vector2(
-                m_ActualCellCountX * m_CellRect.size.x + (m_ActualCellCountX - 1) * spacing.x,
-                m_ActualCellCountY * m_CellRect.size.y + (m_ActualCellCountY - 1) * spacing.y
-            );
-            this.m_RequiredSpace = requiredSpace;
+            if (m_CellCount > 0)
+            {
+                this.m_RequiredSpace = new Vector2(
+                    m_ActualCellCountX * m_CellRect.size.x + (m_ActualCellCountX - 1) * spacing.x,
+                    m_ActualCellCountY * m_CellRect.size.y + (m_ActualCellCountY - 1) * spacing.y
+                );
+            }
+            else
+            {
+                this.m_RequiredSpace = Vector2.zero;
+            }
         }
 
         //设置滑动轴方向的Content大小
-        private void SetContentSizeOnMovementAxis()
+        //总数为0的特殊情况下，不要计入边距
+        protected virtual void SetContentSizeOnMovementAxis()
         {
             RectTransform.Axis axis;
             float size;
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 axis = RectTransform.Axis.Horizontal;
-                size = m_RequiredSpace.x + padding.horizontal;
+                size = m_CellCount > 0 ? m_RequiredSpace.x + padding.horizontal : 0;
             }
             else
             {
                 axis = RectTransform.Axis.Vertical;
-                size = m_RequiredSpace.y + padding.vertical;
+                size = m_CellCount > 0 ? m_RequiredSpace.y + padding.vertical : 0;
             }
 
             m_Content.SetSizeWithCurrentAnchors(axis, size);
