@@ -75,11 +75,11 @@ namespace NRatel
             {
                 if (m_MovementAxis == MovementAxis.Horizontal)
                 {
-                    return m_CellRect.width * m_CellCount + spacing.x * (m_CellCount - 1);
+                    return m_RequiredSpace.x;
                 }
                 else
                 {
-                    return m_CellRect.height * m_CellCount + spacing.y * (m_CellCount - 1);
+                    return m_RequiredSpace.y;
                 }
             }
         }
@@ -388,6 +388,7 @@ namespace NRatel
         protected virtual void FixSpacing() { }
 
         //计算直观行列数（自然坐标轴上）
+        //总数为0的特殊情况下，若为水平方向，则 列数为0，行数为1，没有问题（无需处理）
         protected void CalcCellCountOnNaturalAxis()
         {
             this.m_ActualCellCountX = m_MovementAxis == MovementAxis.Horizontal ? m_CellCount : 1;
@@ -395,16 +396,24 @@ namespace NRatel
         }
 
         //计算实际需要的空间大小（不含padding） 及 在这个空间上第一个元素所在的位置
+        //总数为0的特殊情况下，不要计入间隙
         protected void CalculateRequiredSpace()
         {
-            Vector2 requiredSpace = new Vector2(
-                m_ActualCellCountX * m_CellRect.size.x + (m_ActualCellCountX - 1) * spacing.x,
-                m_ActualCellCountY * m_CellRect.size.y + (m_ActualCellCountY - 1) * spacing.y
-            );
-            this.m_RequiredSpace = requiredSpace;
+            if (m_CellCount > 0)
+            {
+                this.m_RequiredSpace = new Vector2(
+                    m_ActualCellCountX * m_CellRect.size.x + (m_ActualCellCountX - 1) * spacing.x,
+                    m_ActualCellCountY * m_CellRect.size.y + (m_ActualCellCountY - 1) * spacing.y
+                );
+            }
+            else
+            {
+                this.m_RequiredSpace = Vector2.zero;
+            }
         }
 
         //设置滑动轴方向的Content大小
+        //总数为0的特殊情况下，不要计入边距
         protected virtual void SetContentSizeOnMovementAxis()
         {
             RectTransform.Axis axis;
@@ -412,12 +421,27 @@ namespace NRatel
             if (m_MovementAxis == MovementAxis.Horizontal)
             {
                 axis = RectTransform.Axis.Horizontal;
-                size = m_Loop ? m_ExpandedContentSizeOnMovementAxis : m_RequiredSpace.x + padding.horizontal;
+                if (m_Loop)
+                {
+                    size = m_CellCount > 0 ? m_ExpandedContentSizeOnMovementAxis : 0;
+                }
+                else
+                {
+                    size = m_CellCount > 0 ? m_RequiredSpace.x + padding.horizontal : 0;
+                }
             }
             else
             {
                 axis = RectTransform.Axis.Vertical;
-                size = m_Loop ? m_ExpandedContentSizeOnMovementAxis : m_RequiredSpace.y + padding.vertical; //todo!!!
+                if (m_Loop)
+                {
+                    size = m_CellCount > 0 ? m_ExpandedContentSizeOnMovementAxis : 0;
+                }
+                else
+                {
+                    size = m_CellCount > 0 ? m_RequiredSpace.y + padding.vertical : 0;
+
+                }
             }
 
             m_Content.SetSizeWithCurrentAnchors(axis, size);

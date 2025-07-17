@@ -49,7 +49,7 @@ public class UIPanel_TestListView : MonoBehaviour
     void StartShow()
     {
         m_UIListView.Init(m_CellRTTemplate, OnCreateCell, OnShowCell);
-        var count = Random.Range(1, m_DataList.Count);
+        var count = Random.Range(0, m_DataList.Count);
         Debug.LogWarning(count);
         m_UIListView.StartShow(count, false);
     }
