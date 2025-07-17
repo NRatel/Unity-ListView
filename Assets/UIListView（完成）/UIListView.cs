@@ -73,14 +73,7 @@ namespace NRatel
         {
             get
             {
-                if (m_MovementAxis == MovementAxis.Horizontal)
-                {
-                    return m_RequiredSpace.x;
-                }
-                else
-                {
-                    return m_RequiredSpace.y;
-                }
+                return m_MovementAxis == MovementAxis.Horizontal ? m_RequiredSpace.x : m_RequiredSpace.y;
             }
         }
 
