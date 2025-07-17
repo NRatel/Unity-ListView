@@ -503,11 +503,9 @@ namespace NRatel
             foreach (int index in m_DisAppearIndexes)
             {
                 //if (!IsValidIndex(index)) { continue; }   //不要限制，列表可能由长变短
-                int validIndex = ConvertIndexToValid(index);
-                //Debug.Log($"DisAppearCells index：{index}， validIndex：{validIndex}");
-                bool exist = m_CellRTDict.TryGetValue(validIndex, out RectTransform cellRT);
+                bool exist = m_CellRTDict.TryGetValue(index, out RectTransform cellRT);
                 if (!exist) { continue; }
-                m_CellRTDict.Remove(validIndex);
+                m_CellRTDict.Remove(index);
                 cellRT.gameObject.SetActive(false);
                 m_UnUseCellRTStack.Push(cellRT);
             }
@@ -519,12 +517,10 @@ namespace NRatel
             foreach (int index in m_AppearIndexes)
             {
                 if (!IsValidIndex(index)) { continue; }
-                int validIndex = ConvertIndexToValid(index);
-                //Debug.Log($"AppearCells index：{index}， validIndex：{validIndex}");
-                RectTransform cellRT = GetOrCreateCell(validIndex);
-                m_CellRTDict[validIndex] = cellRT;
+                RectTransform cellRT = GetOrCreateCell(index);
+                m_CellRTDict[index] = cellRT;
                 cellRT.anchoredPosition = GetCellPos(index);        //设置Cell位置
-                m_OnShowCell?.Invoke(validIndex);                   //Cell出现/刷新回调
+                m_OnShowCell?.Invoke(index);                   //Cell出现/刷新回调
             }
         }
 
@@ -534,11 +530,9 @@ namespace NRatel
             foreach (int index in m_StayIndexes)
             {
                 if (!IsValidIndex(index)) { continue; }
-                int validIndex = ConvertIndexToValid(index);
-                //Debug.Log($"RefreshStayCells index：{index}， validIndex：{validIndex}");
-                RectTransform cellRT = m_CellRTDict[validIndex];
+                RectTransform cellRT = m_CellRTDict[index];
                 cellRT.anchoredPosition = GetCellPos(index);        //设置Cell位置
-                m_OnShowCell?.Invoke(validIndex);                   //Cell出现/刷新回调
+                m_OnShowCell?.Invoke(index);                   //Cell出现/刷新回调
             }
         }
 
