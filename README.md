@@ -5,8 +5,8 @@
   ListView基本排布原理1：只做一个排布方式 “水平方向、从左到右”，不考虑数据和复用。（已完成）  
   ListView基本排布原理2：在基本排布原理1的基础上，实现Cell复用。（已完成）  
   UIListView: 单行单列双向排列 Cell复用，可首尾相接无限循环（已完成）
-  GridView：多行多列多方向 Cell复用。（已完成）  
-  PageView/Swiper 可翻页。（已完成）
+  UIGridView：多行多列多方向 Cell复用。（已完成）  
+  UIPageView/Swiper 可翻页（首尾相接 或 跳回首部）。（已完成）
   多种不规则Cell的排布等。(未进行)  
   其他特殊需求。
  
